@@ -48,11 +48,7 @@ abstract class AudiopcPlatform extends PlatformInterface {
     throw UnimplementedError('getDuration() has not been implemented.');
   }
 
-  Future<List<double>?> getSample() {
-    throw UnimplementedError('getVolume() has not been implemented.');
-  }
-
-  Future<int?> getSampleCount() {
+  Future<List<double>?> getSamples() {
     throw UnimplementedError('getVolume() has not been implemented.');
   }
 

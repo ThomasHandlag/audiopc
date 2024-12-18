@@ -3,7 +3,6 @@ import 'dart:async';
 // import 'package:flutter/foundation.dart';
 
 import 'audiopc_platform_interface.dart';
-import 'dart:developer' show log;
 
 enum AudiopcState {
   none, 
@@ -112,5 +111,9 @@ class Audiopc {
 
   Future<double?> seek(double position) {
     return AudiopcPlatform.instance.seek(position);
+  }
+
+  Future<List<double>?> getSamples() {
+    return AudiopcPlatform.instance.getSamples();
   }
 }

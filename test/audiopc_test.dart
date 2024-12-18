@@ -7,8 +7,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 class MockAudiopcPlatform
     with MockPlatformInterfaceMixin
     implements AudiopcPlatform {
-  @override
-  Future<bool?> initAudioPC() => Future.value(true);
 
   @override
   Future<bool?> setVolume() => Future.value(false);
@@ -29,12 +27,6 @@ class MockAudiopcPlatform
   Future<double?> getPosition() => Future.value(0.0);
 
   @override
-  Future<List<double>?> getSample() => Future.value([]);
-
-  @override
-  Future<int?> getSampleCount() => Future.value(0);
-
-  @override
   Future<double?> seek(double position) => Future.value(0);
 
   @override
@@ -45,6 +37,9 @@ class MockAudiopcPlatform
 
   @override
   Future<double?> getState() => Future.value(0);
+  
+  @override
+  Future<List<double>?> getSamples() => Future.value([]);
 }
 
 void main() {
