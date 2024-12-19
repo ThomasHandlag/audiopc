@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:audiopc/audiopc.dart';
 import 'package:audiopc/audiopc_platform_interface.dart';
@@ -39,7 +41,7 @@ class MockAudiopcPlatform
   Future<double?> getState() => Future.value(0);
   
   @override
-  Future<List<double>?> getSamples() => Future.value([]);
+  Future<Float64List?> getSamples() => Future.value(Float64List(0));
 }
 
 void main() {

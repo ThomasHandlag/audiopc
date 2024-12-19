@@ -35,8 +35,8 @@ class MethodChannelAudiopc extends AudiopcPlatform {
   }
 
   @override
-  Future<List<double>?> getSamples() async {
-    final result = await methodChannel.invokeMethod<List<double>>('getSamples');
+  Future<Float64List?> getSamples() async {
+    final result = await methodChannel.invokeMethod<Float64List?>('getSamples');
     return result;
   }
 
@@ -74,7 +74,7 @@ class MethodChannelAudiopc extends AudiopcPlatform {
 
   @override
   Future<double?> getState() async {
-    final result = await methodChannel.invokeMethod<double>('getState');
+    final result = await methodChannel.invokeMethod<double?>('getState');
     return result;
   }
 }

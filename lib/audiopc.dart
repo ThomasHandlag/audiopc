@@ -5,9 +5,9 @@ import 'dart:async';
 import 'audiopc_platform_interface.dart';
 
 enum AudiopcState {
-  none, 
-  playing, 
-  paused, 
+  none,
+  playing,
+  paused,
   stopped,
 }
 
@@ -34,22 +34,21 @@ class Audiopc {
   Audiopc() {
     _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
       getState().then((value) {
-        if (value != null && onStateChanged != null) {
-            onStateChanged!(_state);
-        }
-
         switch (value) {
-          case 3:
+          case 3.0:
             _state = AudiopcState.playing;
             break;
-          case 4:
+          case 4.0:
             _state = AudiopcState.paused;
             break;
-          case 5:
+          case 5.0:
             _state = AudiopcState.stopped;
             break;
           default:
             _state = AudiopcState.none;
+        }
+        if (value != null && onStateChanged != null) {
+          onStateChanged!(_state);
         }
       });
 
@@ -64,12 +63,13 @@ class Audiopc {
           onDurationChanged!(value);
         }
       });
-
-      getSamples().then((value) {
-        if (value != null && onSamplesChanged != null) {
-          onSamplesChanged!(value);
-        }
-      });
+      if (_state == AudiopcState.playing) {
+        getSamples().then((value) {
+          if (value != null && onSamplesChanged != null) {
+            onSamplesChanged!(value);
+          }
+        });
+      }
     });
   }
 
@@ -94,11 +94,11 @@ class Audiopc {
   }
 
   Future<bool?> play() {
-   return AudiopcPlatform.instance.play();
+    return AudiopcPlatform.instance.play();
   }
 
   Future<bool?> pause() {
-   return AudiopcPlatform.instance.pause();
+    return AudiopcPlatform.instance.pause();
   }
 
   Future<double?> getDuration() {

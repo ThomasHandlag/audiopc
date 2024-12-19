@@ -11,11 +11,18 @@
 #include <Shlwapi.h>
 #include <stdio.h>
 #include <new>
+#include <vector>
+#include <thread>
 #include <iostream>
-
+#include <stdexcept>
 
 namespace audiopc {
+
+	using std::cout, std::endl, std::vector, std::thread, std::nothrow;
+
 	class AudioPlayer;
+	class AudioSamplesGrabber;
+	class CircularBuffer;
 	class AudiopcPlugin;
 
 	// Helper macro for checking HRESULT results and throwing exceptions on failure.
@@ -55,8 +62,6 @@ namespace audiopc {
 
 		virtual ~AudiopcPlugin();
 
-
-
 		// Disallow copy and assign.
 		AudiopcPlugin(const AudiopcPlugin&) = delete;
 		AudiopcPlugin& operator=(const AudiopcPlugin&) = delete;
@@ -67,13 +72,84 @@ namespace audiopc {
 			std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
 	};
 
+	class CircularBuffer {
+	private:
+		size_t maxSize;
+		vector<double> buffer;
+		size_t csor = 0;
+	public:
+		CircularBuffer(size_t size)
+			: maxSize(size){
+			buffer = vector<double>(size, 0);
+		}
+
+		void Write(const vector<double>& samples) {
+			try {
+				for (double sample : samples) {
+					if (csor == maxSize) {
+						csor = 0;
+					}
+					buffer[csor] = sample;
+					if (csor < maxSize) {
+						csor++;
+					}
+				}
+			}
+			catch (const std::exception& e) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<int>(__LINE__) << " - " << e.what() << endl;
+			}
+		}
+
+		void Read(vector<double> &out) const {
+			try {
+				for (size_t i = 0; i < csor; i++) {
+					out.push_back(buffer[i]);
+				}
+			}
+			catch (const std::exception& e) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<int>(__LINE__) << " - " << e.what() << endl;
+			}
+		}
+	};
+
+	class AudioSamplesGrabber : public IMFSampleGrabberSinkCallback {
+	public:
+		ULONG m_cRef;
+		CircularBuffer samplesBuffer;
+
+		AudioSamplesGrabber();
+		~AudioSamplesGrabber();
+		// IUnknown methods
+		static HRESULT CreateInstance(AudioSamplesGrabber** ppCB);
+
+		// IUnknown methods
+		STDMETHODIMP QueryInterface(REFIID iid, void** ppv);
+		STDMETHODIMP_(ULONG) AddRef();
+		STDMETHODIMP_(ULONG) Release();
+
+		// IMFClockStateSink methods
+		STDMETHODIMP OnClockStart(MFTIME hnsSystemTime, LONGLONG llClockStartOffset);
+		STDMETHODIMP OnClockStop(MFTIME hnsSystemTime);
+		STDMETHODIMP OnClockPause(MFTIME hnsSystemTime);
+		STDMETHODIMP OnClockRestart(MFTIME hnsSystemTime);
+		STDMETHODIMP OnClockSetRate(MFTIME hnsSystemTime, float flRate);
+
+		// IMFSampleGrabberSinkCallback methods
+		STDMETHODIMP OnSetPresentationClock(IMFPresentationClock* pClock);
+		STDMETHODIMP OnProcessSample(REFGUID guidMajorMediaType, DWORD dwSampleFlags,
+			LONGLONG llSampleTime, LONGLONG llSampleDuration, const BYTE* pSampleBuffer,
+			DWORD dwSampleSize);
+		STDMETHODIMP OnShutdown();
+	};
+
 	// AudioPlayer class
 	class AudioPlayer : public IMFAsyncCallback
 	{
 	protected:
 		ULONG m_cRef;
+		AudioSamplesGrabber* m_pGrabber;
 
-		AudioPlayer();
+		AudioPlayer(AudioSamplesGrabber** grabber);
 		~AudioPlayer();
 
 	public:
@@ -135,7 +211,8 @@ namespace audiopc {
 		HRESULT SetRate(float fRate);
 		HRESULT FastForward();
 		HRESULT Rewind();
-		PlaybackState GetState();
+		void GetSamples(vector<double>& out) const;
+		PlaybackState GetState() const;
 
 
 	protected:
@@ -152,26 +229,32 @@ namespace audiopc {
 		HRESULT OnPresentationEnded();
 		HRESULT OnNewPresentation();
 		HRESULT Shutdown();
-		HRESULT EventListener();
 		HRESULT EventHandle();
+		HRESULT AddGrabberOutputNode();
 
 		HRESULT GetDuration();
 
 		PlaybackState m_state;
 		HANDLE m_hCloseEvent;
 		IMFSourceResolver* m_pSourceResolver;
-		IMFMediaBuffer* m_pBuffer;
 		IMFMediaSource* m_pSource;
 		IUnknown* m_pSourceUnk;
 		IMFMediaSession* m_pSession;
 		IMFStreamDescriptor* m_pStreamDescriptor;
 		IMFTopology* m_pTopology;
 		IMFPresentationDescriptor* m_pPD;
-		IMFActivate* m_pSinkActivate;
+
 		IMFTopologyNode* m_pSourceNode;
 		IMFTopologyNode* m_pOutputNode;
+		IMFTopologyNode* m_pGrabberNode;
+
 		IMFMediaEvent* m_pEvent;
 		MediaEventType m_eType;
+
+		IMFActivate* m_pSinkActivate;
+		IMFActivate* m_pSinkActivateGrabber;
+
+		IMFMediaType* m_pMediaType;
 		MFTIME m_duration;
 		HWND m_hwndEvent;
 		bool m_poolFlag = true;

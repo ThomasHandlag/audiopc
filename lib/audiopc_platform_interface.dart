@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'audiopc_method_channel.dart';
@@ -48,7 +50,7 @@ abstract class AudiopcPlatform extends PlatformInterface {
     throw UnimplementedError('getDuration() has not been implemented.');
   }
 
-  Future<List<double>?> getSamples() {
+  Future<Float64List?> getSamples() {
     throw UnimplementedError('getVolume() has not been implemented.');
   }
 

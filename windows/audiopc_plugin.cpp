@@ -26,7 +26,9 @@
 
 
 namespace audiopc {
-	using std::cout, std::endl;
+	using std::cout, std::endl, std::hex, std::nothrow, std::make_unique, std::unique_ptr;
+	using std::get, std::string, std::wstring, std::vector, std::thread, std::chrono::milliseconds;
+
 	HWND audiopc::AudiopcPlugin::hwnd = nullptr;
 
 	template <class Q>
@@ -55,16 +57,16 @@ namespace audiopc {
 	void AudiopcPlugin::RegisterWithRegistrar(
 		flutter::PluginRegistrarWindows* registrar) {
 		auto channel =
-			std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+			make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
 				registrar->messenger(), "audiopc",
 				&flutter::StandardMethodCodec::GetInstance());
-		auto plugin = std::make_unique<AudiopcPlugin>();
+		auto plugin = make_unique<AudiopcPlugin>();
 
 		channel->SetMethodCallHandler(
 			[plugin_pointer = plugin.get()](const auto& call, auto result) {
-				plugin_pointer->HandleMethodCall(call, std::move(result));
+				plugin_pointer->HandleMethodCall(call, move(result));
 			});
-		registrar->AddPlugin(std::move(plugin));
+		registrar->AddPlugin(move(plugin));
 
 		AudiopcPlugin::hwnd = registrar->GetView()->GetNativeWindow();
 	}
@@ -72,31 +74,30 @@ namespace audiopc {
 
 	void AudiopcPlugin::HandleMethodCall(
 		const flutter::MethodCall<flutter::EncodableValue>& method_call,
-		std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+		unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
 
 		if (player) {
 			player->SetHWND(AudiopcPlugin::hwnd);
 		}
 
 		if (method_call.method_name().compare("setSource") == 0) {
-			flutter::EncodableMap map = std::get<flutter::EncodableMap>(*method_call.arguments());
+			flutter::EncodableMap map = get<flutter::EncodableMap>(*method_call.arguments());
 			auto path = map.find(flutter::EncodableValue("path"));
 
 			if (path == map.end()) {
 				result->Error("Error", "Path is not provided");
 			}
 
-			std::string pathStr = std::get<std::string>(path->second);
-			std::wstring pathWStr(pathStr.begin(), pathStr.end());
+			string pathStr = get<string>(path->second);
+			wstring pathWStr(pathStr.begin(), pathStr.end());
 
 			if (player) {
-				//HRESULT hr = player->SetSource(L"D:/Downloads/thehype.mp3");
 				HRESULT hr = player->SetSource(pathWStr.c_str());
 				if (SUCCEEDED(hr)) {
 					result->Success();
 				}
 				else {
-					std::cout << "Error" << __FILE__ << ":" << __LINE__ << "-" << std::hex << hr << std::endl;
+					cout << "Error" << __FILE__ << ":" << static_cast<double>(__LINE__) << "-" << hex << hr << endl;
 					result->Error("Error", "Error setting source");
 				}
 			}
@@ -109,12 +110,10 @@ namespace audiopc {
 			if (player) {
 				HRESULT hr = S_OK;
 				hr = player->Play();
-
-				std::thread poolThread(&AudioPlayer::StartAudioPool, player);
+				thread poolThread(&AudioPlayer::StartAudioPool, player);
 				// detach the audio pool thread from the main thread to prevent blocking UI thread
 				poolThread.detach();
 				result->Success(flutter::EncodableValue(true));
-
 			}
 			else {
 				result->Error("Error", "Player is not initialized");
@@ -138,12 +137,10 @@ namespace audiopc {
 				result->Error("Error", "Player is not initialized");
 			}
 		}
-
 		else if (method_call.method_name().compare("getDuration") == 0) {
 			if (player) {
 				double duration = 0;
 				HRESULT hr = player->GetSecondDuration(duration);
-				cout << duration << endl;
 
 				if (SUCCEEDED(hr)) {
 					result->Success(flutter::EncodableValue(duration));
@@ -156,13 +153,10 @@ namespace audiopc {
 				result->Error("Error", "Player is not initialized");
 			}
 		}
-
-		else if (method_call.method_name().compare("getPostion")) {
+		else if (method_call.method_name().compare("getPostion") == 0) {
 			if (player) {
 				double position = 0;
 				HRESULT hr = player->GetCDurationSecond(position);
-				//cout << "Current position: " << position << endl;
-
 				if (SUCCEEDED(hr)) {
 					result->Success(flutter::EncodableValue(position));
 				}
@@ -174,21 +168,21 @@ namespace audiopc {
 				result->Error("Error", "Player is not initialized");
 			}
 		}
-		else if (method_call.method_name().compare("seek")) {
-			flutter::EncodableMap map = std::get<flutter::EncodableMap>(*method_call.arguments());
+		else if (method_call.method_name().compare("seek") == 0) {
+			flutter::EncodableMap map = get<flutter::EncodableMap>(*method_call.arguments());
 			auto position = map.find(flutter::EncodableValue("position"));
 
 			if (position == map.end()) {
 				result->Error("Error", "Position is not provided");
 			}
 
-			double positionValue = std::get<double>(position->second);
+			double positionValue = get<double>(position->second);
 
 			if (player) {
 				MFTIME time = static_cast<MFTIME>(positionValue * MICRO_TO_SECOND);
 				HRESULT hr = player->SetPosition(time);
 				if (SUCCEEDED(hr)) {
-					result->Success(flutter::EncodableValue(1));
+					result->Success(flutter::EncodableValue(1.0));
 				}
 				else {
 					result->Error("Error", "Error setting position");
@@ -200,7 +194,32 @@ namespace audiopc {
 		}
 		else if (method_call.method_name().compare("getState") == 0) {
 			if (player) {
-				result->Success(flutter::EncodableValue(player->GetState()));
+				result->Success(flutter::EncodableValue((double)player->GetState()));
+			}
+			else {
+				result->Error("Error", "Player is not initialized");
+			}
+		}
+		else if (method_call.method_name().compare("getSamples") == 0) {
+			if (player) {
+				vector<double> samples = vector<double>(44100, 0);
+				player->GetSamples(samples);
+				result->Success(flutter::EncodableValue(samples));
+			}
+			else {
+				result->Error("Error", "Player is not initialized");
+			}
+		}
+		else if (method_call.method_name().compare("getPosition") == 0) {
+			if (player) {
+				double position = 0;
+				HRESULT hr = player->GetCDurationSecond(position);
+				if (SUCCEEDED(hr)) {
+					result->Success(flutter::EncodableValue(position));
+				}
+				else {
+					result->Error("Error", "Error getting position");
+				}
 			}
 			else {
 				result->Error("Error", "Player is not initialized");
@@ -213,12 +232,10 @@ namespace audiopc {
 	}
 
 	AudiopcPlugin::AudiopcPlugin() {
-		cout << "Create Player instance" << endl;
 		AudioPlayer::CreateInstance(&player);
 	}
 
 	AudiopcPlugin::~AudiopcPlugin() {
-		cout << "Plugin end here" << endl;
 	}
 
 
@@ -229,8 +246,13 @@ namespace audiopc {
 		{
 			return E_POINTER;
 		}
+		AudioSamplesGrabber* pGrabber;
+		hr = AudioSamplesGrabber::CreateInstance(&pGrabber);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
 
-		AudioPlayer* pPlayer = new (std::nothrow) AudioPlayer();
+		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber);
 		if (pPlayer == NULL)
 		{
 			return E_OUTOFMEMORY;
@@ -238,7 +260,7 @@ namespace audiopc {
 
 		hr = pPlayer->StartPlayer();
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -250,7 +272,6 @@ namespace audiopc {
 	}
 
 	HRESULT AudioPlayer::StartPlayer() {
-		cout << "StartPlayer" << endl;
 		HRESULT hr = S_OK;
 		hr = MFStartup(MF_VERSION);
 		if (SUCCEEDED(hr))
@@ -265,22 +286,55 @@ namespace audiopc {
 	}
 
 	HRESULT AudioPlayer::SetSource(const WCHAR* path) {
-		cout << "SetSoucre: " << path << endl;
 		MF_OBJECT_TYPE ObjectType = MF_OBJECT_INVALID;
 		HRESULT hr = S_OK;
 		HRESULT hr_Tmp = S_OK;
 
+		hr = MFCreateMediaType(&m_pMediaType);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+
+		hr = m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+
+		hr = m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+
+		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+
+		/*hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_BLOCK_ALIGNMENT, 2);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}*/
+
+		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+
 		hr = CreateMediaSession();
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = MFCreateSourceResolver(&m_pSourceResolver);
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -293,67 +347,63 @@ namespace audiopc {
 		);
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSourceUnk->QueryInterface(IID_PPV_ARGS(&m_pSource));
 
-		SAFE_RELEASE(&m_pSourceResolver);
-		SAFE_RELEASE(&m_pSourceUnk);
-
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSource->CreatePresentationDescriptor(&m_pPD);
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = CreatePlaybackTopology();
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSession->SetTopology(0, m_pTopology);
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSession->GetSessionCapabilities(&m_caps);
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
-
 		IMFClock* pClock = NULL;
 
 		hr = m_pSession->GetClock(&pClock);
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 		hr = pClock->QueryInterface(IID_PPV_ARGS(&m_pClock));
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr_Tmp = MFGetService(m_pSession, MF_RATE_CONTROL_SERVICE, IID_PPV_ARGS(&m_pRate));
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 		}
 		hr_Tmp = MFGetService(m_pSession, MF_RATE_CONTROL_SERVICE, IID_PPV_ARGS(&m_pRateSupport));
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 		}
 		hr_Tmp = m_pRateSupport->IsRateSupported(TRUE, 0, NULL);
 		if (SUCCEEDED(hr)) {
@@ -373,18 +423,17 @@ namespace audiopc {
 	}
 
 	STDMETHODIMP AudioPlayer::Invoke(IMFAsyncResult* pResult) {
-		std::cout << "Invoke is called" << std::endl;
 		HRESULT hr = S_OK;
 		// Get the event from the event queue.
 		hr = m_pSession->EndGetEvent(pResult, &m_pEvent);
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pEvent->GetType(&m_eType);
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -399,7 +448,7 @@ namespace audiopc {
 			// For all other events, get the next event in the queue.
 			hr = m_pSession->BeginGetEvent(this, NULL);
 			if (FAILED(hr)) {
-				std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
 		}
@@ -428,13 +477,12 @@ namespace audiopc {
 	}
 
 	HRESULT AudioPlayer::CreateMediaSession() {
-		cout << "CreateMediaSession" << endl;
 		HRESULT hr = S_OK;
 
 		// Close the old session, if any.
 		hr = CloseSession();
 		if (FAILED(hr)) {
-			////std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			////cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -442,13 +490,13 @@ namespace audiopc {
 
 		hr = MFCreateMediaSession(NULL, &m_pSession);
 		if (FAILED(hr)) {
-			////std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			////cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSession->BeginGetEvent((IMFAsyncCallback*)this, NULL);
 		if (FAILED(hr)) {
-			////std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			////cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 		m_state = Ready;
@@ -457,7 +505,6 @@ namespace audiopc {
 	}
 
 	HRESULT AudioPlayer::CloseSession() {
-		cout << "CloseSession" << endl;
 		HRESULT hr = S_OK;
 
 		if (m_pSession) {
@@ -492,12 +539,11 @@ namespace audiopc {
 		return hr;
 	}
 
-	AudioPlayer::AudioPlayer() : m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL),
-		m_pBuffer(NULL), m_pSource(NULL), m_hCloseEvent(NULL), m_state(Closed), m_eType(MEUnknown),
+	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB) : m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL),
+		m_pSource(NULL), m_hCloseEvent(NULL), m_state(Closed), m_eType(MEUnknown),
 		m_pSourceUnk(NULL), m_pSession(NULL), m_pStreamDescriptor(NULL), m_poolFlag(true),
-		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL),
+		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE), m_pGrabber(*GCB),
 		m_pOutputNode(NULL), m_pSinkActivate(NULL), m_pPD(NULL), m_pSourceNode(NULL) {
-		std::cout << "Contructor" << std::endl;
 	}
 
 	AudioPlayer::~AudioPlayer() {
@@ -533,7 +579,6 @@ namespace audiopc {
 	//  Start playback from paused or stopped.
 	HRESULT AudioPlayer::Play()
 	{
-		std::cout << "Play" << std::endl;
 		AutoLock lock(m_critsec);
 
 		if (m_state != Paused && m_state != Stopped)
@@ -549,7 +594,6 @@ namespace audiopc {
 
 	HRESULT AudioPlayer::Pause()
 	{
-		cout << "Pause" << endl;
 		AutoLock lock(m_critsec);
 		HRESULT hr = S_OK;
 
@@ -578,7 +622,6 @@ namespace audiopc {
 	// Stop playback.
 	HRESULT AudioPlayer::Stop()
 	{
-		cout << "Stop" << endl;
 		HRESULT hr = S_OK;
 		if (m_state != Started && m_state != Paused)
 		{
@@ -607,7 +650,7 @@ namespace audiopc {
 		hr = m_pPD->GetUINT64(MF_PD_DURATION, &duration);
 
 		if (FAILED(hr)) {
-			std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			hr = MF_E_NO_DURATION;
 			goto done;
 		}
@@ -619,14 +662,13 @@ namespace audiopc {
 	}
 
 	HRESULT AudioPlayer::CreateMediaSinkActivate() {
-		cout << "CreateMediaSinkActivate" << endl;
 		IMFMediaTypeHandler* pHandler = NULL;
 
 		HRESULT hr = S_OK;
 
 		hr = m_pStreamDescriptor->GetMediaTypeHandler(&pHandler);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -634,7 +676,7 @@ namespace audiopc {
 		GUID guidMajorType;
 		hr = pHandler->GetMajorType(&guidMajorType);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -643,6 +685,7 @@ namespace audiopc {
 		{
 			// Create the audio renderer.
 			hr = MFCreateAudioRendererActivate(&m_pSinkActivate);
+			hr = MFCreateSampleGrabberSinkActivate(m_pMediaType, m_pGrabber, &m_pSinkActivateGrabber);
 		}
 		else
 		{
@@ -652,11 +695,12 @@ namespace audiopc {
 		}
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 		// Return IMFActivate pointer to caller.
 		m_pSinkActivate->AddRef();
+		m_pGrabber->AddRef();
 
 	done:
 		SAFE_RELEASE(&pHandler);
@@ -665,37 +709,36 @@ namespace audiopc {
 
 	// Add a source node to a topology.
 	HRESULT AudioPlayer::AddSourceNode() {
-		cout << "AddSourceNode" << endl;
 		// Create the node.
 		HRESULT hr = S_OK;
 
 		hr = MFCreateTopologyNode(MF_TOPOLOGY_SOURCESTREAM_NODE, &m_pSourceNode);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSourceNode->SetUnknown(MF_TOPONODE_SOURCE, m_pSource);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSourceNode->SetUnknown(MF_TOPONODE_PRESENTATION_DESCRIPTOR, m_pPD);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pSourceNode->SetUnknown(MF_TOPONODE_STREAM_DESCRIPTOR, m_pStreamDescriptor);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pTopology->AddNode(m_pSourceNode);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -707,13 +750,12 @@ namespace audiopc {
 
 	// Add an output node to a topology.
 	HRESULT AudioPlayer::AddOutputNode() {
-		cout << "AddOutputNode" << endl;
 		HRESULT hr = S_OK;
 		// Create the node.
 		hr = MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &m_pOutputNode);
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -721,7 +763,7 @@ namespace audiopc {
 		hr = m_pOutputNode->SetObject(m_pSinkActivate);
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -729,21 +771,21 @@ namespace audiopc {
 		hr = m_pOutputNode->SetUINT32(MF_TOPONODE_STREAMID, 0);
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		hr = m_pOutputNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, FALSE);
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		// Add the node to the topology.
 		hr = m_pTopology->AddNode(m_pOutputNode);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -753,7 +795,38 @@ namespace audiopc {
 	done:
 		return hr;
 	}
-	//</SnippetPlayer.cpp>
+
+	HRESULT AudioPlayer::AddGrabberOutputNode() {
+		HRESULT hr = S_OK;
+		hr = MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &m_pGrabberNode);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			goto done;
+		}
+		hr = m_pGrabberNode->SetObject(m_pSinkActivateGrabber);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			goto done;
+		}
+		hr = m_pGrabberNode->SetUINT32(MF_TOPONODE_STREAMID, 0);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+		hr = m_pGrabberNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, FALSE);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+		}
+		hr = m_pTopology->AddNode(m_pGrabberNode);
+		if (FAILED(hr)) {
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			goto done;
+		}
+
+		m_pGrabberNode->AddRef();
+	done:
+		return hr;
+	}
+
 
 	//  Add a topology branch for one stream.
 	//
@@ -766,15 +839,14 @@ namespace audiopc {
 	//  The media session will add any decoders that are needed.
 
 	HRESULT AudioPlayer::AddBranchToPartialTopology(DWORD index) {
-		cout << "AddBranchToPartialTopology" << endl;
 		BOOL fSelected = FALSE;
-
 		HRESULT hr = S_OK;
+		IMFTopologyNode* teeNode = NULL;
 
 		hr = m_pPD->GetStreamDescriptorByIndex(index, &fSelected, &m_pStreamDescriptor);
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -783,47 +855,72 @@ namespace audiopc {
 			// Create the media sink activation object.
 			hr = CreateMediaSinkActivate();
 			if (FAILED(hr)) {
-				//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
 
 			// Add a source node for this stream.
 			hr = AddSourceNode();
 			if (FAILED(hr)) {
-				//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
 			hr = AddOutputNode();
-
 			if (FAILED(hr)) {
-				//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
-			hr = m_pSourceNode->ConnectOutput(0, m_pOutputNode, 0);
+			hr = AddGrabberOutputNode();
+			if (FAILED(hr)) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			}
+			hr = MFCreateTopologyNode(MF_TOPOLOGY_TEE_NODE, &teeNode);
+			if (FAILED(hr)) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			}
+			hr = m_pSourceNode->ConnectOutput(0, teeNode, 0);
+			if (FAILED(hr)) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			}
+			hr = teeNode->ConnectOutput(0, m_pOutputNode, 0);
+			if (FAILED(hr)) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			}
+			hr = teeNode->ConnectOutput(1, m_pGrabberNode, 0);
+			if (FAILED(hr)) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			}
+			hr = m_pTopology->AddNode(teeNode);
+			if (FAILED(hr)) {
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
+			}
+			teeNode->AddRef();
 		}
 	done:
 		SAFE_RELEASE(&m_pStreamDescriptor);
-		SAFE_RELEASE(&m_pSinkActivate);
+		/*SAFE_RELEASE(&m_pSinkActivate);
+		SAFE_RELEASE(&m_pSinkActivateGrabber);
 		SAFE_RELEASE(&m_pOutputNode);
-		SAFE_RELEASE(&m_pSourceNode);
+		SAFE_RELEASE(&m_pGrabberNode);
+		SAFE_RELEASE(&m_pSourceNode);*/
+		//SAFE_RELEASE(&teeNode);
 		return hr;
 	}
 
 	HRESULT AudioPlayer::CreatePlaybackTopology() {
-		cout << "CreatePlaybackTopology" << endl;
 		DWORD cSourceStreams = 0;
 
 		HRESULT hr = S_OK;
 
 		hr = MFCreateTopology(&m_pTopology);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 		// Get the number of streams in the media source.
 		hr = m_pPD->GetStreamDescriptorCount(&cSourceStreams);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -832,7 +929,7 @@ namespace audiopc {
 		{
 			hr = AddBranchToPartialTopology(i);
 			if (FAILED(hr)) {
-				//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
 		}
@@ -844,13 +941,12 @@ namespace audiopc {
 	}
 
 	HRESULT AudioPlayer::Shutdown() {
-		cout << "Shutdown" << endl;
 		// Close the session
 		HRESULT hr = S_OK;
 
 		hr = CloseSession();
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -869,12 +965,11 @@ namespace audiopc {
 	/// Protected methods
 
 	HRESULT AudioPlayer::OnTopologyStatus() {
-		std::cout << "OnTopologyStatus" << std::endl;
 		UINT32 status;
 		HRESULT hr = S_OK;
 		hr = m_pEvent->GetUINT32(MF_EVENT_TOPOLOGY_STATUS, &status);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 		if (status == MF_TOPOSTATUS_READY)
@@ -882,7 +977,7 @@ namespace audiopc {
 
 			hr = StartPlayback();
 			if (FAILED(hr)) {
-				//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
 		}
@@ -893,7 +988,6 @@ namespace audiopc {
 
 	//  Handler for MEEndOfPresentation event.
 	HRESULT AudioPlayer::OnPresentationEnded() {
-		std::cout << "OnPresentationEnded" << std::endl;
 		// The session puts itself into the stopped state automatically.
 		m_state = Stopped;
 		return S_OK;
@@ -905,26 +999,25 @@ namespace audiopc {
 	//  requires a new topology. 
 
 	HRESULT AudioPlayer::OnNewPresentation() {
-		std::cout << "OnNewPresentation" << std::endl;
 		HRESULT hr = S_OK;
 		// Get the presentation descriptor from the event.
 		hr = GetEventObject(m_pEvent, &m_pPD);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		// Create a partial topology.
 		hr = CreatePlaybackTopology();
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
 		// Set the topology on the media session.
 		hr = m_pSession->SetTopology(0, m_pTopology);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -934,29 +1027,6 @@ namespace audiopc {
 		SAFE_RELEASE(&m_pPD);
 		SAFE_RELEASE(&m_pTopology);
 		return S_OK;
-	}
-
-	HRESULT AudioPlayer::EventListener() {
-		HRESULT hr = S_OK;
-		// Make sure the media session is valid
-		if (!m_pSession || !m_pEvent) {
-			return E_POINTER; // Return error if the session or event pointer is invalid
-		}
-
-		// Wait for the next event
-		hr = m_pSession->GetEvent(0, &m_pEvent);
-		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
-			goto done;
-		}
-
-		// Check if the event is valid
-		if (!m_pEvent) {
-			std::cout << "Null event received from media session." << std::endl;
-			return E_POINTER;
-		}
-	done:
-		return hr;
 	}
 
 	HRESULT AudioPlayer::EventHandle() {
@@ -972,7 +1042,7 @@ namespace audiopc {
 		// Get the event type.
 		hr = m_pEvent->GetType(&m_eType);
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 		// Get the event status. If the operation that triggered the event 
@@ -980,7 +1050,7 @@ namespace audiopc {
 		hr = m_pEvent->GetStatus(&hrStatus);
 
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -990,7 +1060,7 @@ namespace audiopc {
 			hr = hrStatus;
 		}
 		if (FAILED(hr)) {
-			//std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+			//cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			goto done;
 		}
 
@@ -1028,20 +1098,20 @@ namespace audiopc {
 			m_caps = MFGetAttributeUINT32(m_pEvent, MF_EVENT_SESSIONCAPS, m_caps);
 			break;
 
-			/*case MESessionStarted:
-				OnSessionStart();
-				break;
+		case MESessionStarted:
+			OnSessionStart();
+			break;
 
-			case MESessionStopped:
-				OnSessionStop();
-				break;
+		case MESessionStopped:
+			OnSessionStop();
+			break;
 
-			case MESessionPaused:
-				OnSessionPause();
-				break;
-			case MESessionEnded:
-				OnSessionEnded();
-				break;*/
+		case MESessionPaused:
+			OnSessionPause();
+			break;
+		case MESessionEnded:
+			OnSessionEnded();
+			break;
 		default:
 			hr = S_OK;
 			break;
@@ -1056,11 +1126,9 @@ namespace audiopc {
 		if (m_pSource && m_pPD) {
 			hr = GetDuration();
 			if (FAILED(hr)) {
-				std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 				goto done;
 			}
-
-			std::cout << "Duration: " << m_duration << std::endl;
 
 			ref = static_cast<double>(m_duration) / MICRO_TO_SECOND;
 
@@ -1119,7 +1187,7 @@ namespace audiopc {
 			HRESULT hr = S_OK;
 			hr = GetCurrentPosition();
 			if (FAILED(hr)) {
-				std::cout << "Error at " << __FILE__ << ":" << __LINE__ << " - " << std::hex << hr << std::endl;
+				cout << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " - " << hex << hr << endl;
 			}
 			ref = static_cast<double>(m_cDuration) / MICRO_TO_SECOND;
 		}
@@ -1614,8 +1682,114 @@ namespace audiopc {
 		return hr;
 	}
 
-	PlaybackState AudioPlayer::GetState() {
+	PlaybackState AudioPlayer::GetState() const {
 		return m_state;
 	}
 
+	void AudioPlayer::GetSamples(vector<double>& out) const {
+		m_pGrabber->samplesBuffer.Read(out);
+	}
+
+	AudioSamplesGrabber::AudioSamplesGrabber() : m_cRef(1), samplesBuffer(44100) {
+	}
+
+	AudioSamplesGrabber::~AudioSamplesGrabber() {
+	}
+
+	HRESULT AudioSamplesGrabber::CreateInstance(AudioSamplesGrabber** ppCB)
+	{
+		*ppCB = new (nothrow) AudioSamplesGrabber();
+
+		if (ppCB == NULL)
+		{
+			return E_OUTOFMEMORY;
+		}
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::QueryInterface(REFIID riid, void** ppv)
+	{
+		static const QITAB qit[] =
+		{
+			QITABENT(AudioSamplesGrabber, IMFSampleGrabberSinkCallback),
+			QITABENT(AudioSamplesGrabber, IMFClockStateSink),
+			{ 0 }
+		};
+		return QISearch(this, qit, riid, ppv);
+	}
+
+	STDMETHODIMP_(ULONG) AudioSamplesGrabber::AddRef()
+	{
+		return InterlockedIncrement(&m_cRef);
+	}
+
+	STDMETHODIMP_(ULONG) AudioSamplesGrabber::Release()
+	{
+		ULONG cRef = InterlockedDecrement(&m_cRef);
+		if (cRef == 0)
+		{
+			delete this;
+		}
+		return cRef;
+
+	}
+
+	// IMFClockStateSink methods.
+
+	// In these example, the IMFClockStateSink methods do not perform any actions. 
+	// You can use these methods to track the state of the sample grabber sink.
+
+	STDMETHODIMP AudioSamplesGrabber::OnClockStart(MFTIME hnsSystemTime, LONGLONG llClockStartOffset)
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::OnClockStop(MFTIME hnsSystemTime)
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::OnClockPause(MFTIME hnsSystemTime)
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::OnClockRestart(MFTIME hnsSystemTime)
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::OnClockSetRate(MFTIME hnsSystemTime, float flRate)
+	{
+		return S_OK;
+	}
+
+	// IMFSampleGrabberSink methods.
+
+	STDMETHODIMP AudioSamplesGrabber::OnSetPresentationClock(IMFPresentationClock* pClock)
+	{
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::OnProcessSample(REFGUID guidMajorMediaType, DWORD dwSampleFlags,
+		LONGLONG llSampleTime, LONGLONG llSampleDuration, const BYTE* pSampleBuffer,
+		DWORD dwSampleSize)
+	{
+		vector<double> samples;
+		for (DWORD i = 0; i < dwSampleSize; i += 2) {
+			// Combine two bytes into one int16_t
+			int16_t int16_sample = static_cast<int16_t>(pSampleBuffer[i] | (pSampleBuffer[i + 1] << 8));
+			// Normalize to double in range [-1.0, 1.0]
+			double sample = int16_sample / 32768.0; // 32768 = 2^15
+			samples.push_back(sample);
+		}
+		samplesBuffer.Write(samples);
+
+		return S_OK;
+	}
+
+	STDMETHODIMP AudioSamplesGrabber::OnShutdown()
+	{
+		return S_OK;
+	}
 }  // namespace audiopc

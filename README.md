@@ -1,15 +1,12 @@
 # audiopc
 
-A new Flutter plugin project.
+An audio plugin for window and anroid
 
 ## Getting Started
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/to/develop-plugins),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+This project use Window Media Foundation SDK
+[online documentation](https://learn.microsoft.com/en-us/windows/win32/medfound/microsoft-media-foundation-sdk)
 
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
-
