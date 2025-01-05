@@ -1,134 +1,110 @@
 import 'dart:async';
 
-// import 'package:flutter/foundation.dart';
-
-import 'audiopc_platform_interface.dart';
-
-enum AudiopcState {
-  none,
-  playing,
-  paused,
-  stopped,
-}
-
-typedef PlayerStateListener = void Function(AudiopcState newState);
-typedef SamplesListener = void Function(List<double> samples);
-typedef PositionListener = void Function(double position);
-typedef DurationListener = void Function(double duration);
-typedef PlayerCompletedListener = void Function(bool completed);
+import 'package:audiopc/audiopc_platform.dart';
+import 'package:audiopc/audiopc_state.dart';
+import 'package:audiopc/audopc_helper.dart';
+import 'package:audiopc/player_event.dart';
 
 class Audiopc {
-  Timer? _timer;
+  final _platform = AudiopcPlatform();
 
-  static AudiopcState _state = AudiopcState.none;
-  get state => _state;
-  static double position = 0.0;
-  static double duration = 0.0;
-  PlayerStateListener? onStateChanged;
+  PositionListener? _positionListener;
+  SamplesListener? _samplesListener;
 
-  SamplesListener? onSamplesChanged;
+  Stream<double> get onPositionChanged =>
+      _positionListener!.streamControler.stream;
+  Stream<List<double>> get onSamples =>
+      _samplesListener!.streamControler.stream;
 
-  PositionListener? onPositionChanged;
+  StreamSubscription<PlayerEvent>? _eventSubscription;
 
-  DurationListener? onDurationChanged;
+  final _eventStreamController = StreamController<PlayerEvent>.broadcast();
 
-  PlayerCompletedListener? onPlayerCompleted;
+  Stream<double> get onDurationChanged => _eventStreamController.stream
+      .where((event) => event.type == PlayerEventType.duration)
+      .map((event) => event.value as double);
+
+  Stream<AudiopcState> get onStateChanged => _eventStreamController.stream
+          .where((event) => event.type == PlayerEventType.position)
+          .map((event) {
+        final state = event.value as double;
+        switch (state) {
+          case 3.0:
+            return AudiopcState.playing;
+          case 4.0:
+            return AudiopcState.paused;
+          case 5.0:
+            return AudiopcState.stopped;
+          default:
+            return AudiopcState.none;
+        }
+      });
+
+  Stream<bool> get onCompleted => _eventStreamController.stream
+      .where((event) => event.type == PlayerEventType.completed)
+      .map((event) => event.value as bool);
 
   Audiopc() {
-    _timer = Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      getState().then((value) {
-        if (onPlayerCompleted != null) {
-          if (_state == AudiopcState.playing && value == 5.0) {
-            onPlayerCompleted!(true);
-          }
-        }
-        switch (value) {
-          case 3.0:
-            _state = AudiopcState.playing;
-            break;
-          case 4.0:
-            _state = AudiopcState.paused;
-            break;
-          case 5.0:
-            _state = AudiopcState.stopped;
-            break;
-          default:
-            _state = AudiopcState.none;
-        }
-
-        if (value != null && onStateChanged != null) {
-          onStateChanged!(_state);
-        }
-      });
-
-      getCurrentPosition().then((value) {
-        if (value != null && onPositionChanged != null) {
-          onPositionChanged!(value);
-          position = value;
-        }
-      });
-
-      getDuration().then((value) {
-        if (value != null && onDurationChanged != null) {
-          onDurationChanged!(value);
-          duration = value;
-        }
-      });
-      if (_state == AudiopcState.playing) {
-        getSamples().then((value) {
-          if (value != null && onSamplesChanged != null) {
-            onSamplesChanged!(value);
-          }
-        });
-      }
+    _eventSubscription = _platform.eventStream.listen((event) {
+      _eventStreamController.add(event);
     });
+
+    _platform.create();
+
+    _positionListener = PositionListener(
+      getPosition: getPosition,
+      id: 0,
+    );
+
+    _samplesListener = SamplesListener(
+      getSamples: getSamples,
+      id: 1,
+    );
   }
 
-  void close() {
-    _timer?.cancel();
+  Future<void> play(String path) async {
+    await _platform.setSource(path);
+    await _platform.play();
+    _positionListener!.start();
+    _samplesListener!.start();
   }
 
-  Future<double?> getState() {
-    return AudiopcPlatform.instance.getState();
+  Future<void> resume() async {
+    await _platform.play();
+    _positionListener!.start();
+    _samplesListener!.start();
   }
 
-  Future<bool?> setVolume() {
-    return AudiopcPlatform.instance.setVolume();
+  Future<void> pause() async {
+    await _platform.pause();
+    _positionListener!.pause();
+    _samplesListener!.pause();
   }
 
-  Future<String?> setSource(String path) {
-    String? isSet;
-    AudiopcPlatform.instance.setSource(path).then((val) {
-      isSet = val;
-    });
-    return Future.value(isSet);
+  Future<void> seek(double position) async {
+    await _platform.seek(position);
   }
 
-  Future<bool?> play() {
-    return AudiopcPlatform.instance.play();
+  Future<void> setVolume() async {
+    await _platform.setVolume();
   }
 
-  Future<bool?> pause() {
-    return AudiopcPlatform.instance.pause();
+  Future<void> setRate(double rate) async {
+    await _platform.setRate(rate);
   }
 
-  Future<double?> getDuration() {
-    return AudiopcPlatform.instance.getDuration();
+  Future<double> getPosition() async {
+    return await _platform.getPosition() ?? 0.0;
   }
 
-  Future<double?> getCurrentPosition() {
-    return AudiopcPlatform.instance.getPosition();
+  Future<List<double>> getSamples() async {
+    return await _platform.getSamples() ?? [];
   }
 
-  Future<double?> seek(double position) {
-    return AudiopcPlatform.instance.seek(position);
-  }
-
-  Future<List<double>?> getSamples() {
-    return AudiopcPlatform.instance.getSamples();
-  }
-
-  Future<bool?> setRate(double rate) {
-    return AudiopcPlatform.instance.setRate(rate);
+  void dispose() {
+    _positionListener!.stop();
+    _samplesListener!.stop();
+    _eventSubscription!.cancel();
+    _eventStreamController.close();
   }
 }

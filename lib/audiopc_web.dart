@@ -5,15 +5,12 @@
 
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
-import 'audiopc_platform_interface.dart';
-
 /// A web implementation of the AudiopcPlatform of the Audiopc plugin.
-class AudiopcWeb extends AudiopcPlatform {
+class AudiopcWeb  {
   /// Constructs a AudiopcWeb
   AudiopcWeb();
 
   static void registerWith(Registrar registrar) {
-    AudiopcPlatform.instance = AudiopcWeb();
   }
 
   /// Returns a [String] containing the version of the platform.
