@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:audiopc/audiopc.dart';
 import 'package:audiopc/audiopc_state.dart';
 
+
 void main() {
   runApp(const MyApp());
 }
@@ -16,7 +17,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
-  final _audiopcPlugin = Audiopc();
+  final _audiopcPlugin = Audiopc(id: "0");
 
   double _duration = 0.0;
   double _cDuration = 0.0;

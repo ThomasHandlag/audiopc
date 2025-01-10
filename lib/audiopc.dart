@@ -7,6 +7,7 @@ import 'package:audiopc/player_event.dart';
 
 class Audiopc {
   final _platform = AudiopcPlatform();
+  final String id;
 
   PositionListener? _positionListener;
   SamplesListener? _samplesListener;
@@ -44,12 +45,12 @@ class Audiopc {
       .where((event) => event.type == PlayerEventType.completed)
       .map((event) => event.value as bool);
 
-  Audiopc() {
+  Audiopc({required this.id}) {
     _eventSubscription = _platform.eventStream.listen((event) {
       _eventStreamController.add(event);
     });
-
-    _platform.create();
+    _platform.init(id);
+    _platform.listen(id);
 
     _positionListener = PositionListener(
       getPosition: getPosition,
@@ -63,42 +64,42 @@ class Audiopc {
   }
 
   Future<void> play(String path) async {
-    await _platform.setSource(path);
-    await _platform.play();
+    await _platform.setSource(path, id);
+    await _platform.play(id);
     _positionListener!.start();
     _samplesListener!.start();
   }
 
   Future<void> resume() async {
-    await _platform.play();
+    await _platform.play(id);
     _positionListener!.start();
     _samplesListener!.start();
   }
 
   Future<void> pause() async {
-    await _platform.pause();
+    await _platform.pause(id);
     _positionListener!.pause();
     _samplesListener!.pause();
   }
 
   Future<void> seek(double position) async {
-    await _platform.seek(position);
+    await _platform.seek(position, id);
   }
 
   Future<void> setVolume() async {
-    await _platform.setVolume();
+    await _platform.setVolume(id);
   }
 
   Future<void> setRate(double rate) async {
-    await _platform.setRate(rate);
+    await _platform.setRate(rate, id);
   }
 
   Future<double> getPosition() async {
-    return await _platform.getPosition() ?? 0.0;
+    return await _platform.getPosition(id) ?? 0.0;
   }
 
   Future<List<double>> getSamples() async {
-    return await _platform.getSamples() ?? [];
+    return await _platform.getSamples(id) ?? [];
   }
 
   void dispose() {

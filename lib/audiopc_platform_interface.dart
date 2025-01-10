@@ -27,42 +27,50 @@ abstract class AudiopcPlatformInterface extends PlatformInterface
 
 abstract class AudioMethodChannelInterface {
 
-  Future<void> setVolume() {
+  Future<void> init(String id) {
+    throw UnimplementedError('create() has not been implemented.');
+  }
+
+  Future<void> setVolume(String id) {
     throw UnimplementedError('setVolume() has not been implemented.');
   }
 
-  Future<void> setSource(String path) {
+  Future<void> setSource(String path, String id) {
     throw UnimplementedError(
         'setSource(String path) has not been implemented.');
   }
 
-  Future<void> play() {
+  Future<void> play(String id) {
     throw UnimplementedError('play() has not been implemented.');
   }
 
-  Future<void> pause() {
+  Future<void> pause(String id) {
     throw UnimplementedError('pause() has not been implemented.');
   }
 
-  Future<Float64List?> getSamples() {
+  Future<Float64List?> getSamples(String id) {
     throw UnimplementedError('getVolume() has not been implemented.');
   }
 
-  Future<void> seek(double position) {
+  Future<void> seek(double position, String id) {
     throw UnimplementedError('seek(double position) has not been implemented.');
   }
 
-  Future<double?> getPosition() {
+  Future<double?> getPosition(String id) {
     throw UnimplementedError('getPosition() has not been implemented.');
   }
 
-  Future<void> setRate(double rate) {
+  Future<void> setRate(double rate, String id) {
     throw UnimplementedError('setRate(double rate) has not been implemented.');
+  }
+
+  Future<void> close(String id) {
+    throw UnimplementedError('close() has not been implemented.');
   }
 }
 
 abstract class AudioEventChannelInterface {
-  void listen() {
+  void listen(String id) {
     throw UnimplementedError('listen() has not been implemented.');
   }
 }
