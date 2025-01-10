@@ -5,7 +5,7 @@ namespace audiopc {
 	using std::cout, std::endl, std::hex, std::nothrow, std::make_unique, std::unique_ptr;
 	using std::get, std::string, std::wstring, std::vector, std::thread, std::chrono::milliseconds;
 
-	HRESULT AudioPlayer::CreateInstance(AudioPlayer** ppCB)
+	HRESULT AudioPlayer::CreateInstance(AudioPlayer** ppCB, UINT id, string hashID)
 	{
 		HRESULT hr = S_OK;
 		if (ppCB == NULL)
@@ -15,10 +15,10 @@ namespace audiopc {
 		AudioSamplesGrabber* pGrabber;
 		hr = AudioSamplesGrabber::CreateInstance(&pGrabber);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 
-		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber);
+		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, id, hashID);
 		if (pPlayer == NULL)
 		{
 			return E_OUTOFMEMORY;
@@ -55,31 +55,31 @@ namespace audiopc {
 
 		hr = MFCreateMediaType(&m_pMediaType);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 
 		hr = m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 
 		hr = m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 
 		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 
 		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 8);
 		if (FAILED(hr)) {
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 		}
 
 		hr = CreateMediaSession();
@@ -200,10 +200,7 @@ namespace audiopc {
 		CHECK_FAILED(hr);
 
 		hr = m_pSession->BeginGetEvent((IMFAsyncCallback*)this, NULL);
-		if (FAILED(hr)) {
-			////PRINT_LOG(hr);
-			goto done;
-		}
+		CHECK_FAILED(hr);
 		m_state = Ready;
 	done:
 		return hr;
@@ -244,11 +241,13 @@ namespace audiopc {
 		return hr;
 	}
 
-	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB) : m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL),
+	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, UINT id, string hashID) :
+		m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL),
 		m_pSource(NULL), m_hCloseEvent(NULL), m_state(Closed), m_eType(MEUnknown),
 		m_pSourceUnk(NULL), m_pSession(NULL), m_pStreamDescriptor(NULL), m_poolFlag(true),
-		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE), m_pGrabber(*GCB),
-		m_pOutputNode(NULL), m_pSinkActivate(NULL), m_pPD(NULL), m_pSourceNode(NULL) {
+		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE), 
+		m_pGrabber(*GCB), m_pOutputNode(NULL), m_pSinkActivate(NULL), m_pPD(NULL), 
+		m_pSourceNode(NULL), hashID(hashID), WM_APP_PLAYER_EVENT(WM_APP + id) {
 	}
 
 	AudioPlayer::~AudioPlayer() {
@@ -356,7 +355,7 @@ namespace audiopc {
 
 		if (FAILED(hr)) {
 			hr = MF_E_NO_DURATION;
-			PRINT_LOG(hr);
+			WARNING(message(hr));
 			goto done;
 		}
 
@@ -513,27 +512,27 @@ namespace audiopc {
 			CHECK_FAILED(hr);
 			hr = AddGrabberOutputNode();
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			hr = MFCreateTopologyNode(MF_TOPOLOGY_TEE_NODE, &teeNode);
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			hr = m_pSourceNode->ConnectOutput(0, teeNode, 0);
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			hr = teeNode->ConnectOutput(0, m_pOutputNode, 0);
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			hr = teeNode->ConnectOutput(1, m_pGrabberNode, 0);
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			hr = m_pTopology->AddNode(teeNode);
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			teeNode->AddRef();
 		}
@@ -731,7 +730,7 @@ namespace audiopc {
 		if (m_pSource && m_pPD) {
 			hr = GetDuration();
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 				goto done;
 			}
 
@@ -792,7 +791,7 @@ namespace audiopc {
 			HRESULT hr = S_OK;
 			hr = GetCurrentPosition();
 			if (FAILED(hr)) {
-				PRINT_LOG(hr);
+				WARNING(message(hr));
 			}
 			ref = static_cast<double>(m_cDuration) / MICRO_TO_SECOND;
 		}
@@ -1081,6 +1080,7 @@ namespace audiopc {
 				{
 					goto done;
 				}
+				CHECK_FAILED(hr);
 
 				(void)pClock->GetCorrelatedTime(0, &hnsClockTime, &hnsSystemTime);
 
@@ -1088,10 +1088,7 @@ namespace audiopc {
 
 				// Stop and set the rate
 				hr = Stop();
-				if (FAILED(hr))
-				{
-					goto done;
-				}
+				CHECK_FAILED(hr);
 
 				// Cache Request: Restart from stop.
 				m_request.command = CmdSeek;
@@ -1119,10 +1116,7 @@ namespace audiopc {
 
 				 // Pause and set the rate.
 				hr = Pause();
-				if (FAILED(hr))
-				{
-					goto done;
-				}
+				CHECK_FAILED(hr);
 
 				// Request: Switch back to current state.
 				m_request.command = cmdNow;
@@ -1131,10 +1125,7 @@ namespace audiopc {
 
 		// Set the rate.
 		hr = m_pRate->SetRate(bThin, fRate);
-		if (FAILED(hr))
-		{
-			goto done;
-		}
+		CHECK_FAILED(hr);
 
 		// Adjust our current rate and requested rate.
 		m_request.fRate = m_sState.fRate = fRate;
@@ -1248,10 +1239,7 @@ namespace audiopc {
 			if (m_request.fRate != m_sState.fRate)
 			{
 				hr = CommitRateChange(m_request.fRate, m_request.bThin);
-				if (FAILED(hr))
-				{
-					goto done;
-				}
+				CHECK_FAILED(hr);
 			}
 
 			// Now look for seek requests.

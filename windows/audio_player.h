@@ -7,7 +7,7 @@
 #include <Shlwapi.h>
 #include <chrono>
 #include <iostream>
-
+//#include <flutter/>
 #include <cassert>
 #include <Mferror.h>
 #include "helper.h"
@@ -19,14 +19,14 @@ namespace audiopc {
 	constexpr int CMD_PENDING_RATE = 0x04;
 	constexpr double MICRO_TO_SECOND = 10000000.0;
 
-	constexpr char* DB_RED = "\033[1;31m";
-	constexpr char* DB_GREEN = "\033[1;32m";
-	constexpr char* DB_YELLOW = "\033[1;33m";
-	constexpr char* DB_BLUE = "\033[1;34m";
-	constexpr char* DB_MAGENTA = "\033[1;35m";
-	constexpr char* DB_CYAN = "\033[1;36m";
-	constexpr char* DB_RESET = "\033[0m";
-	constexpr char* DB_BOLD = "\033[1m";
+	inline TCHAR* message(const HRESULT hr) {
+		// FORMAT_MESSAGE_IGNORE_INSERTS
+		// FORMAT_MESSAGE_ALLOCATE_BUFFER
+		TCHAR message[256];
+		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&message, 0, NULL);
+		return message;
+	}
 
 	template <class Q>
 	HRESULT GetEventObject(IMFMediaEvent* pEvent, Q** ppObject)
@@ -74,14 +74,14 @@ namespace audiopc {
 	protected:
 		ULONG m_cRef;
 		AudioSamplesGrabber* m_pGrabber;
-		UINT WM_APP_PLAYER_EVENT;
+		const UINT WM_APP_PLAYER_EVENT;
+		const std::string hashID;
 
-
-		AudioPlayer(AudioSamplesGrabber** grabber);
+		AudioPlayer(AudioSamplesGrabber** grabber, UINT id, std::string hashID);
 		~AudioPlayer();
 
 	public:
-		static HRESULT CreateInstance(AudioPlayer** ppCB);
+		static HRESULT CreateInstance(AudioPlayer** ppCB, UINT id, std::string hashID);
 
 		// IUnknown methods
 		STDMETHODIMP QueryInterface(REFIID riid, void** ppv) {

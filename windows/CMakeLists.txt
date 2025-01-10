@@ -27,6 +27,7 @@ list(APPEND PLUGIN_SOURCES
   "audio_player.h"
   "audio_player.cpp"
   "helper.h"
+  "event_stream_handler.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment
