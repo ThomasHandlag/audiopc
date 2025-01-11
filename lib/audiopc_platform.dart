@@ -6,12 +6,12 @@ import 'audiopc_platform_interface.dart';
 class AudiopcPlatform extends AudiopcPlatformInterface with AudioEventChannel {
   // / The method channel used to interact with the native platform.
   @visibleForTesting
-  final methodChannel = const MethodChannel('audiopc'); 
+  final methodChannel = const MethodChannel('audiopc/methodChannel');
 
   /// Initializes the platform interface and create a new instance of the player.
   @override
   Future<void> init(String id) {
-    return _call('create', {"id": id}, id);
+    return _call('init', {"id": id}, id);
   }
 
   /// Sets the source of the player.
@@ -62,7 +62,8 @@ class AudiopcPlatform extends AudiopcPlatformInterface with AudioEventChannel {
   }
 
   Future<void> _call(String method, Map<String, dynamic> params, String id) {
-    return methodChannel.invokeMethod(method, params..addEntries([MapEntry('id', id)]));
+    return methodChannel.invokeMethod(
+        method, params..addEntries([MapEntry('id', id)]));
   }
 
   Future<T?> _listen<T>(String method, String id) {
@@ -71,35 +72,33 @@ class AudiopcPlatform extends AudiopcPlatformInterface with AudioEventChannel {
 }
 
 mixin AudioEventChannel implements AudioEventChannelInterface {
-
   final eventChannel = const EventChannel('audiopc/eventChannel');
-  static Stream<dynamic> _eventStream = const Stream.empty();
+  static final Map<String, Stream<dynamic>> _eventStream = {};
 
   get eventStream => _eventStream;
 
   @override
   void listen(String id) {
-    _eventStream = eventChannel
-        .receiveBroadcastStream()
-        .map((event) {
-          final eventName = event['event'] as String;
-
-          switch (eventName) {
-            case 'duration':
-              {
-                final duration = event['value'] as double;
-                return duration;
-              }
-            case 'state':
-              {
-                final position = event['value'] as double;
-                return position;
-              }
-            case 'completed':
-              {
-                return true;
-              }
-          }
-        });
+    _eventStream[id] = eventChannel.receiveBroadcastStream().map((event) {
+      if (event['id'] == id) {
+        final eventName = event['event'] as String;
+        switch (eventName) {
+          case 'duration':
+            {
+              final duration = event['value'] as double;
+              return duration;
+            }
+          case 'state':
+            {
+              final position = event['value'] as double;
+              return position;
+            }
+          case 'completed':
+            {
+              return event['value'] == 1;
+            }
+        }
+      }
+    });
   }
 }

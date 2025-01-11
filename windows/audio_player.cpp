@@ -2,10 +2,12 @@
 
 namespace audiopc {
 
-	using std::cout, std::endl, std::hex, std::nothrow, std::make_unique, std::unique_ptr;
+	using std::cout, std::endl, std::nothrow, std::make_unique, std::unique_ptr;
 	using std::get, std::string, std::wstring, std::vector, std::thread, std::chrono::milliseconds;
 
-	HRESULT AudioPlayer::CreateInstance(AudioPlayer** ppCB, UINT id, string hashID)
+	int audiopc::AudioPlayer::m_playerCount = 0;
+
+	HRESULT AudioPlayer::CreateInstance(unique_ptr<AudioPlayer>* ppCB, UINT id, string hashID, unique_ptr<EventStreamHandler>* handler)
 	{
 		HRESULT hr = S_OK;
 		if (ppCB == NULL)
@@ -15,10 +17,10 @@ namespace audiopc {
 		AudioSamplesGrabber* pGrabber;
 		hr = AudioSamplesGrabber::CreateInstance(&pGrabber);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 
-		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, id, hashID);
+		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, id, hashID, handler);
 		if (pPlayer == NULL)
 		{
 			return E_OUTOFMEMORY;
@@ -27,7 +29,7 @@ namespace audiopc {
 		hr = pPlayer->StartPlayer();
 
 		CHECK_FAILED(hr);
-		*ppCB = pPlayer;
+		ppCB->reset(pPlayer);
 		(*ppCB)->AddRef();
 
 	done:
@@ -55,31 +57,31 @@ namespace audiopc {
 
 		hr = MFCreateMediaType(&m_pMediaType);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 
 		hr = m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 
 		hr = m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 
 		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 
 		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 8);
 		if (FAILED(hr)) {
-			WARNING(message(hr));
+			WARNING(hr);
 		}
 
 		hr = CreateMediaSession();
@@ -131,12 +133,14 @@ namespace audiopc {
 		}
 
 		assert(m_pRate || !m_bCanScrub);
-
+		GetDuration();
 		m_state = OpenPending;
+		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 	done:
 		if (FAILED(hr))
 		{
 			m_state = Closed;
+			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 		}
 		SAFE_RELEASE(&pClock);
 		return hr;
@@ -202,6 +206,7 @@ namespace audiopc {
 		hr = m_pSession->BeginGetEvent((IMFAsyncCallback*)this, NULL);
 		CHECK_FAILED(hr);
 		m_state = Ready;
+		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 	done:
 		return hr;
 	}
@@ -211,6 +216,7 @@ namespace audiopc {
 
 		if (m_pSession) {
 			m_state = Closing;
+			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 			hr = m_pSession->Close();
 			if (SUCCEEDED(hr))
 			{
@@ -238,21 +244,23 @@ namespace audiopc {
 		SAFE_RELEASE(&m_pSource);
 		SAFE_RELEASE(&m_pSession);
 		m_state = Closed;
+		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 		return hr;
 	}
 
-	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, UINT id, string hashID) :
-		m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL),
+	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, UINT id, string hashID, unique_ptr<EventStreamHandler>* handler) :
+		m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL), handler(handler->get()),
 		m_pSource(NULL), m_hCloseEvent(NULL), m_state(Closed), m_eType(MEUnknown),
 		m_pSourceUnk(NULL), m_pSession(NULL), m_pStreamDescriptor(NULL), m_poolFlag(true),
-		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE), 
-		m_pGrabber(*GCB), m_pOutputNode(NULL), m_pSinkActivate(NULL), m_pPD(NULL), 
+		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE),
+		m_pGrabber(*GCB), m_pOutputNode(NULL), m_pSinkActivate(NULL), m_pPD(NULL),
 		m_pSourceNode(NULL), hashID(hashID), WM_APP_PLAYER_EVENT(WM_APP + id) {
+		m_playerCount++;
 	}
 
 	AudioPlayer::~AudioPlayer() {
 		assert(m_pSession == 0);
-
+		m_playerCount--;
 		Shutdown();
 	}
 
@@ -268,6 +276,7 @@ namespace audiopc {
 		hr = m_pSession->Start(&GUID_NULL, &varStart);
 		if (SUCCEEDED(hr)) {
 			m_state = Started;
+			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 		}
 
 		m_sState.command = CmdStart;
@@ -314,6 +323,7 @@ namespace audiopc {
 		if (SUCCEEDED(hr))
 		{
 			m_state = Paused;
+			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 		}
 		if (m_bPending) {
 			m_request.command = CmdPause;
@@ -340,6 +350,7 @@ namespace audiopc {
 		if (SUCCEEDED(hr))
 		{
 			m_state = Stopped;
+			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 		}
 		if (m_bPending) {
 			m_request.command = CmdStop;
@@ -355,11 +366,12 @@ namespace audiopc {
 
 		if (FAILED(hr)) {
 			hr = MF_E_NO_DURATION;
-			WARNING(message(hr));
+			WARNING(hr);
 			goto done;
 		}
 
 		m_duration = duration;
+		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_duration)} });
 
 	done:
 		return hr;
@@ -504,7 +516,6 @@ namespace audiopc {
 			// Create the media sink activation object.
 			hr = CreateMediaSinkActivate();
 			CHECK_FAILED(hr);
-
 			// Add a source node for this stream.
 			hr = AddSourceNode();
 			CHECK_FAILED(hr);
@@ -512,38 +523,38 @@ namespace audiopc {
 			CHECK_FAILED(hr);
 			hr = AddGrabberOutputNode();
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			hr = MFCreateTopologyNode(MF_TOPOLOGY_TEE_NODE, &teeNode);
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			hr = m_pSourceNode->ConnectOutput(0, teeNode, 0);
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			hr = teeNode->ConnectOutput(0, m_pOutputNode, 0);
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			hr = teeNode->ConnectOutput(1, m_pGrabberNode, 0);
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			hr = m_pTopology->AddNode(teeNode);
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			teeNode->AddRef();
 		}
 	done:
 		SAFE_RELEASE(&m_pStreamDescriptor);
-		/*SAFE_RELEASE(&m_pSinkActivate);
+		SAFE_RELEASE(&m_pSinkActivate);
 		SAFE_RELEASE(&m_pSinkActivateGrabber);
 		SAFE_RELEASE(&m_pOutputNode);
 		SAFE_RELEASE(&m_pGrabberNode);
-		SAFE_RELEASE(&m_pSourceNode);*/
-		//SAFE_RELEASE(&teeNode);
+		SAFE_RELEASE(&m_pSourceNode);
+		SAFE_RELEASE(&teeNode);
 		return hr;
 	}
 
@@ -599,7 +610,6 @@ namespace audiopc {
 		CHECK_FAILED(hr);
 		if (status == MF_TOPOSTATUS_READY)
 		{
-
 			hr = StartPlayback();
 			CHECK_FAILED(hr);
 		}
@@ -612,6 +622,8 @@ namespace audiopc {
 	HRESULT AudioPlayer::OnPresentationEnded() {
 		// The session puts itself into the stopped state automatically.
 		m_state = Stopped;
+		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)}});
+		handler->emitEvent({ {"id", hashID}, {"event", "completed"}, {"value", std::to_string(1)}});
 		return S_OK;
 	}
 
@@ -635,6 +647,7 @@ namespace audiopc {
 		CHECK_FAILED(hr);
 
 		m_state = OpenPending;
+		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
 
 	done:
 		SAFE_RELEASE(&m_pPD);
@@ -730,7 +743,7 @@ namespace audiopc {
 		if (m_pSource && m_pPD) {
 			hr = GetDuration();
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 				goto done;
 			}
 
@@ -791,7 +804,7 @@ namespace audiopc {
 			HRESULT hr = S_OK;
 			hr = GetCurrentPosition();
 			if (FAILED(hr)) {
-				WARNING(message(hr));
+				WARNING(hr);
 			}
 			ref = static_cast<double>(m_cDuration) / MICRO_TO_SECOND;
 		}
@@ -818,7 +831,7 @@ namespace audiopc {
 		return hr;
 	}
 
-	HRESULT AudioPlayer::CanScrub(BOOL* pbCanScrub)
+	HRESULT AudioPlayer::CanScrub(BOOL* pbCanScrub) const
 	{
 		if (pbCanScrub == NULL)
 		{

@@ -7,13 +7,17 @@
 namespace audiopc {
 	using flutter::EncodableValue, flutter::StreamHandler, std::unique_ptr, flutter::StreamHandlerError, std::map;
 	using flutter::EventSink, std::string;
-	class EventStreamHandler : StreamHandler<EncodableValue> {
+	class EventStreamHandler : public StreamHandler<EncodableValue> {
 	public:
 		EventStreamHandler() : _sink(nullptr){}
 
-		void emitEvent(const map<string, EncodableValue> value) const {
+		void emitEvent(const map<string, string> value) const {
 			if (_sink) {
-				_sink->Success(EncodableValue(value));
+				flutter::EncodableMap map;
+				for (const auto& pair : value) {
+					map[flutter::EncodableValue(pair.first)] = flutter::EncodableValue(pair.second);
+				}
+				_sink->Success(EncodableValue(map));
 			}
 		}
 
@@ -35,6 +39,5 @@ namespace audiopc {
 		}
 
 		unique_ptr<EventSink<EncodableValue>> _sink;
-
 	};
 };

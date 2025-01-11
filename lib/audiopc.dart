@@ -17,7 +17,7 @@ class Audiopc {
   Stream<List<double>> get onSamples =>
       _samplesListener!.streamControler.stream;
 
-  StreamSubscription<PlayerEvent>? _eventSubscription;
+  StreamSubscription<dynamic>? _eventSubscription;
 
   final _eventStreamController = StreamController<PlayerEvent>.broadcast();
 
@@ -46,11 +46,12 @@ class Audiopc {
       .map((event) => event.value as bool);
 
   Audiopc({required this.id}) {
-    _eventSubscription = _platform.eventStream.listen((event) {
+    _platform.listen(id);
+
+    _eventSubscription = _platform.eventStream[id].listen((event) {
       _eventStreamController.add(event);
     });
     _platform.init(id);
-    _platform.listen(id);
 
     _positionListener = PositionListener(
       getPosition: getPosition,

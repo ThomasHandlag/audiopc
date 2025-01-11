@@ -86,7 +86,7 @@ final class SamplesListener extends PlayerListener
 
   @override
   void start() {
-    // do nothing
+    isRunnin = true;
   }
 
   @override

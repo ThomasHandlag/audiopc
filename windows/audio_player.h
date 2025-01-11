@@ -7,10 +7,10 @@
 #include <Shlwapi.h>
 #include <chrono>
 #include <iostream>
-//#include <flutter/>
 #include <cassert>
 #include <Mferror.h>
 #include "helper.h"
+#include "event_stream_handler.h"
 
 namespace audiopc {
 
@@ -18,15 +18,6 @@ namespace audiopc {
 	constexpr int CMD_PENDING_SEEK = 0x02;
 	constexpr int CMD_PENDING_RATE = 0x04;
 	constexpr double MICRO_TO_SECOND = 10000000.0;
-
-	inline TCHAR* message(const HRESULT hr) {
-		// FORMAT_MESSAGE_IGNORE_INSERTS
-		// FORMAT_MESSAGE_ALLOCATE_BUFFER
-		TCHAR message[256];
-		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-			NULL, hr, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&message, 0, NULL);
-		return message;
-	}
 
 	template <class Q>
 	HRESULT GetEventObject(IMFMediaEvent* pEvent, Q** ppObject)
@@ -76,13 +67,13 @@ namespace audiopc {
 		AudioSamplesGrabber* m_pGrabber;
 		const UINT WM_APP_PLAYER_EVENT;
 		const std::string hashID;
-
-		AudioPlayer(AudioSamplesGrabber** grabber, UINT id, std::string hashID);
-		~AudioPlayer();
+		const unique_ptr<EventStreamHandler> handler;
 
 	public:
-		static HRESULT CreateInstance(AudioPlayer** ppCB, UINT id, std::string hashID);
-
+		static HRESULT CreateInstance(std::unique_ptr<AudioPlayer>* ppCB, UINT id, std::string hashID, std::unique_ptr<EventStreamHandler> *handler);
+		static int m_playerCount;
+		AudioPlayer(AudioSamplesGrabber** grabber, UINT id, std::string hashID, std::unique_ptr<EventStreamHandler>* handler);
+		~AudioPlayer();
 		// IUnknown methods
 		STDMETHODIMP QueryInterface(REFIID riid, void** ppv) {
 			static const QITAB qit[] =
@@ -131,7 +122,7 @@ namespace audiopc {
 		HRESULT GetCDurationSecond(double& duration);
 		HRESULT SetPosition(MFTIME hnsPosition);
 
-		HRESULT CanScrub(BOOL* pbCanScrub);
+		HRESULT CanScrub(BOOL* pbCanScrub) const;
 		HRESULT Scrub(BOOL bScrub);
 
 		HRESULT CanFastForward(BOOL* pbCanFF);

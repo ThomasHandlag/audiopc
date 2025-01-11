@@ -20,7 +20,7 @@ enum DEBUG_LEVEL {
 };
 
 #define INFO(hr) cout << "INFO: " << __FILE__ << ":" << static_cast<double>(__LINE__) << " => " << hr << endl;
-#define ERROR(hr) cout << DB_RED << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " => " << hex << hr << endl << DB_RESET;
+#define PERROR(hr) cout << DB_RED << "Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " => " << hex << hr << endl << DB_RESET;
 #define WARNING(hr) cout << DB_YELLOW << "Waring at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " => " << hex << hr << endl;
 #define FATAL(hr) cout << DB_BOLD << DB_RED << "Fatal Error at " << __FILE__ << ":" << static_cast<double>(__LINE__) << " => " << hex << hr << endl;
 
