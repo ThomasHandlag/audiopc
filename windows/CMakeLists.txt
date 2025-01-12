@@ -20,6 +20,14 @@ set(PLUGIN_NAME "audiopc_plugin")
 list(APPEND PLUGIN_SOURCES
   "audiopc_plugin.cpp"
   "audiopc_plugin.h"
+  "audio_samples_grabber.cpp"
+  "audio_samples_grabber.h"
+  "circular_buffer.cpp"
+  "circular_buffer.h"
+  "audio_player.h"
+  "audio_player.cpp"
+  "helper.h"
+  "event_stream_handler.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment

@@ -2,6 +2,8 @@ import 'package:audiopc_example/visualizer.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:audiopc/audiopc.dart';
+import 'package:audiopc/audiopc_state.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -15,13 +17,13 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
-  final _audiopcPlugin = Audiopc();
+  final _audiopcPlugin = Audiopc(id: "0");
 
   double _duration = 0.0;
   double _cDuration = 0.0;
 
   final Map<String, String> songs = {
-    "nodoubt": "D:/Downloads/nodoubt.mp3",
+    "holdon": "D:/Downloads/holdon.mp3",
     "thehype": "D:/Downloads/thehype.mp3",
     "underrated": "D:/Downloads/underrated.mp3",
     "mine": "D:/Downloads/mine.mp3",
@@ -62,19 +64,19 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     });
 
     _controller.forward();
-    _audiopcPlugin.onDurationChanged = (duration) {
+    _audiopcPlugin.onDurationChanged.listen((event) {
       setState(() {
-        _duration = duration;
+        _duration = event;
       });
-    };
+    });
 
-    _audiopcPlugin.onPositionChanged = (position) {
+    _audiopcPlugin.onPositionChanged.listen((position) {
       setState(() {
         _cDuration = position;
       });
-    };
+    });
 
-    _audiopcPlugin.onStateChanged = (state) {
+    _audiopcPlugin.onStateChanged.listen((state) {
       if (state == AudiopcState.playing) {
         setState(() {
           isPlaying = true;
@@ -84,19 +86,19 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           isPlaying = false;
         });
       }
-    };
+    });
 
-    _audiopcPlugin.onSamplesChanged = (samples) {
+    _audiopcPlugin.onSamples.listen((samples) {
       setState(() {
         data = samples;
       });
-    };
+    });
 
-    _audiopcPlugin.onPlayerCompleted = (completed) {
+    _audiopcPlugin.onCompleted.listen((completed) {
       if (completed) {
         debugPrint("completed");
       }
-    };
+    });
   }
 
   double rate = 1.0;
@@ -106,88 +108,86 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData.dark(
-        useMaterial3: true
-      ),
+        theme: ThemeData.dark(useMaterial3: true),
         home: Scaffold(
           appBar: AppBar(
             title: const Text("Audiopc example"),
           ),
-      body: Row(
-        children: [
-          MediaQuery.of(context).size.width < 569
-              ? ElevatedButton(
-                  onPressed: () {
-                    const XTypeGroup typeGroup = XTypeGroup(
-                      label: 'audio',
-                      extensions: <String>['mp3', 'wav', 'flac'],
-                    );
-                    openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]).then((file) {
-                      if (file != null) {
-                        _audiopcPlugin.setSource(file.path);
-                        _audiopcPlugin.play();
-                      }
-                    });
-                  },
-                  child: const Text("Choose file"))
-              : SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.2,
-                  child: ListView.builder(
-                      itemCount: songs.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(songs.keys.elementAt(index)),
-                          onTap: () {
-                            _audiopcPlugin
-                                .setSource(songs.values.elementAt(index));
-                            _audiopcPlugin.play();
-                          },
+          body: Row(
+            children: [
+              MediaQuery.of(context).size.width < 569
+                  ? ElevatedButton(
+                      onPressed: () {
+                        const XTypeGroup typeGroup = XTypeGroup(
+                          label: 'audio',
+                          extensions: <String>['mp3', 'wav', 'flac'],
                         );
-                      })),
-          SingleChildScrollView(
-            child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.7,
-                child: Column(
-                  children: [
-                    ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            rate += 0.1;
-                          });
-                          _audiopcPlugin.setRate(rate);
-                        },
-                        child: Text("Rate: $rate")),
-                    IconButton(
-                        onPressed: () {
-                          if (isPlaying) {
-                            _audiopcPlugin.pause();
-                          } else {
-                            _audiopcPlugin.play();
+                        openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup])
+                            .then((file) {
+                          if (file != null) {
+                            _audiopcPlugin.play(file.path);
                           }
-                        },
-                        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow)),
-                    Slider(
-                      value: _cDuration,
-                      onChanged: (value) {
-                        _audiopcPlugin.seek(value);
+                        });
                       },
-                      max: _duration + 1,
-                    ),
-                    Text("$_duration"),
-                    CustomPaint(
-                      painter: VisualzerPainter(
-                          clipper: const VisualizerClipper(),
-                          deltaTime: _controller.value,
-                          data: data,
-                          isPlaying: isPlaying),
-                      size: Size(MediaQuery.of(context).size.width * 0.8, 200),
-                    )
-                  ],
-                )),
+                      child: const Text("Choose file"))
+                  : SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.2,
+                      child: ListView.builder(
+                          itemCount: songs.length,
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              title: Text(songs.keys.elementAt(index)),
+                              onTap: () {
+                                _audiopcPlugin.play(songs.values.elementAt(index));
+                              },
+                            );
+                          })),
+              SingleChildScrollView(
+                child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.7,
+                    child: Column(
+                      children: [
+                        ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                rate += 0.1;
+                              });
+                              _audiopcPlugin.setRate(rate);
+                            },
+                            child: Text("Rate: $rate")),
+                        IconButton(
+                            onPressed: () {
+                              if (isPlaying) {
+                                _audiopcPlugin.pause();
+                              } else {
+                                _audiopcPlugin.resume();
+                              }
+                            },
+                            icon: Icon(
+                                isPlaying ? Icons.pause : Icons.play_arrow)),
+                        Slider(
+                          value: _cDuration,
+                          onChanged: (value) {
+                            _audiopcPlugin.seek(value);
+                          },
+                          max: _duration + 1,
+                        ),
+                        Text("$_duration"),
+                        CustomPaint(
+                          painter: VisualzerPainter(
+                              clipper: const VisualizerClipper(),
+                              deltaTime: _controller.value,
+                              data: data,
+                              isPlaying: isPlaying),
+                          size: Size(
+                              MediaQuery.of(context).size.width * 0.8, 200),
+                        )
+                      ],
+                    )),
+              ),
+            ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 }
 

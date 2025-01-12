@@ -1,12 +1,10 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:audiopc/audiopc_method_channel.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  MethodChannelAudiopc platform = MethodChannelAudiopc();
-  const MethodChannel channel = MethodChannel('audiopc');
+  const MethodChannel channel = MethodChannel('audiopc/methodChannel');
 
   setUp(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
@@ -21,7 +19,7 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
   });
 
-  test('getPlatformVersion', () async {
+  test('get', () async {
     
   });
 }
