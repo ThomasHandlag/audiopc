@@ -5,35 +5,29 @@
 
 // For getPlatformVersion; remove unless needed for your plugin implementation.
 #include <VersionHelpers.h>
-
 #include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 #include <flutter/event_channel.h>
-
 #include <iostream>
 #include <string>
 #include <thread>
-
 #include <cassert>
 #include <Mferror.h>
-
 #include "event_stream_handler.h"
-
 #pragma comment(lib, "mfplat")
 #pragma comment(lib, "mf")
 #pragma comment(lib, "mfreadwrite")
 #pragma comment(lib, "mfuuid")
 #pragma comment(lib, "Shlwapi")
 
-
-
 namespace audiopc {
 	using std::cout, std::endl, std::hex, std::make_unique, std::unique_ptr;
 	using std::get, std::string, std::wstring, std::vector, std::move;
 
 	HWND audiopc::AudiopcPlugin::hwnd = nullptr;
-	std::unique_ptr<EventStreamHandler> AudiopcPlugin::eventHandler = nullptr;
+	shared_ptr<EventSink<EncodableValue>> audiopc::EventStreamHandler::_sink = nullptr;
+
 
 	// static
 	void AudiopcPlugin::RegisterWithRegistrar(
@@ -49,15 +43,14 @@ namespace audiopc {
 				plugin_pointer->HandleMethodCall(call, move(result));
 			});
 		registrar->AddPlugin(move(plugin));
+		AudiopcPlugin::hwnd = registrar->GetView()->GetNativeWindow();
 
 		auto eventChannel = make_unique<flutter::EventChannel<flutter::EncodableValue>>(
 			registrar->messenger(), "audiopc/eventChannel",
 			&flutter::StandardMethodCodec::GetInstance());
 
-		eventHandler = make_unique<EventStreamHandler>();
+		auto eventHandler = make_unique<EventStreamHandler>();
 		eventChannel->SetStreamHandler(move(eventHandler));
-
-		AudiopcPlugin::hwnd = registrar->GetView()->GetNativeWindow();
 	}
 
 	void AudiopcPlugin::HandleMethodCall(
@@ -69,11 +62,13 @@ namespace audiopc {
 			result->Error("Error", "ID is required, found 0");
 		}
 		string id = get<string>(value->second);
+		
 		if (method_call.method_name().compare("init") == 0) {
 			HRESULT hr = S_OK;
 			unique_ptr<AudioPlayer> player;
-			hr = AudioPlayer::CreateInstance(&player, AudioPlayer::m_playerCount, id, &eventHandler);
+			hr = AudioPlayer::CreateInstance(&player, AudioPlayer::m_playerCount, id, &audiopc::EventStreamHandler::_sink);
 			if (SUCCEEDED(hr)) {
+				player->SetHWND(audiopc::AudiopcPlugin::hwnd);
 				players.insert({id, std::move(player)});
 				result->Success();
 			}
@@ -160,7 +155,7 @@ namespace audiopc {
 					result->Error("Error", "Player is not initialized");
 				}
 			}
-			else if (method_call.method_name().compare("getPostion") == 0) {
+			else if (method_call.method_name().compare("getPosition") == 0) {
 				if (player) {
 					double position = 0;
 					HRESULT hr = player->GetCDurationSecond(position);

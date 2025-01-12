@@ -4,6 +4,7 @@ import 'package:audiopc/audiopc_platform.dart';
 import 'package:audiopc/audiopc_state.dart';
 import 'package:audiopc/audopc_helper.dart';
 import 'package:audiopc/player_event.dart';
+import 'package:flutter/foundation.dart';
 
 class Audiopc {
   final _platform = AudiopcPlatform();
@@ -50,6 +51,7 @@ class Audiopc {
 
     _eventSubscription = _platform.eventStream[id].listen((event) {
       _eventStreamController.add(event);
+      debugPrint('event: $event');
     });
     _platform.init(id);
 

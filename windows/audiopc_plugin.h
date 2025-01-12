@@ -18,19 +18,16 @@
 #include "audio_samples_grabber.h"
 #include "audio_player.h"
 #include <map>
-
+#include <flutter/event_channel.h>
 namespace audiopc {
 
-	using std::map;
+	using std::map, flutter::EventSink, flutter::EncodableValue;
 
 	constexpr int MAX_PLAYERS = 128;
 
 	class AudiopcPlugin : public flutter::Plugin {
 	public:
 		map<std::string, std::unique_ptr<AudioPlayer>> players;
-
-		static std::unique_ptr<EventStreamHandler> eventHandler;
-
 		static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 		static HWND hwnd;
 

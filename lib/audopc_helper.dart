@@ -35,6 +35,7 @@ final class PositionListener extends PlayerListener
   @override
   void start() {
     isRunnin = true;
+    callback(null);
   }
 
   @override
@@ -87,6 +88,7 @@ final class SamplesListener extends PlayerListener
   @override
   void start() {
     isRunnin = true;
+    callback(null);
   }
 
   @override

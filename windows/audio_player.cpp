@@ -4,10 +4,11 @@ namespace audiopc {
 
 	using std::cout, std::endl, std::nothrow, std::make_unique, std::unique_ptr;
 	using std::get, std::string, std::wstring, std::vector, std::thread, std::chrono::milliseconds;
+	using flutter::EncodableValue, flutter::EventSink;
 
 	int audiopc::AudioPlayer::m_playerCount = 0;
 
-	HRESULT AudioPlayer::CreateInstance(unique_ptr<AudioPlayer>* ppCB, UINT id, string hashID, unique_ptr<EventStreamHandler>* handler)
+	HRESULT AudioPlayer::CreateInstance(unique_ptr<AudioPlayer>* ppCB, UINT id, string hashID, shared_ptr<EventSink<EncodableValue>>* handler)
 	{
 		HRESULT hr = S_OK;
 		if (ppCB == NULL)
@@ -19,7 +20,9 @@ namespace audiopc {
 		if (FAILED(hr)) {
 			WARNING(hr);
 		}
-
+		if (!handler) {
+			INFO("given sink is null");
+		}
 		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, id, hashID, handler);
 		if (pPlayer == NULL)
 		{
@@ -74,7 +77,7 @@ namespace audiopc {
 			WARNING(hr);
 		}
 
-		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
+		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44800);
 		if (FAILED(hr)) {
 			WARNING(hr);
 		}
@@ -133,14 +136,16 @@ namespace audiopc {
 		}
 
 		assert(m_pRate || !m_bCanScrub);
-		GetDuration();
 		m_state = OpenPending;
-		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
+		double duration = 0;
+		GetSecondDuration(duration);
+		emitEvent({ {"id", hashID}, {"event", "duration"}, {"value", duration} });
 	done:
 		if (FAILED(hr))
 		{
 			m_state = Closed;
-			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 		}
 		SAFE_RELEASE(&pClock);
 		return hr;
@@ -206,7 +211,7 @@ namespace audiopc {
 		hr = m_pSession->BeginGetEvent((IMFAsyncCallback*)this, NULL);
 		CHECK_FAILED(hr);
 		m_state = Ready;
-		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 	done:
 		return hr;
 	}
@@ -216,7 +221,7 @@ namespace audiopc {
 
 		if (m_pSession) {
 			m_state = Closing;
-			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 			hr = m_pSession->Close();
 			if (SUCCEEDED(hr))
 			{
@@ -244,12 +249,12 @@ namespace audiopc {
 		SAFE_RELEASE(&m_pSource);
 		SAFE_RELEASE(&m_pSession);
 		m_state = Closed;
-		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+		emitEvent({ {"id", hashID}, {"event", "state"}, {"value",m_state} });
 		return hr;
 	}
 
-	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, UINT id, string hashID, unique_ptr<EventStreamHandler>* handler) :
-		m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL), handler(handler->get()),
+	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, UINT id, string hashID, shared_ptr<EventSink<EncodableValue>>* handler) :
+		m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL), handler(*handler),
 		m_pSource(NULL), m_hCloseEvent(NULL), m_state(Closed), m_eType(MEUnknown),
 		m_pSourceUnk(NULL), m_pSession(NULL), m_pStreamDescriptor(NULL), m_poolFlag(true),
 		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE),
@@ -259,6 +264,7 @@ namespace audiopc {
 	}
 
 	AudioPlayer::~AudioPlayer() {
+		CloseSession();
 		assert(m_pSession == 0);
 		m_playerCount--;
 		Shutdown();
@@ -269,14 +275,13 @@ namespace audiopc {
 		assert(m_pSession != NULL);
 		HRESULT hr = S_OK;
 
-
 		PROPVARIANT varStart;
 		PropVariantInit(&varStart);
 
 		hr = m_pSession->Start(&GUID_NULL, &varStart);
 		if (SUCCEEDED(hr)) {
 			m_state = Started;
-			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 		}
 
 		m_sState.command = CmdStart;
@@ -323,7 +328,7 @@ namespace audiopc {
 		if (SUCCEEDED(hr))
 		{
 			m_state = Paused;
-			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 		}
 		if (m_bPending) {
 			m_request.command = CmdPause;
@@ -350,7 +355,7 @@ namespace audiopc {
 		if (SUCCEEDED(hr))
 		{
 			m_state = Stopped;
-			handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+			emitEvent({ {"id", hashID}, {"event", "state"}, {"value",m_state} });
 		}
 		if (m_bPending) {
 			m_request.command = CmdStop;
@@ -371,8 +376,6 @@ namespace audiopc {
 		}
 
 		m_duration = duration;
-		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_duration)} });
-
 	done:
 		return hr;
 	}
@@ -622,8 +625,8 @@ namespace audiopc {
 	HRESULT AudioPlayer::OnPresentationEnded() {
 		// The session puts itself into the stopped state automatically.
 		m_state = Stopped;
-		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)}});
-		handler->emitEvent({ {"id", hashID}, {"event", "completed"}, {"value", std::to_string(1)}});
+		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)}});
+		emitEvent({ {"id", hashID}, {"event", "completed"}, {"value", 1.0}});
 		return S_OK;
 	}
 
@@ -647,7 +650,7 @@ namespace audiopc {
 		CHECK_FAILED(hr);
 
 		m_state = OpenPending;
-		handler->emitEvent({ {"id", hashID}, {"event", "state"}, {"value", std::to_string(m_state)} });
+		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 
 	done:
 		SAFE_RELEASE(&m_pPD);
@@ -746,9 +749,9 @@ namespace audiopc {
 				WARNING(hr);
 				goto done;
 			}
-
-			ref = static_cast<double>(m_duration) / MICRO_TO_SECOND;
-
+			if (m_duration > 0) {
+				ref = static_cast<double>(m_duration) / MICRO_TO_SECOND;
+			}
 		}
 	done:
 		return hr;
@@ -1294,6 +1297,20 @@ namespace audiopc {
 
 	void AudioPlayer::GetSamples(vector<double>& out) const {
 		m_pGrabber->samplesBuffer.Read(out);
+	}
+	
+	void AudioPlayer::emitEvent(const std::map<std::string, EncodableValue> value) const {
+		if (handler) {
+			flutter::EncodableMap map;
+			for (auto& [key, data] : value) {
+				map[EncodableValue(key)] = data;
+			}
+			cout << "Emitting event" << map.size() << endl;
+			handler->Success(EncodableValue(map));
+		}
+		else {
+			INFO("Handler is null");
+		}
 	}
 
 }

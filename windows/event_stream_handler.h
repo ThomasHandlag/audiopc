@@ -3,41 +3,40 @@
 #include <flutter/event_channel.h>
 #include <map>
 #include <iostream>
+#include <any>
 
 namespace audiopc {
 	using flutter::EncodableValue, flutter::StreamHandler, std::unique_ptr, flutter::StreamHandlerError, std::map;
-	using flutter::EventSink, std::string;
+	using flutter::EventSink, std::string, std::shared_ptr, std::any;
+
 	class EventStreamHandler : public StreamHandler<EncodableValue> {
 	public:
-		EventStreamHandler() : _sink(nullptr){}
-
-		void emitEvent(const map<string, string> value) const {
-			if (_sink) {
-				flutter::EncodableMap map;
-				for (const auto& pair : value) {
-					map[flutter::EncodableValue(pair.first)] = flutter::EncodableValue(pair.second);
-				}
-				_sink->Success(EncodableValue(map));
-			}
+		EventStreamHandler() {}
+		static shared_ptr<EventSink<EncodableValue>> _sink;
+		static void setSink(unique_ptr<flutter::EventSink<EncodableValue>>&& sink) {
+			_sink = move(sink);
 		}
 
+		static void destroySink() {
+			_sink = nullptr;
+		}
 	protected:
 		unique_ptr<StreamHandlerError<EncodableValue>> 
 			OnListenInternal(
 				const EncodableValue* arguments, std::unique_ptr<flutter::EventSink<EncodableValue>>&& events
 			) override
 		{
-			_sink = std::move(events);
-
+			setSink(move(events));
+			if (!_sink) {
+				WARNING("Sink is null");
+			}
 			return nullptr;
 		}
 
 		std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnCancelInternal(
 			const flutter::EncodableValue* arguments) override {
-			_sink = nullptr;
+			destroySink();
 			return nullptr;
 		}
-
-		unique_ptr<EventSink<EncodableValue>> _sink;
 	};
 };

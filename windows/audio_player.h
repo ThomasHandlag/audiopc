@@ -11,6 +11,8 @@
 #include <Mferror.h>
 #include "helper.h"
 #include "event_stream_handler.h"
+#include <flutter/encodable_value.h>
+#include <flutter/event_channel.h>
 
 namespace audiopc {
 
@@ -60,6 +62,8 @@ namespace audiopc {
 		Closing
 	};
 
+	using flutter::EventSink, std::shared_ptr;
+
 	class AudioPlayer : public IMFAsyncCallback
 	{
 	protected:
@@ -67,12 +71,17 @@ namespace audiopc {
 		AudioSamplesGrabber* m_pGrabber;
 		const UINT WM_APP_PLAYER_EVENT;
 		const std::string hashID;
-		const unique_ptr<EventStreamHandler> handler;
+		shared_ptr<EventSink<flutter::EncodableValue>> handler;
 
 	public:
-		static HRESULT CreateInstance(std::unique_ptr<AudioPlayer>* ppCB, UINT id, std::string hashID, std::unique_ptr<EventStreamHandler> *handler);
+		static HRESULT CreateInstance(std::unique_ptr<AudioPlayer>* ppCB, UINT id, 
+			std::string hashID, std::shared_ptr<EventSink<flutter::EncodableValue>>* handler
+		);
 		static int m_playerCount;
-		AudioPlayer(AudioSamplesGrabber** grabber, UINT id, std::string hashID, std::unique_ptr<EventStreamHandler>* handler);
+		AudioPlayer(
+			AudioSamplesGrabber** grabber, UINT id, std::string hashID, 
+			std::shared_ptr<EventSink<flutter::EncodableValue>>* handler
+		);
 		~AudioPlayer();
 		// IUnknown methods
 		STDMETHODIMP QueryInterface(REFIID riid, void** ppv) {
@@ -150,7 +159,7 @@ namespace audiopc {
 		HRESULT Shutdown();
 		HRESULT EventHandle();
 		HRESULT AddGrabberOutputNode();
-
+		void emitEvent(const std::map<std::string, flutter::EncodableValue> value) const;
 		HRESULT GetDuration();
 
 		PlaybackState m_state;

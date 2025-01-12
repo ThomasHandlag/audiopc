@@ -23,7 +23,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   double _cDuration = 0.0;
 
   final Map<String, String> songs = {
-    "nodoubt": "D:/Downloads/nodoubt.mp3",
+    "holdon": "D:/Downloads/holdon.mp3",
     "thehype": "D:/Downloads/thehype.mp3",
     "underrated": "D:/Downloads/underrated.mp3",
     "mine": "D:/Downloads/mine.mp3",

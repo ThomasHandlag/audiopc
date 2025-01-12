@@ -1,3 +1,4 @@
+import 'package:audiopc/player_event.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'audiopc_platform_interface.dart';
@@ -79,6 +80,7 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
 
   @override
   void listen(String id) {
+    
     _eventStream[id] = eventChannel.receiveBroadcastStream().map((event) {
       if (event['id'] == id) {
         final eventName = event['event'] as String;
@@ -86,16 +88,16 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
           case 'duration':
             {
               final duration = event['value'] as double;
-              return duration;
+              return DurationEvent(value: duration);
             }
           case 'state':
             {
-              final position = event['value'] as double;
-              return position;
+              final state = event['value'] as int;
+              return StateEvent(value: state.toDouble());
             }
           case 'completed':
             {
-              return event['value'] == 1;
+              return CompletedEvent(value: event['value'] == 1);
             }
         }
       }

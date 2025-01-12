@@ -27,7 +27,7 @@ class VisualzerPainter extends CustomPainter {
       ..color = const Color.fromARGB(220, 50, 234, 255)
       ..style = PaintingStyle.fill;
 
-    const chunkSize = 44100;
+    const chunkSize = 1024;
     final stft = STFT(chunkSize, Window.hanning(chunkSize));
     final spectrogram = <Float64List>[];
     stft.run(data, (Float64x2List freq) {
@@ -52,8 +52,8 @@ class VisualzerPainter extends CustomPainter {
     double spacing = barWidth / 2; // Spacing between bars
 
     for (int i = 0; i < barCount; i++) {
-      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max) * 40;
-      double barHeight = value * deltaTime;
+      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max) * 10;
+      double barHeight = value * deltaTime / 5;
       if (barHeight > size.height) {
         barHeight = size.height;
       }
@@ -77,7 +77,7 @@ class VisualzerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(VisualzerPainter oldDelegate) =>
-      isPlaying && data != oldDelegate.data;
+      isPlaying;
 }
 
 class VisualizerClipper extends CustomClipper<Path> {
