@@ -17,12 +17,7 @@ namespace audiopc {
 		}
 		AudioSamplesGrabber* pGrabber;
 		hr = AudioSamplesGrabber::CreateInstance(&pGrabber);
-		if (FAILED(hr)) {
-			WARNING(hr);
-		}
-		if (!handler) {
-			INFO("given sink is null");
-		}
+		
 		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, id, hashID, handler);
 		if (pPlayer == NULL)
 		{
@@ -58,38 +53,26 @@ namespace audiopc {
 		HRESULT hr = S_OK;
 		HRESULT hr_Tmp = S_OK;
 
+		if (m_path && path == m_path) {
+			return S_OK;
+		}
+
 		hr = MFCreateMediaType(&m_pMediaType);
 		if (FAILED(hr)) {
-			WARNING(hr);
+			emitError(WARNING, "Error create media type");
 		}
 
-		hr = m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
-		if (FAILED(hr)) {
-			WARNING(hr);
-		}
-
-		hr = m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
-		if (FAILED(hr)) {
-			WARNING(hr);
-		}
-		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
-		if (FAILED(hr)) {
-			WARNING(hr);
-		}
-
-		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44800);
-		if (FAILED(hr)) {
-			WARNING(hr);
-		}
-
-		hr = m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 8);
-		if (FAILED(hr)) {
-			WARNING(hr);
-		}
+		m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+		m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+		m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
+		m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44800);
+		m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 8);
 
 		hr = CreateMediaSession();
-
-		CHECK_FAILED(hr);
+		if (FAILED(hr)) {
+			emitError(FATAL, "Error create media session");
+			goto done;
+		}
 		hr = MFCreateSourceResolver(&m_pSourceResolver);
 		CHECK_FAILED(hr);
 
@@ -100,6 +83,10 @@ namespace audiopc {
 			&ObjectType,
 			&m_pSourceUnk
 		);
+
+		if (FAILED(hr)) {
+			emitEvent({ {"id", hashID}, {"event", "error"}, {"value", "Invalid source path"} });
+		}
 
 		CHECK_FAILED(hr);
 		hr = m_pSourceUnk->QueryInterface(IID_PPV_ARGS(&m_pSource));
@@ -267,6 +254,7 @@ namespace audiopc {
 		CloseSession();
 		assert(m_pSession == 0);
 		m_playerCount--;
+		m_poolFlag = false;
 		Shutdown();
 	}
 
@@ -371,7 +359,7 @@ namespace audiopc {
 
 		if (FAILED(hr)) {
 			hr = MF_E_NO_DURATION;
-			WARNING(hr);
+			emitError(WARNING, "Error get duration");
 			goto done;
 		}
 
@@ -526,27 +514,27 @@ namespace audiopc {
 			CHECK_FAILED(hr);
 			hr = AddGrabberOutputNode();
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error add grabber output node");
 			}
 			hr = MFCreateTopologyNode(MF_TOPOLOGY_TEE_NODE, &teeNode);
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error create tee node");
 			}
 			hr = m_pSourceNode->ConnectOutput(0, teeNode, 0);
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error connect source node");
 			}
 			hr = teeNode->ConnectOutput(0, m_pOutputNode, 0);
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error connect tee node");
 			}
 			hr = teeNode->ConnectOutput(1, m_pGrabberNode, 0);
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error connect tee node");
 			}
 			hr = m_pTopology->AddNode(teeNode);
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error add tee node");
 			}
 			teeNode->AddRef();
 		}
@@ -653,8 +641,8 @@ namespace audiopc {
 		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 
 	done:
-		SAFE_RELEASE(&m_pPD);
-		SAFE_RELEASE(&m_pTopology);
+		/*SAFE_RELEASE(&m_pPD);
+		SAFE_RELEASE(&m_pTopology);*/
 		return S_OK;
 	}
 
@@ -746,7 +734,7 @@ namespace audiopc {
 		if (m_pSource && m_pPD) {
 			hr = GetDuration();
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error get duration");
 				goto done;
 			}
 			if (m_duration > 0) {
@@ -802,12 +790,13 @@ namespace audiopc {
 		return hr;
 	}
 
-	HRESULT AudioPlayer::GetCDurationSecond(double& ref) {
+	HRESULT AudioPlayer::GetPositionSecond(double& ref) {
 		if (m_pClock) {
 			HRESULT hr = S_OK;
 			hr = GetCurrentPosition();
 			if (FAILED(hr)) {
-				WARNING(hr);
+				emitError(WARNING, "Error get current position");
+				return hr;
 			}
 			ref = static_cast<double>(m_cDuration) / MICRO_TO_SECOND;
 		}
@@ -1049,7 +1038,8 @@ namespace audiopc {
 		varStart.hVal.QuadPart = hnsPosition;
 
 		hr = m_pSession->Start(NULL, &varStart);
-
+		m_state = Started;
+		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 		if (SUCCEEDED(hr))
 		{
 			// Store the pending state.
@@ -1296,7 +1286,8 @@ namespace audiopc {
 	}
 
 	void AudioPlayer::GetSamples(vector<double>& out) const {
-		m_pGrabber->samplesBuffer.Read(out);
+		//m_pGrabber->samplesBuffer.Read(out);
+		out = m_pGrabber->m_samples;
 	}
 	
 	void AudioPlayer::emitEvent(const std::map<std::string, EncodableValue> value) const {
@@ -1308,9 +1299,14 @@ namespace audiopc {
 			cout << "Emitting event" << map.size() << endl;
 			handler->Success(EncodableValue(map));
 		}
-		else {
-			INFO("Handler is null");
-		}
 	}
 
+	void AudioPlayer::emitError(ERROR_TYPE e_type, const std::string error) const {
+		if (e_type == WARNING) {
+			emitEvent({ {"id", hashID}, {"event", "error"}, {"value", error} });
+		}
+		else {
+			handler->Error(error);
+		}
+	}
 }

@@ -14,6 +14,7 @@ namespace audiopc {
 	public:
 		ULONG m_cRef;
 		CircularBuffer samplesBuffer;
+		vector<double> m_samples;
 
 		AudioSamplesGrabber();
 		~AudioSamplesGrabber();

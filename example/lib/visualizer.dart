@@ -14,6 +14,7 @@ class VisualzerPainter extends CustomPainter {
   final double deltaTime;
   final bool isPlaying;
 
+
   @override
   void paint(Canvas canvas, Size size) {
     var path = clipper.getClip(size);
@@ -27,33 +28,20 @@ class VisualzerPainter extends CustomPainter {
       ..color = const Color.fromARGB(220, 50, 234, 255)
       ..style = PaintingStyle.fill;
 
-    const chunkSize = 1024;
-    final stft = STFT(chunkSize, Window.hanning(chunkSize));
+    final stft = STFT(data.length, Window.hanning(data.length));
     final spectrogram = <Float64List>[];
     stft.run(data, (Float64x2List freq) {
       spectrogram.add(freq.discardConjugates().magnitudes());
     });
 
-    final maxPeaks = List<double>.filled(barCount, 0.0);
-    final binSize = spectrogram[0].length ~/ barCount;
-
-    for (final frame in spectrogram) {
-      for (int i = 0; i < barCount; i++) {
-        final startIdx = i * binSize;
-        final endIdx = (i + 1) * binSize;
-        final bin = frame.sublist(startIdx, endIdx);
-
-        final peak =
-            bin.reduce((value, element) => element > value ? element : value);
-        maxPeaks[i] = maxPeaks[i] > peak ? maxPeaks[i] : peak;
-      }
-    }
+    final maxPeaks = getPeaks(data, barCount);
+   
     double barWidth = size.width / (barCount * 1.5);
     double spacing = barWidth / 2; // Spacing between bars
 
     for (int i = 0; i < barCount; i++) {
-      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max) * 10;
-      double barHeight = value * deltaTime / 5;
+      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max) * 30;
+      double barHeight = value * deltaTime / 30;
       if (barHeight > size.height) {
         barHeight = size.height;
       }
@@ -77,7 +65,45 @@ class VisualzerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(VisualzerPainter oldDelegate) =>
-      isPlaying;
+      isPlaying && data != oldDelegate.data;
+
+
+  List<double> getPeaks(List<double> data, int barCount) {
+    final stft = STFT(2048, Window.hanning(2048));
+    final spectrogram = <Float64List>[];
+    final freqBin = List.generate(128, (i) => 44100 / 2 * i / 128);
+
+    // final freqBin = List.generate(128, (i) {
+    //   double t = i / 128;
+    //   return 20.0 * pow(20000.0 / 20.0, t);
+    // });
+    
+    // Run STFT
+    stft.run(data, (Float64x2List freq) {
+      spectrogram.add(freq.discardConjugates().magnitudes());
+    });
+    
+    double fitFactor = 0.3;
+    List<double> lastSpectrum = List.filled(128, 0.0);
+    for (var frame in spectrogram) {
+      for (int j = 0; j < (frame.length ~/ 2); j++) {
+        double magnitude = frame[j];
+        double freq = j * 44800 / 2048;
+        
+        for (int i = 0; i < 128; i++) {
+          if (freq >= freqBin[i] && freq <= freqBin[i + 1]) {
+            double smoothedValue = max(
+              magnitude,
+              lastSpectrum[i] * fitFactor
+            );
+            lastSpectrum[i] = smoothedValue;
+          }
+        }
+      }
+    }
+    return lastSpectrum;    
+  }
+ 
 }
 
 class VisualizerClipper extends CustomClipper<Path> {

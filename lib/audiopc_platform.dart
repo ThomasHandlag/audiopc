@@ -34,7 +34,11 @@ class AudiopcPlatform extends AudiopcPlatformInterface with AudioEventChannel {
   /// Gets the samples data from the player.
   @override
   Future<Float64List?> getSamples(String id) async {
-    return await _listen('getSamples', id);
+    try {
+      return await _listen<Float64List>('getSamples', id);
+    } catch (e) {
+      return null;
+    }
   }
 
   @override
@@ -80,7 +84,6 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
 
   @override
   void listen(String id) {
-    
     _eventStream[id] = eventChannel.receiveBroadcastStream().map((event) {
       if (event['id'] == id) {
         final eventName = event['event'] as String;
@@ -98,6 +101,10 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
           case 'completed':
             {
               return CompletedEvent(value: event['value'] == 1);
+            }
+          case 'error':
+            {
+              return ErrorEvent(value: event['value'] as String);
             }
         }
       }

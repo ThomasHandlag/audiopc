@@ -15,6 +15,7 @@
 #include <cassert>
 #include <Mferror.h>
 #include "event_stream_handler.h"
+
 #pragma comment(lib, "mfplat")
 #pragma comment(lib, "mf")
 #pragma comment(lib, "mfreadwrite")
@@ -70,7 +71,6 @@ namespace audiopc {
 			if (SUCCEEDED(hr)) {
 				player->SetHWND(audiopc::AudiopcPlugin::hwnd);
 				players.insert({id, std::move(player)});
-				result->Success();
 			}
 			else {
 				result->Error("Error", "Error creating player");
@@ -84,7 +84,7 @@ namespace audiopc {
 				auto path = map.find(flutter::EncodableValue("path"));
 
 				if (path == map.end()) {
-					result->Error("Error", "Invalid path");
+					result->Error("Error", "Empty path");
 				}
 
 				string pathStr = get<string>(path->second);
@@ -96,7 +96,6 @@ namespace audiopc {
 						result->Success();
 					}
 					else {
-						cout << "Error" << __FILE__ << ":" << static_cast<double>(__LINE__) << "-" << hex << hr << endl;
 						result->Error("Error", "Error setting source");
 					}
 				}
@@ -104,9 +103,10 @@ namespace audiopc {
 					result->Error("Error", "Player is not initialized");
 				}
 			}
-			else if (method_call.method_name().compare("dispose") == 0) {
+			else if (method_call.method_name().compare("close") == 0) {
 				players[id].reset(nullptr);
 				players.erase(id);
+				result->Success();
 			}
 			else if (method_call.method_name().compare("play") == 0) {
 				if (player) {
@@ -115,16 +115,16 @@ namespace audiopc {
 					thread poolThread(&AudioPlayer::StartAudioPool, player);
 					// detach the audio pool thread from the main thread to prevent blocking UI thread
 					poolThread.detach();
-					result->Success(flutter::EncodableValue(true));
+					result->Success();
 				}
 				else {
 					result->Error("Error", "Player is not initialized");
 				}
-
 			}
 			else if (method_call.method_name().compare("stop") == 0) {
 				if (player) {
 					player->Stop();
+					result->Success();
 				}
 				else {
 					result->Error("Error", "Player is not initialized");
@@ -133,23 +133,7 @@ namespace audiopc {
 			else if (method_call.method_name().compare("pause") == 0) {
 				if (player) {
 					player->Pause();
-					result->Success(flutter::EncodableValue(true));
-				}
-				else {
-					result->Error("Error", "Player is not initialized");
-				}
-			}
-			else if (method_call.method_name().compare("getDuration") == 0) {
-				if (player) {
-					double duration = 0;
-					HRESULT hr = player->GetSecondDuration(duration);
-
-					if (SUCCEEDED(hr)) {
-						result->Success(flutter::EncodableValue(duration));
-					}
-					else {
-						result->Error("Error", "Error getting duration");
-					}
+					result->Success();
 				}
 				else {
 					result->Error("Error", "Player is not initialized");
@@ -158,12 +142,9 @@ namespace audiopc {
 			else if (method_call.method_name().compare("getPosition") == 0) {
 				if (player) {
 					double position = 0;
-					HRESULT hr = player->GetCDurationSecond(position);
+					HRESULT hr = player->GetPositionSecond(position);
 					if (SUCCEEDED(hr)) {
 						result->Success(flutter::EncodableValue(position));
-					}
-					else {
-						result->Error("Error", "Error getting position");
 					}
 				}
 				else {
@@ -193,9 +174,14 @@ namespace audiopc {
 					result->Error("Error", "Player is not initialized");
 				}
 			}
-			else if (method_call.method_name().compare("getState") == 0) {
+			else if (method_call.method_name().compare("setRate") == 0) {
 				if (player) {
-					result->Success(flutter::EncodableValue((double)player->GetState()));
+					auto rate = map.find(flutter::EncodableValue("rate"));
+					if (rate == map.end()) {
+						result->Error("Error", "Rate is not provided");
+					}
+					double rateValue = get<double>(rate->second);
+					player->SetRate(static_cast<float>(rateValue));
 				}
 				else {
 					result->Error("Error", "Player is not initialized");
@@ -211,22 +197,6 @@ namespace audiopc {
 					result->Error("Error", "Player is not initialized");
 				}
 			}
-			else if (method_call.method_name().compare("getPosition") == 0) {
-				if (player) {
-					double position = 0;
-					HRESULT hr = player->GetCDurationSecond(position);
-					if (SUCCEEDED(hr)) {
-						result->Success(flutter::EncodableValue(position));
-					}
-					else {
-						result->Error("Error", "Error getting position");
-					}
-				}
-				else {
-					result->Error("Error", "Player is not initialized");
-				}
-			}
-
 			else {
 				result->NotImplemented();
 			}

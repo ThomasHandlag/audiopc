@@ -23,6 +23,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   double _cDuration = 0.0;
 
   final Map<String, String> songs = {
+    "flyagain": "D:/Downloads/flyagain.mp3",
+    "gravity": "D:/Downloads/gravity.mp3",
     "holdon": "D:/Downloads/holdon.mp3",
     "thehype": "D:/Downloads/thehype.mp3",
     "underrated": "D:/Downloads/underrated.mp3",
@@ -40,6 +42,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     "ifeelcrazy": "D:/Downloads/ifeelcrazy.mp3",
     "getouthere": "D:/Downloads/getouthere.mp3",
     "vessel": "D:/Downloads/vessel.mp3",
+    "vietnam": "D:/Downloads/vietnam.mp3",
   };
 
   List<double> data = List.generate(100, (index) => 0);

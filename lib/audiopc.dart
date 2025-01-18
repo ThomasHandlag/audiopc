@@ -4,7 +4,6 @@ import 'package:audiopc/audiopc_platform.dart';
 import 'package:audiopc/audiopc_state.dart';
 import 'package:audiopc/audopc_helper.dart';
 import 'package:audiopc/player_event.dart';
-import 'package:flutter/foundation.dart';
 
 class Audiopc {
   final _platform = AudiopcPlatform();
@@ -25,6 +24,10 @@ class Audiopc {
   Stream<double> get onDurationChanged => _eventStreamController.stream
       .where((event) => event.type == PlayerEventType.duration)
       .map((event) => event.value as double);
+
+  // Stream<String> get onError => _eventStreamController.stream
+  //     .where((event) => event.type == PlayerEventType.error)
+  //     .map((event) => event.value as String);
 
   Stream<AudiopcState> get onStateChanged => _eventStreamController.stream
           .where((event) => event.type == PlayerEventType.position)
@@ -51,7 +54,6 @@ class Audiopc {
 
     _eventSubscription = _platform.eventStream[id].listen((event) {
       _eventStreamController.add(event);
-      debugPrint('event: $event');
     });
     _platform.init(id);
 
@@ -81,8 +83,6 @@ class Audiopc {
 
   Future<void> pause() async {
     await _platform.pause(id);
-    _positionListener!.pause();
-    _samplesListener!.pause();
   }
 
   Future<void> seek(double position) async {
