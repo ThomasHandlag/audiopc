@@ -79,7 +79,7 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
                 }
 
                 "getPosition" -> {
-                    result.success(audioPlayer?.getPosition())
+                    result.success(audioPlayer?.getPosition() ?: 0.0)
                 }
 
                 "setRate" -> {

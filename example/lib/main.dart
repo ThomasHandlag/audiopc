@@ -6,6 +6,7 @@ import 'package:audiopc/audiopc_state.dart';
 
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -55,7 +56,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 90),
     );
 
     _controller.addStatusListener((status) {
@@ -77,6 +78,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       setState(() {
         _cDuration = position;
       });
+      debugPrint("position: $position");
     });
 
     _audiopcPlugin.onStateChanged.listen((state) {
@@ -169,7 +171,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             icon: Icon(
                                 isPlaying ? Icons.pause : Icons.play_arrow)),
                         Slider(
-                          value: _cDuration,
+                          value: _audiopcPlugin.duration == 0
+                              ? 0
+                              : _cDuration,
                           onChanged: (value) {
                             _audiopcPlugin.seek(value);
                           },

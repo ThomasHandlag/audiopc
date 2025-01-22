@@ -5,9 +5,9 @@ import android.os.Handler
 import androidx.annotation.OptIn
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -18,13 +18,15 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.audio.TeeAudioProcessor
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
+import io.flutter.Log
 import io.flutter.plugin.common.EventChannel
 import java.util.ArrayList
 
-class AudioPlayer @OptIn(UnstableApi::class) constructor(
+@OptIn(UnstableApi::class)
+class AudioPlayer(
     private var id: String,
     private var eventSink: EventChannel.EventSink,
-    context: Context
+    context: Context,
 ) {
     private var player: ExoPlayer
     private lateinit var samplesProcessor: SamplesProcessor
@@ -65,36 +67,52 @@ class AudioPlayer @OptIn(UnstableApi::class) constructor(
         player = ExoPlayer.Builder(context, defaultRenderersFactory).build()
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(unused: Int) {
-                var state = 0
-                when (player.playbackState) {
-                    Player.STATE_IDLE -> state = 0
-                    Player.STATE_BUFFERING -> state = 1
-                    Player.STATE_READY -> state = 2
-                    Player.STATE_ENDED -> state = 5
-                }
+                when (unused) {
+                    Player.STATE_READY-> {
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "state",
+                                "value" to 2
+                            )
+                        )
+                    }
+                    Player.STATE_ENDED -> {
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "state",
+                                "value" to 5
+                            )
+                        )
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "completed",
+                                "value" to 1
+                            )
+                        )
+                    }
+                    else -> {
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "state",
+                                "value" to 0
+                            )
+                        )
 
-                if (player.isPlaying) {
-                    state = 3
-                } else if (player.isPlaying) {
-                    state = 4
+                    }
                 }
+            }
 
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
                 eventSink.success(
                     mapOf(
                         "id" to id,
                         "event" to "state",
-                        "value" to state
-                    )
-                )
-            }
-
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                super.onMediaMetadataChanged(mediaMetadata)
-                eventSink.success(
-                    mapOf(
-                        "id" to id,
-                        "event" to "metadata",
-                        "value" to mediaMetadata.durationMs
+                        "value" to if (isPlaying) 3 else 4
                     )
                 )
             }
@@ -109,17 +127,27 @@ class AudioPlayer @OptIn(UnstableApi::class) constructor(
                 )
             }
 
-            override fun onEvents(player: Player, events: Player.Events) {
-                super.onEvents(player, events)
-                if (player.playbackState == Player.STATE_ENDED) {
-                    eventSink.success(
-                        mapOf(
-                            "id" to id,
-                            "event" to "completed",
-                            "value" to 1
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+                super.onTimelineChanged(timeline, reason)
+                when(val duration = player.duration) {
+                    C.TIME_UNSET -> {
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "duration",
+                                "value" to 0.0
+                            )
                         )
-                    )
-
+                    }
+                    else -> {
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "duration",
+                                "value" to duration.toDouble() / 1000.0
+                            )
+                        )
+                    }
                 }
             }
         })
@@ -138,9 +166,10 @@ class AudioPlayer @OptIn(UnstableApi::class) constructor(
     }
 
     fun getPosition(): Double {
+        Log.d("AudioPlayer", "getPosition: ${player.currentPosition}")
         return when (player.currentPosition) {
             C.TIME_UNSET -> 0.0
-            else -> player.currentPosition.toDouble() / 1000.0
+            else -> player.currentPosition / 1000.0
         }
     }
 
@@ -151,11 +180,11 @@ class AudioPlayer @OptIn(UnstableApi::class) constructor(
 
     fun setSource(path: String) {
         player.setMediaItem(MediaItem.fromUri(path))
+        player.prepare()
     }
 
     fun play() {
         player.play()
-        player.prepare()
     }
 
     fun pause() {

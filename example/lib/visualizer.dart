@@ -71,12 +71,12 @@ class VisualzerPainter extends CustomPainter {
   List<double> getPeaks(List<double> data, int barCount) {
     final stft = STFT(2048, Window.hanning(2048));
     final spectrogram = <Float64List>[];
-    final freqBin = List.generate(128, (i) => 44100 / 2 * i / 128);
+    // final freqBin = List.generate(128, (i) => 44100 / 2 * i / 128);
 
-    // final freqBin = List.generate(128, (i) {
-    //   double t = i / 128;
-    //   return 20.0 * pow(20000.0 / 20.0, t);
-    // });
+    final freqBin = List.generate(128, (i) {
+      double t = i / 128;
+      return 30.0 * pow(20000.0 / 30.0, t);
+    });
     
     // Run STFT
     stft.run(data, (Float64x2List freq) {
