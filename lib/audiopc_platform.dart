@@ -66,6 +66,11 @@ class AudiopcPlatform extends AudiopcPlatformInterface with AudioEventChannel {
     return await _call('close', {}, id);
   }
 
+  @override
+  Future<Map<dynamic, dynamic>?> getMetadata(String path) async {
+    return await methodChannel.invokeMethod('getMetaData', {"path": path});
+  }
+
   Future<void> _call(String method, Map<String, dynamic> params, String id) {
     return methodChannel.invokeMethod(
         method, params..addEntries([MapEntry('id', id)]));

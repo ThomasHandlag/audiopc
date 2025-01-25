@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audiopc/audiopc_platform.dart';
 import 'package:audiopc/audiopc_state.dart';
 import 'package:audiopc/audopc_helper.dart';
+import 'package:audiopc/audio_metadata.dart';
 import 'package:audiopc/player_event.dart';
 
 class Audiopc {
@@ -80,12 +81,10 @@ class Audiopc {
 
     _positionListener = PositionListener(
       getPosition: getPosition,
-      id: 0,
     );
 
     _samplesListener = SamplesListener(
       getSamples: getSamples,
-      id: 0,
     );
   }
 
@@ -120,6 +119,12 @@ class Audiopc {
 
   Future<List<double>> getSamples() async {
     return await _platform.getSamples(id) ?? [];
+  }
+
+  Future<AudioMetaData> getMetadata(String path) async {
+    final metadata = await _platform.getMetadata(path) ?? {};
+    final temp = metadata.map((key, value) => MapEntry(key as String, value));
+    return AudioMetaData.fromMap(temp);
   }
 
   void dispose() {

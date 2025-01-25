@@ -1,9 +1,9 @@
+import 'package:audiopc/audio_metadata.dart';
 import 'package:audiopc_example/visualizer.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:audiopc/audiopc.dart';
 import 'package:audiopc/audiopc_state.dart';
-
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +78,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       setState(() {
         _cDuration = position;
       });
-      debugPrint("position: $position");
     });
 
     _audiopcPlugin.onStateChanged.listen((state) {
@@ -110,6 +109,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   bool isPlaying = false;
 
+  String sPath = "";
+
+  AudioMetaData? snapshot;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -131,6 +134,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             .then((file) {
                           if (file != null) {
                             _audiopcPlugin.play(file.path);
+                            setState(() {
+                              sPath = file.path;
+                            });
                           }
                         });
                       },
@@ -143,13 +149,25 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             return ListTile(
                               title: Text(songs.keys.elementAt(index)),
                               onTap: () {
-                                _audiopcPlugin.play(songs.values.elementAt(index));
+                                _audiopcPlugin
+                                    .play(songs.values.elementAt(index));
+                                setState(() {
+                                  sPath = songs.values.elementAt(index);
+                                });
+                                _audiopcPlugin.getMetadata(sPath).then(
+                                  (value) {
+                                    setState(() {
+                                      snapshot = value;
+                                    });
+                                    debugPrint(snapshot.toString());
+                                  },
+                                );
                               },
                             );
                           })),
               SingleChildScrollView(
                 child: SizedBox(
-                    width: MediaQuery.of(context).size.width * 0.7,
+                    width: MediaQuery.of(context).size.width * 0.5,
                     child: Column(
                       children: [
                         ElevatedButton(
@@ -171,7 +189,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             icon: Icon(
                                 isPlaying ? Icons.pause : Icons.play_arrow)),
                         Slider(
-                          value: _audiopcPlugin.duration == 0
+                          value: _audiopcPlugin.duration < _cDuration
                               ? 0
                               : _cDuration,
                           onChanged: (value) {
@@ -188,10 +206,32 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                               isPlaying: isPlaying),
                           size: Size(
                               MediaQuery.of(context).size.width * 0.8, 200),
-                        )
+                        ),
+                        CustomPaint(
+                          painter: CircleAudioVisualizerPainter(
+                              _controller.value, data, isPlaying, 0, 64),
+                          size: Size(
+                              MediaQuery.of(context).size.width * 0.8, 200),
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            height: MediaQuery.of(context).size.width * 0.5,
+                          ),
+                        ),
                       ],
                     )),
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            snapshot?.title != null
+                                ? Text("Title: ${snapshot?.title}")
+                                : const SizedBox(),
+                            Text("Artist: ${snapshot?.artist}"),
+                            if (snapshot != null && snapshot!.thumbnail != null)
+                              Image.memory(snapshot!.thumbnail!),
+                          ],
+                        )
             ],
           ),
         ));

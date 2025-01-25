@@ -187,6 +187,8 @@ namespace audiopc {
 		HRESULT Shutdown();
 		HRESULT EventHandle();
 		HRESULT AddGrabberOutputNode();
+
+		
 		void emitEvent(const std::map<std::string, flutter::EncodableValue> value) const;
 		HRESULT GetDuration();
 		void emitError(ERROR_TYPE e_type, const std::string message) const;

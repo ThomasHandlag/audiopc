@@ -3,10 +3,11 @@
 
 namespace audiopc {
 
-	AudioSamplesGrabber::AudioSamplesGrabber() : m_cRef(1), samplesBuffer(44800) {
+	AudioSamplesGrabber::AudioSamplesGrabber() : m_cRef(1) {
 	}
 
 	AudioSamplesGrabber::~AudioSamplesGrabber() {
+		m_samples.clear();
 	}
 
 	HRESULT AudioSamplesGrabber::CreateInstance(AudioSamplesGrabber** ppCB)
@@ -98,7 +99,6 @@ namespace audiopc {
 
 			samples.push_back(sample);
 		}
-		//samplesBuffer.Write(samples);
 		m_samples = samples;
 
 		return S_OK;

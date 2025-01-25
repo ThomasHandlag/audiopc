@@ -255,6 +255,7 @@ namespace audiopc {
 		assert(m_pSession == 0);
 		m_playerCount--;
 		m_poolFlag = false;
+		handler.reset();
 		Shutdown();
 	}
 
@@ -387,6 +388,7 @@ namespace audiopc {
 			// Create the audio renderer.
 			hr = MFCreateAudioRendererActivate(&m_pSinkActivate);
 			hr = MFCreateSampleGrabberSinkActivate(m_pMediaType, m_pGrabber, &m_pSinkActivateGrabber);
+			m_pSinkActivateGrabber->SetUINT32(MF_SAMPLEGRABBERSINK_IGNORE_CLOCK, FALSE);
 		}
 		else
 		{
@@ -641,8 +643,8 @@ namespace audiopc {
 		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 
 	done:
-		/*SAFE_RELEASE(&m_pPD);
-		SAFE_RELEASE(&m_pTopology);*/
+		SAFE_RELEASE(&m_pPD);
+		SAFE_RELEASE(&m_pTopology);
 		return S_OK;
 	}
 
@@ -1286,7 +1288,6 @@ namespace audiopc {
 	}
 
 	void AudioPlayer::GetSamples(vector<double>& out) const {
-		//m_pGrabber->samplesBuffer.Read(out);
 		out = m_pGrabber->m_samples;
 	}
 	
@@ -1296,7 +1297,6 @@ namespace audiopc {
 			for (auto& [key, data] : value) {
 				map[EncodableValue(key)] = data;
 			}
-			cout << "Emitting event" << map.size() << endl;
 			handler->Success(EncodableValue(map));
 		}
 	}

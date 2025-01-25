@@ -15,6 +15,7 @@
 #include <cassert>
 #include <Mferror.h>
 #include "event_stream_handler.h"
+#include "metadata.h"
 
 #pragma comment(lib, "mfplat")
 #pragma comment(lib, "mf")
@@ -58,14 +59,15 @@ namespace audiopc {
 		const flutter::MethodCall<flutter::EncodableValue>& method_call,
 		unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
 		flutter::EncodableMap map = get<flutter::EncodableMap>(*method_call.arguments());
-		auto value = map.find(flutter::EncodableValue("id"));
-		if (value == map.end()) {
-			result->Error("Error", "ID is required, found 0");
-		}
-		string id = get<string>(value->second);
+		
 		
 		if (method_call.method_name().compare("init") == 0) {
 			HRESULT hr = S_OK;
+			auto value = map.find(flutter::EncodableValue("id"));
+			if (value == map.end()) {
+				result->Error("Error", "ID is required, found 0");
+			}
+			string id = get<string>(value->second);
 			unique_ptr<AudioPlayer> player;
 			hr = AudioPlayer::CreateInstance(&player, AudioPlayer::m_playerCount, id, &audiopc::EventStreamHandler::_sink);
 			if (SUCCEEDED(hr)) {
@@ -76,8 +78,27 @@ namespace audiopc {
 				result->Error("Error", "Error creating player");
 			}
 		}
+		else if (method_call.method_name().compare("getMetaData") == 0) {
+			auto value = map.find(flutter::EncodableValue("path"));
+			if (value == map.end()) {
+				result->Error("Error", "Empty path");
+			}
+			string pathStr = get<string>(value->second);
+			wstring pathWStr(pathStr.begin(), pathStr.end());
+			AudioMetaData audioMetaData(pathWStr);
+			flutter::EncodableMap rs;
+			for (auto& [key, val] : audioMetaData.metaData) {
+				rs[key] = val;
+			}
+			result->Success(flutter::EncodableValue(rs));
+		}
 		else
 		{
+			auto value = map.find(flutter::EncodableValue("id"));
+			if (value == map.end()) {
+				result->Error("Error", "ID is required, found 0");
+			}
+			string id = get<string>(value->second);
 			AudioPlayer* player = players[id].get();
 			
 			if (method_call.method_name().compare("setSource") == 0) {

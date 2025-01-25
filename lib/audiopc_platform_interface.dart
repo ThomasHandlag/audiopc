@@ -67,6 +67,10 @@ abstract class AudioMethodChannelInterface {
   Future<void> close(String id) {
     throw UnimplementedError('close() has not been implemented.');
   }
+
+  Future<Map<dynamic, dynamic>?> getMetadata(String path) {
+    throw UnimplementedError('getMetadata() has not been implemented.');
+  }
 }
 
 abstract class AudioEventChannelInterface {
