@@ -53,10 +53,6 @@ namespace audiopc {
 		HRESULT hr = S_OK;
 		HRESULT hr_Tmp = S_OK;
 
-		if (m_path && path == m_path) {
-			return S_OK;
-		}
-
 		hr = MFCreateMediaType(&m_pMediaType);
 		if (FAILED(hr)) {
 			emitError(WARNING, "Error create media type");
@@ -65,7 +61,7 @@ namespace audiopc {
 		m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 		m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
 		m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
-		m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44800);
+		m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
 		m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 8);
 
 		hr = CreateMediaSession();
@@ -75,7 +71,6 @@ namespace audiopc {
 		}
 		hr = MFCreateSourceResolver(&m_pSourceResolver);
 		CHECK_FAILED(hr);
-
 		hr = m_pSourceResolver->CreateObjectFromURL(
 			path,
 			MF_RESOLUTION_MEDIASOURCE,
@@ -83,29 +78,21 @@ namespace audiopc {
 			&ObjectType,
 			&m_pSourceUnk
 		);
-
 		if (FAILED(hr)) {
 			emitEvent({ {"id", hashID}, {"event", "error"}, {"value", "Invalid source path"} });
 		}
-
 		CHECK_FAILED(hr);
 		hr = m_pSourceUnk->QueryInterface(IID_PPV_ARGS(&m_pSource));
 		CHECK_FAILED(hr);
-
 		hr = m_pSource->CreatePresentationDescriptor(&m_pPD);
-
 		CHECK_FAILED(hr);
-
 		hr = CreatePlaybackTopology();
-
 		CHECK_FAILED(hr);
-
 		hr = m_pSession->SetTopology(0, m_pTopology);
-
 		CHECK_FAILED(hr);
-
 		hr = m_pSession->GetSessionCapabilities(&m_caps);
 		CHECK_FAILED(hr);
+
 		IMFClock* pClock = NULL;
 
 		hr = m_pSession->GetClock(&pClock);
@@ -409,26 +396,19 @@ namespace audiopc {
 
 	// Add a source node to a topology.
 	HRESULT AudioPlayer::AddSourceNode() {
-		// Create the node.
 		HRESULT hr = S_OK;
-
 		hr = MFCreateTopologyNode(MF_TOPOLOGY_SOURCESTREAM_NODE, &m_pSourceNode);
 		CHECK_FAILED(hr);
-
 		hr = m_pSourceNode->SetUnknown(MF_TOPONODE_SOURCE, m_pSource);
 		CHECK_FAILED(hr);
-
 		hr = m_pSourceNode->SetUnknown(MF_TOPONODE_PRESENTATION_DESCRIPTOR, m_pPD);
 		CHECK_FAILED(hr);
-
 		hr = m_pSourceNode->SetUnknown(MF_TOPONODE_STREAM_DESCRIPTOR, m_pStreamDescriptor);
 		CHECK_FAILED(hr);
-
 		hr = m_pTopology->AddNode(m_pSourceNode);
 		CHECK_FAILED(hr);
 
 		m_pSourceNode->AddRef();
-
 	done:
 		return hr;
 	}
@@ -436,29 +416,19 @@ namespace audiopc {
 	// Add an output node to a topology.
 	HRESULT AudioPlayer::AddOutputNode() {
 		HRESULT hr = S_OK;
-		// Create the node.
 		hr = MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &m_pOutputNode);
-
 		CHECK_FAILED(hr);
-
 		// Set the object pointer.
 		hr = m_pOutputNode->SetObject(m_pSinkActivate);
-
 		CHECK_FAILED(hr);
-
 		// Set the stream sink ID attribute.
 		hr = m_pOutputNode->SetUINT32(MF_TOPONODE_STREAMID, 0);
-
 		CHECK_FAILED(hr);
-
 		hr = m_pOutputNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, FALSE);
-
 		CHECK_FAILED(hr);
-
 		// Add the node to the topology.
 		hr = m_pTopology->AddNode(m_pOutputNode);
 		CHECK_FAILED(hr);
-
 		// Return the pointer to the caller.
 		m_pOutputNode->AddRef();
 
@@ -553,24 +523,19 @@ namespace audiopc {
 
 	HRESULT AudioPlayer::CreatePlaybackTopology() {
 		DWORD cSourceStreams = 0;
-
 		HRESULT hr = S_OK;
-
 		hr = MFCreateTopology(&m_pTopology);
 		CHECK_FAILED(hr);
 		// Get the number of streams in the media source.
 		hr = m_pPD->GetStreamDescriptorCount(&cSourceStreams);
 		CHECK_FAILED(hr);
-
 		// For each stream, create the topology nodes and add them to the topology.
 		for (DWORD i = 0; i < cSourceStreams; i++)
 		{
 			hr = AddBranchToPartialTopology(i);
 			CHECK_FAILED(hr);
 		}
-
 		m_pTopology->AddRef();
-
 	done:
 		return hr;
 	}
@@ -620,11 +585,10 @@ namespace audiopc {
 		return S_OK;
 	}
 
-	//  Handler for MENewPresentation event.
-	//
-	//  This event is sent if the media source has a new presentation, which 
-	//  requires a new topology. 
-
+	/// Handler for MENewPresentation event.
+	///
+	/// This event is sent if the media source has a new presentation, which 
+	/// requires a new topology. 
 	HRESULT AudioPlayer::OnNewPresentation() {
 		HRESULT hr = S_OK;
 		// Get the presentation descriptor from the event.
@@ -878,7 +842,7 @@ namespace audiopc {
 		return hr;
 	}
 
-	HRESULT AudioPlayer::CanFastForward(BOOL* pbCanFF)
+	HRESULT AudioPlayer::CanFastForward(BOOL* pbCanFF) const
 	{
 		if (pbCanFF == NULL)
 		{
@@ -893,7 +857,7 @@ namespace audiopc {
 
 	// Queries whether the current session supports rewind (reverse play).
 
-	HRESULT AudioPlayer::CanRewind(BOOL* pbCanRewind)
+	HRESULT AudioPlayer::CanRewind(BOOL* pbCanRewind) const
 	{
 		if (pbCanRewind == NULL)
 		{
@@ -966,14 +930,12 @@ namespace audiopc {
 	{
 		HRESULT hr = S_OK;
 		BOOL bThin = FALSE;
-
 		AutoLock lock(m_critsec);
 
 		if (fRate == GetNominalRate())
 		{
 			return S_OK; // no-op
 		}
-
 		if (m_pRateSupport == NULL)
 		{
 			return MF_E_INVALIDREQUEST;
@@ -981,7 +943,6 @@ namespace audiopc {
 
 		// Check if this rate is supported. Try non-thinned playback first,
 		// then fall back to thinned playback.
-
 		hr = m_pRateSupport->IsRateSupported(FALSE, fRate, NULL);
 
 		if (FAILED(hr))
@@ -989,13 +950,11 @@ namespace audiopc {
 			bThin = TRUE;
 			hr = m_pRateSupport->IsRateSupported(TRUE, fRate, NULL);
 		}
-
 		if (FAILED(hr))
 		{
 			// Unsupported rate.
 			return hr;
 		}
-
 		// If there is an operation pending, cache the request.
 		if (m_bPending)
 		{
@@ -1010,16 +969,13 @@ namespace audiopc {
 			{
 				m_request.command = m_sState.command;
 			}
-
 		}
 		else
 		{
 			// No pending operation. Commit the new rate.
 			hr = CommitRateChange(fRate, bThin);
 		}
-
 		return hr;
-
 	}
 
 	// Sets the playback position.
@@ -1144,7 +1100,7 @@ namespace audiopc {
 	}
 
 
-	float AudioPlayer::GetNominalRate()
+	float AudioPlayer::GetNominalRate() const
 	{
 		return m_request.fRate;
 	}
@@ -1217,7 +1173,6 @@ namespace audiopc {
 		if (GetNominalRate() < 0.0f)
 		{
 			m_sState.command = CmdStop;
-
 			hr = CommitRateChange(1.0f, FALSE);
 		}
 
@@ -1260,7 +1215,6 @@ namespace audiopc {
 					break;
 
 				case CmdStart:
-					Play();
 					break;
 
 				case CmdPause:

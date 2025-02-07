@@ -127,10 +127,49 @@ class Audiopc {
     return AudioMetaData.fromMap(temp);
   }
 
+  /// Dispose the player 
+  /// 
+  /// This method should be called when the player is no longer needed. 
+  /// Throws an [Exception] if trying to call any method after calling this method
   void dispose() {
     _positionListener!.stop();
     _samplesListener!.stop();
     _eventSubscription!.cancel();
     _eventStreamController.close();
+  }
+}
+
+
+class CircularBuffer<T> {
+
+  final int max;
+  final List<T> buffer=[];
+
+  CircularBuffer({required this.max});
+
+  void add(T value) {
+    if (buffer.length >= max) {
+      buffer.removeAt(0);
+    }
+    buffer.add(value);
+  }
+
+  void addAll(List<T> values) {
+    if (buffer.length + values.length > max) {
+      buffer.removeRange(0, buffer.length + values.length - max);
+    }
+    buffer.addAll(values);
+  }
+
+  T get(int index) {
+    return buffer[index];
+  }
+
+  int get length {
+    return buffer.length;
+  }
+
+  void clear() {
+    buffer.clear();
   }
 }

@@ -127,21 +127,20 @@ namespace audiopc {
 		HRESULT CanScrub(BOOL* pbCanScrub) const;
 		HRESULT Scrub(BOOL bScrub);
 
-		HRESULT CanFastForward(BOOL* pbCanFF);
-		HRESULT CanRewind(BOOL* pbCanRewind);
+		HRESULT CanFastForward(BOOL* pbCanFF) const;
+		HRESULT CanRewind(BOOL* pbCanRewind) const;
 		HRESULT SetRate(float fRate);
 		HRESULT FastForward();
 		HRESULT Rewind();
 		void GetSamples(vector<double>& out) const;
 		PlaybackState GetState() const;
-
+		std::wstring m_path;
 	protected:
 		ULONG m_cRef;
 		AudioSamplesGrabber* m_pGrabber;
 		const UINT WM_APP_PLAYER_EVENT;
 		const std::string hashID;
 		shared_ptr<EventSink<flutter::EncodableValue>> handler;
-		WCHAR* m_path;
 		PlaybackState m_state;
 		HANDLE m_hCloseEvent;
 		IMFSourceResolver* m_pSourceResolver;
@@ -243,7 +242,7 @@ namespace audiopc {
 
 		HRESULT SetPositionInternal(const MFTIME& hnsPosition);
 		HRESULT CommitRateChange(float fRate, BOOL bThin);
-		float   GetNominalRate();
+		float   GetNominalRate() const;
 
 		HRESULT OnSessionStart();
 		HRESULT OnSessionStop();

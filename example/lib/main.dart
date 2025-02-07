@@ -44,15 +44,28 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     "getouthere": "D:/Downloads/getouthere.mp3",
     "vessel": "D:/Downloads/vessel.mp3",
     "vietnam": "D:/Downloads/vietnam.mp3",
+    "forever": "D:/Downloads/forever.mp3",
+    "runaway": "D:/Downloads/runaway.mp3",
+    "loveu": "D:/Downloads/loveu.mp3",
+    "survive": "D:/Downloads/survive.mp3",
+    "calling": "D:/Downloads/calling.mp3",
+    "whydoi": "D:/Downloads/whydoi.mp3",
+    "lemonstronger": "D:/Downloads/lemonstronger.mp3",
+    "alwaysbe": "D:/Downloads/alwaysbe.mp3",
+    "nodoubt": "D:/Downloads/nodoubt.mp3",
+    "thistime": "D:/Downloads/thistime.mp3",
+    "mushoku": "D:/Downloads/mushoku.mp3",
+    "safensound": "D:/Downloads/safensound.mp3",
   };
 
-  List<double> data = List.generate(100, (index) => 0);
+  final CircularBuffer<double> _sampleBuffer = CircularBuffer(max: 44100);
+
 
   late AnimationController _controller;
 
   @override
   void initState() {
-    super.initState();
+    super.initState(); 
 
     _controller = AnimationController(
       vsync: this,
@@ -94,7 +107,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     _audiopcPlugin.onSamples.listen((samples) {
       setState(() {
-        data = samples;
+         _sampleBuffer.addAll(samples);
       });
     });
 
@@ -202,14 +215,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                           painter: VisualzerPainter(
                               clipper: const VisualizerClipper(),
                               deltaTime: _controller.value,
-                              data: data,
+                              data: _sampleBuffer.buffer,
                               isPlaying: isPlaying),
                           size: Size(
                               MediaQuery.of(context).size.width * 0.8, 200),
                         ),
                         CustomPaint(
                           painter: CircleAudioVisualizerPainter(
-                              _controller.value, data, isPlaying, 0, 64),
+                              _controller.value, _sampleBuffer.buffer, isPlaying, 0, 64),
                           size: Size(
                               MediaQuery.of(context).size.width * 0.8, 200),
                           child: SizedBox(
@@ -220,18 +233,21 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       ],
                     )),
               ),
-              Column(
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.3,
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             snapshot?.title != null
-                                ? Text("Title: ${snapshot?.title}")
+                                ? Text("Title: ${snapshot?.title}", overflow: TextOverflow.ellipsis,)
                                 : const SizedBox(),
                             Text("Artist: ${snapshot?.artist}"),
                             if (snapshot != null && snapshot!.thumbnail != null)
-                              Image.memory(snapshot!.thumbnail!),
+                              Image.memory(snapshot!.thumbnail!, width: 200, height: 200,),
                           ],
                         )
+              )
             ],
           ),
         ));

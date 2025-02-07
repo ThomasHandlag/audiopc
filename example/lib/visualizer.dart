@@ -32,9 +32,9 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
     double barWidth = size.width / (barCount * 1.5);
     double spacing = barWidth / 2; // Spacing between bars
 
-    for (int i = 0; i < barCount; i++) {
-      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max) * 30;
-      double barHeight = value * deltaTime / 30;
+    for (int i = 0; i < barCount && maxPeaks.isNotEmpty; i++) {
+      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
+      double barHeight = value * deltaTime;
       if (barHeight > size.height) {
         barHeight = size.height;
       }
@@ -83,7 +83,8 @@ class VisualizerClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
-class CircleAudioVisualizerPainter extends CustomPainter with SpectrumProcessor {
+class CircleAudioVisualizerPainter extends CustomPainter
+    with SpectrumProcessor {
   List<double> data;
 
   final colors = <Color>[
@@ -109,8 +110,9 @@ class CircleAudioVisualizerPainter extends CustomPainter with SpectrumProcessor 
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint();
-    paint..strokeCap = StrokeCap.round
-    ..style = PaintingStyle.stroke;
+    paint
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
 
     const barCount = 64;
     final barWidth = 6.0;
@@ -118,14 +120,14 @@ class CircleAudioVisualizerPainter extends CustomPainter with SpectrumProcessor 
     final double centerY = size.height / 2;
 
     final maxPeaks = getPeaks(data, barCount);
-    double radius = 90 + maxPeaks[49] * dy;
-    
+    double radius = 90 + (maxPeaks[50] * dy);
+    // double radius = 90;
     // paint.color = const Color(0xFF1001FF);
     paint.color = colors[maxPeaks[50].toInt() % colors.length];
 
-    for (int i = 0; i < barCount; i++) {
+    for (int i = 0; i < barCount && maxPeaks.isNotEmpty; i++) {
       var barHeight = maxPeaks[i] * dy;
-      if  (barHeight > 100) {
+      if (barHeight > 100) {
         barHeight = 100;
       }
       final double angle = (2 * pi / barCount) * i;
@@ -143,8 +145,8 @@ class CircleAudioVisualizerPainter extends CustomPainter with SpectrumProcessor 
     const dradius = 120.0;
     final Path path = Path();
     for (int i = 0; i < 64; i++) {
-      final double startAngle = i * (pi / 2) + dy * maxPeaks[i];
-      final double endAngle = (i + 1) * (pi / 2) + dy * maxPeaks[i];
+      final double startAngle = i * (pi / 2) + dy * maxPeaks[49];
+      final double endAngle = (i + 1) * (pi / 2) + dy * maxPeaks[49];
 
       final Offset startPoint = Offset(
         centerX + dradius * cos(startAngle),
@@ -178,7 +180,7 @@ class CircleAudioVisualizerPainter extends CustomPainter with SpectrumProcessor 
       );
     }
     final dpaint = Paint()
-      ..color = colors[maxPeaks[50].toInt() % colors.length]
+      ..color = colors[maxPeaks[49].toInt() % colors.length]
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, dpaint);
