@@ -61,8 +61,8 @@ namespace audiopc {
 		m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 		m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
 		m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
-		m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44100);
-		m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 8);
+		m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44800);
+		m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
 
 		hr = CreateMediaSession();
 		if (FAILED(hr)) {
@@ -172,7 +172,6 @@ namespace audiopc {
 
 	HRESULT AudioPlayer::CreateMediaSession() {
 		HRESULT hr = S_OK;
-
 		// Close the old session, if any.
 		hr = CloseSession();
 		CHECK_FAILED(hr);
@@ -240,8 +239,8 @@ namespace audiopc {
 	AudioPlayer::~AudioPlayer() {
 		CloseSession();
 		assert(m_pSession == 0);
-		m_playerCount--;
 		m_poolFlag = false;
+		m_playerCount--;
 		handler.reset();
 		Shutdown();
 	}
@@ -418,18 +417,14 @@ namespace audiopc {
 		HRESULT hr = S_OK;
 		hr = MFCreateTopologyNode(MF_TOPOLOGY_OUTPUT_NODE, &m_pOutputNode);
 		CHECK_FAILED(hr);
-		// Set the object pointer.
 		hr = m_pOutputNode->SetObject(m_pSinkActivate);
 		CHECK_FAILED(hr);
-		// Set the stream sink ID attribute.
 		hr = m_pOutputNode->SetUINT32(MF_TOPONODE_STREAMID, 0);
 		CHECK_FAILED(hr);
 		hr = m_pOutputNode->SetUINT32(MF_TOPONODE_NOSHUTDOWN_ON_REMOVE, FALSE);
 		CHECK_FAILED(hr);
-		// Add the node to the topology.
 		hr = m_pTopology->AddNode(m_pOutputNode);
 		CHECK_FAILED(hr);
-		// Return the pointer to the caller.
 		m_pOutputNode->AddRef();
 
 	done:
@@ -996,10 +991,11 @@ namespace audiopc {
 		varStart.hVal.QuadPart = hnsPosition;
 
 		hr = m_pSession->Start(NULL, &varStart);
-		m_state = Started;
-		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
+		
 		if (SUCCEEDED(hr))
 		{
+			m_state = Started;
+			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 			// Store the pending state.
 			m_sState.command = CmdStart;
 			m_sState.hnsStart = hnsPosition;

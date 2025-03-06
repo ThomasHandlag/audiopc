@@ -22,8 +22,6 @@ list(APPEND PLUGIN_SOURCES
   "audiopc_plugin.h"
   "audio_samples_grabber.cpp"
   "audio_samples_grabber.h"
-  "circular_buffer.cpp"
-  "circular_buffer.h"
   "audio_player.h"
   "audio_player.cpp"
   "helper.h"

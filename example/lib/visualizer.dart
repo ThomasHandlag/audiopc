@@ -19,12 +19,12 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
     var path = clipper.getClip(size);
     int barCount = 64;
     final Paint backgroundPaint = Paint()
-      ..color = Colors.black45
+      ..color = Colors.black.withAlpha(255 ~/ 2)
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, backgroundPaint);
 
     final barPainter = Paint()
-      ..color = const Color.fromARGB(220, 50, 234, 255)
+      ..color = const Color.fromARGB(220, 87, 255, 36)
       ..style = PaintingStyle.fill;
 
     final maxPeaks = getPeaks(data, barCount);
@@ -120,15 +120,18 @@ class CircleAudioVisualizerPainter extends CustomPainter
     final double centerY = size.height / 2;
 
     final maxPeaks = getPeaks(data, barCount);
-    double radius = 90 + (maxPeaks[50] * dy);
-    // double radius = 90;
+    double radius = 90 + (maxPeaks[20] * dy);
     // paint.color = const Color(0xFF1001FF);
-    paint.color = colors[maxPeaks[50].toInt() % colors.length];
+    paint.color = Color.fromARGB(255, 84, 33, 61);
 
     for (int i = 0; i < barCount && maxPeaks.isNotEmpty; i++) {
       var barHeight = maxPeaks[i] * dy;
       if (barHeight > 100) {
         barHeight = 100;
+      }
+
+      if (radius > 160) {
+        radius = 160;
       }
       final double angle = (2 * pi / barCount) * i;
       final double startX = centerX + radius * cos(angle);
@@ -142,11 +145,11 @@ class CircleAudioVisualizerPainter extends CustomPainter
         paint..strokeWidth = barWidth,
       );
     }
-    const dradius = 120.0;
+    const dradius = 90.0;
     final Path path = Path();
-    for (int i = 0; i < 64; i++) {
-      final double startAngle = i * (pi / 2) + dy * maxPeaks[49];
-      final double endAngle = (i + 1) * (pi / 2) + dy * maxPeaks[49];
+    for (int i = 0; i < 1; i++) {
+      final double startAngle = i * (pi / 2) + dy * maxPeaks[0];
+      final double endAngle = (i + 1) * (pi / 2) + dy * maxPeaks[0];
 
       final Offset startPoint = Offset(
         centerX + dradius * cos(startAngle),
@@ -180,17 +183,17 @@ class CircleAudioVisualizerPainter extends CustomPainter
       );
     }
     final dpaint = Paint()
-      ..color = colors[maxPeaks[49].toInt() % colors.length]
+      ..color = Color.fromARGB(117, 116, 236, 255)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, dpaint);
     paint.style = PaintingStyle.fill;
-    paint.color = const Color.fromARGB(255, 0, 0, 0);
+    paint.color = Color.fromARGB(172, 17, 0, 255);
     canvas.drawCircle(Offset(centerX, centerY), radius, paint);
 
     final paint2 = Paint()
       ..style = PaintingStyle.stroke
-      ..color = const Color(0xF0FFFFFF)
+      ..color = const Color.fromARGB(68, 31, 236, 255).withAlpha(180)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10)
       ..strokeWidth = 6;
 
@@ -203,13 +206,12 @@ class CircleAudioVisualizerPainter extends CustomPainter
 
 mixin class SpectrumProcessor {
   List<double> getPeaks(List<double> data, int barCount) {
-    final stft = STFT(2048, Window.hanning(2048));
+    final stft = STFT(4096, Window.hanning(4096));
     final spectrogram = <Float64List>[];
-    // final freqBin = List.generate(128, (i) => 44100 / 2 * i / 128);
 
-    final freqBin = List.generate(128, (i) {
-      double t = i / 128;
-      return 30.0 * pow(30000.0 / 30.0, t);
+    final freqBin = List.generate(65, (i) {
+      double t = i / 65;
+      return 20.0 * pow(20000.0 / 20.0, t);
     });
 
     // Run STFT
@@ -217,14 +219,14 @@ mixin class SpectrumProcessor {
       spectrogram.add(freq.discardConjugates().magnitudes());
     });
 
-    double fitFactor = 0.3;
-    List<double> lastSpectrum = List.filled(128, 0.0);
+    double fitFactor = 0.6;
+    List<double> lastSpectrum = List.filled(65, 0.0);
     for (var frame in spectrogram) {
-      for (int j = 0; j < (frame.length ~/ 2); j++) {
+      for (int j = 0; j < (frame.length); j++) {
         double magnitude = frame[j];
-        double freq = j * 44800 / 2048;
+        double freq = j * 44800 / 4096;
 
-        for (int i = 0; i < 128; i++) {
+        for (int i = 0; i < 64; i++) {
           if (freq >= freqBin[i] && freq <= freqBin[i + 1]) {
             double smoothedValue = max(magnitude, lastSpectrum[i] * fitFactor);
             lastSpectrum[i] = smoothedValue;

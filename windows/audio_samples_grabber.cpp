@@ -90,13 +90,10 @@ namespace audiopc {
 		DWORD dwSampleSize)
 	{
 		vector<double> samples;
-		for (DWORD i = 0; i < dwSampleSize; i++) {
+		for (DWORD i = 0; i < dwSampleSize; i+=2) {
 			// Combine two bytes into one int16_t
-			//int16_t int16_sample = static_cast<int16_t>(pSampleBuffer[i] | (pSampleBuffer[i + 1] << 8));
-			// Normalize to double in range [-1.0, 1.0]
-			int8_t int8_sample = static_cast<int8_t>(pSampleBuffer[i]);
-			double sample = int8_sample / 128.0; // 32768 = 2^15
-
+			int16_t int16_sample = static_cast<int16_t>(pSampleBuffer[i] | (pSampleBuffer[i + 1] << 8));
+			double sample = static_cast<double>(int16_sample / 32768.0); // 32768 = 2^15
 			samples.push_back(sample);
 		}
 		m_samples = samples;

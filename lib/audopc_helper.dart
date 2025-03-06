@@ -40,8 +40,8 @@ final class PositionListener extends PlayerListener
   @override
   void callback(Duration? timeStamp) {
     if (isRunnin) {
-      call();
       SchedulerBinding.instance.scheduleFrameCallback(callback);
+      call();
     }
   }
 
@@ -51,7 +51,6 @@ final class PositionListener extends PlayerListener
     SchedulerBinding.instance.cancelFrameCallbackWithId(0);
     streamControler.close();
   }
-  
 
   bool isRunnin = false;
 
@@ -93,8 +92,8 @@ final class SamplesListener extends PlayerListener
   @override
   void callback(Duration? timeStamp) {
     if (isRunnin) {
-      call();
       SchedulerBinding.instance.scheduleFrameCallback(callback);
+      call();
     }
   }
 
