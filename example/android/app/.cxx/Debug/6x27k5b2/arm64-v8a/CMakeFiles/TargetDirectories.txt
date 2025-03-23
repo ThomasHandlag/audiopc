@@ -1,0 +1,2 @@
+D:/Documents/Github/audiopc/example/android/app/.cxx/Debug/6x27k5b2/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/Documents/Github/audiopc/example/android/app/.cxx/Debug/6x27k5b2/arm64-v8a/CMakeFiles/rebuild_cache.dir

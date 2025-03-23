@@ -26,6 +26,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   final CircularBuffer<double> _sampleBuffer = CircularBuffer(max: 88900);
 
   late AnimationController _controller;
+  late Animation<double> _animation;
 
   int timeSec = 100;
 
@@ -36,6 +37,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: timeSec),
+      animationBehavior: AnimationBehavior.preserve
     );
 
     _controller.addStatusListener((status) {
@@ -52,6 +54,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         _duration = event;
       });
     });
+
+    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
 
     _audiopcPlugin.onPositionChanged.listen((position) {
       setState(() {
@@ -180,14 +184,19 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         },
                         icon: const Icon(Icons.exposure_minus_1)),
                     Text("Time: $timeSec"),
-                    CustomPaint(
-                      painter: VisualzerPainter(
-                          clipper: const VisualizerClipper(),
-                          deltaTime: _controller.value,
-                          data: _sampleBuffer.buffer,
-                          isPlaying: isPlaying),
-                      size: Size(MediaQuery.of(context).size.width * 0.8, 200),
-                    ),
+                    AnimatedBuilder(
+                        animation: _animation,
+                        builder: (_, __) {
+                          return CustomPaint(
+                            painter: VisualzerPainter(
+                                clipper: const VisualizerClipper(),
+                                deltaTime: _controller.value,
+                                data: _sampleBuffer.buffer,
+                                isPlaying: isPlaying),
+                            size: Size(
+                                MediaQuery.of(context).size.width * 0.8, 200),
+                          );
+                        }),
                     CustomPaint(
                       painter: CircleAudioVisualizerPainter(_controller.value,
                           _sampleBuffer.buffer, isPlaying, 0, 64),

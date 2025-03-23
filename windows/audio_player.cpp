@@ -240,9 +240,9 @@ namespace audiopc {
 		CloseSession();
 		assert(m_pSession == 0);
 		m_poolFlag = false;
-		m_playerCount--;
-		handler.reset();
 		Shutdown();
+		handler.reset();
+		m_playerCount--;
 	}
 
 	HRESULT AudioPlayer::StartPlayback()
