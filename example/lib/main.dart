@@ -35,10 +35,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     super.initState();
 
     _controller = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: timeSec),
-      animationBehavior: AnimationBehavior.preserve
-    );
+        vsync: this,
+        duration: Duration(milliseconds: timeSec),
+        animationBehavior: AnimationBehavior.preserve);
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -197,15 +196,24 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                                 MediaQuery.of(context).size.width * 0.8, 200),
                           );
                         }),
-                    CustomPaint(
-                      painter: CircleAudioVisualizerPainter(_controller.value,
-                          _sampleBuffer.buffer, isPlaying, 0, 64),
-                      size: Size(MediaQuery.of(context).size.width * 0.8, 200),
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.5,
-                        height: MediaQuery.of(context).size.width * 0.5,
-                      ),
-                    ),
+                    AnimatedBuilder(
+                        animation: _animation,
+                        builder: (_, __) {
+                          return CustomPaint(
+                            painter: CircleAudioVisualizerPainter(
+                                _animation.value,
+                                _sampleBuffer.buffer,
+                                isPlaying,
+                                0,
+                                64),
+                            size: Size(
+                                MediaQuery.of(context).size.width * 0.8, 200),
+                            child: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.5,
+                              height: MediaQuery.of(context).size.width * 0.5,
+                            ),
+                          );
+                        }),
                   ],
                 )),
           ),

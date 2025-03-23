@@ -23,25 +23,34 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, backgroundPaint);
 
+    // Spacing between bars
+    double barWidth = size.width / (barCount * 1.5);
+    double spacing = barWidth / 2;
+
     final barPainter = Paint()
       ..color = const Color.fromARGB(220, 87, 255, 36)
+      ..strokeWidth = barWidth
+      ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.fill;
+
+    if (data.isEmpty) {
+      return;
+    }
 
     final maxPeaks = getPeaks(data, barCount);
 
-    double barWidth = size.width / (barCount * 1.5);
-    double spacing = barWidth / 2; // Spacing between bars
-
-    for (int i = 0; i < barCount && maxPeaks.isNotEmpty; i++) {
+    for (int i = 0; i < barCount && data.isNotEmpty; i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
       double barHeight = value * deltaTime;
       if (barHeight > size.height) {
         barHeight = size.height;
       }
       double x = i * (barWidth + spacing);
-      final Rect barRect =
-          Rect.fromLTWH(x, size.height - barHeight, barWidth, barHeight);
-      canvas.drawRect(barRect, barPainter);
+
+      final startOffset = Offset(x + barWidth / 2, size.height);
+      final endOffset = Offset(x + barWidth / 2, size.height - barHeight);
+
+      canvas.drawLine(startOffset, endOffset, barPainter);
     }
 
     final Paint shadowPaint = Paint()
@@ -120,24 +129,25 @@ class CircleAudioVisualizerPainter extends CustomPainter
     final double centerY = size.height / 2;
 
     final maxPeaks = getPeaks(data, barCount);
-    double radius = 90 + (maxPeaks[20] * dy);
+    double radius = 90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * dy );
     // paint.color = const Color(0xFF1001FF);
     paint.color = Color.fromARGB(255, 84, 33, 61);
 
-    for (int i = 0; i < barCount && maxPeaks.isNotEmpty; i++) {
-      var barHeight = maxPeaks[i] * dy;
+    for (int i = 0; data.isNotEmpty && i < barCount ; i++) {
+      final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
+      var barHeight = value * dy;
       if (barHeight > 100) {
         barHeight = 100;
       }
 
-      if (radius > 160) {
-        radius = 160;
+      if (radius > 100) {
+        radius = 100;
       }
       final double angle = (2 * pi / barCount) * i;
-      final double startX = centerX + radius * cos(angle);
-      final double startY = centerY + radius * sin(angle);
-      final double endX = centerX + (radius + barHeight) * cos(angle);
-      final double endY = centerY + (radius + barHeight) * sin(angle);
+      final double startX = centerX + 90 * cos(angle);
+      final double startY = centerY + 90 * sin(angle);
+      final double endX = centerX + (90 + barHeight) * cos(angle);
+      final double endY = centerY + (90 + barHeight) * sin(angle);
 
       canvas.drawLine(
         Offset(startX, startY),
@@ -145,9 +155,65 @@ class CircleAudioVisualizerPainter extends CustomPainter
         paint..strokeWidth = barWidth,
       );
     }
-    const dradius = 90.0;
+
+    canvas.drawCircle(Offset(centerX, centerY), radius, paint..strokeWidth = 1);
+    
+    final paint2 = Paint()
+      ..style = PaintingStyle.stroke
+      ..color = Colors.white.withAlpha(100)
+      ..maskFilter =  MaskFilter.blur(BlurStyle.normal, 10)
+      ..strokeWidth = 6;
+
+    canvas.drawCircle(Offset(centerX, centerY), 90, paint2);
+  }
+
+  @override
+  bool shouldRepaint(CircleAudioVisualizerPainter oldDelegate) => true;
+}
+
+mixin class SpectrumProcessor {
+  List<double> getPeaks(List<double> data, int barCount) {
+    final stft = STFT(4096, Window.hanning(4096));
+    final spectrogram = <Float64List>[];
+
+    final freqBin = List.generate(65, (i) {
+      double t = i / 65;
+      return 15.0 * pow(25000.0 / 15.0, t);
+    });
+
+    // Run STFT
+    stft.run(data, (Float64x2List freq) {
+      spectrogram.add(freq.discardConjugates().squareMagnitudes());
+    });
+
+    double fitFactor = 0.9;
+    List<double> lastSpectrum = List.filled(65, 0.0);
+    for (var frame in spectrogram) {
+      for (int j = 0; j < (frame.length); j++) {
+        double magnitude = frame[j];
+        double freq = j * 44800 / 4096;
+
+        for (int i = 0; i < 64; i++) {
+          if (freq >= freqBin[i] && freq <= freqBin[i + 1]) {
+            double smoothedValue = max(magnitude, lastSpectrum[i] * fitFactor);
+            lastSpectrum[i] = smoothedValue.abs();
+          }
+        }
+      }
+    }
+    return lastSpectrum;
+  }
+}
+
+enum SoundRange { bass, subBass, mid, lowMid, upMid, treble, ultra }
+
+
+/**
+ * 
+ * 
+const dradius = 90.0;
     final Path path = Path();
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 1 && (maxPeaks.isNotEmpty); i++) {
       final double startAngle = i * (pi / 2) + dy * maxPeaks[0];
       final double endAngle = (i + 1) * (pi / 2) + dy * maxPeaks[0];
 
@@ -187,53 +253,4 @@ class CircleAudioVisualizerPainter extends CustomPainter
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, dpaint);
-    paint.style = PaintingStyle.fill;
-    paint.color = Color.fromARGB(172, 17, 0, 255);
-    canvas.drawCircle(Offset(centerX, centerY), radius, paint);
-
-    final paint2 = Paint()
-      ..style = PaintingStyle.stroke
-      ..color = const Color.fromARGB(68, 31, 236, 255).withAlpha(180)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10)
-      ..strokeWidth = 6;
-
-    canvas.drawCircle(Offset(centerX, centerY), radius, paint2);
-  }
-
-  @override
-  bool shouldRepaint(CircleAudioVisualizerPainter oldDelegate) => true;
-}
-
-mixin class SpectrumProcessor {
-  List<double> getPeaks(List<double> data, int barCount) {
-    final stft = STFT(4096, Window.hanning(4096));
-    final spectrogram = <Float64List>[];
-
-    final freqBin = List.generate(65, (i) {
-      double t = i / 65;
-      return 20.0 * pow(20000.0 / 20.0, t);
-    });
-
-    // Run STFT
-    stft.run(data, (Float64x2List freq) {
-      spectrogram.add(freq.discardConjugates().magnitudes());
-    });
-
-    double fitFactor = 0.6;
-    List<double> lastSpectrum = List.filled(65, 0.0);
-    for (var frame in spectrogram) {
-      for (int j = 0; j < (frame.length); j++) {
-        double magnitude = frame[j];
-        double freq = j * 44800 / 4096;
-
-        for (int i = 0; i < 64; i++) {
-          if (freq >= freqBin[i] && freq <= freqBin[i + 1]) {
-            double smoothedValue = max(magnitude, lastSpectrum[i] * fitFactor);
-            lastSpectrum[i] = smoothedValue;
-          }
-        }
-      }
-    }
-    return lastSpectrum;
-  }
-}
+ */

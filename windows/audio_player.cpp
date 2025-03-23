@@ -237,12 +237,13 @@ namespace audiopc {
 	}
 
 	AudioPlayer::~AudioPlayer() {
-		CloseSession();
-		assert(m_pSession == 0);
 		m_poolFlag = false;
-		Shutdown();
 		handler.reset();
 		m_playerCount--;
+		CloseSession();
+		assert(m_pSession == 0);
+		Shutdown();
+		
 	}
 
 	HRESULT AudioPlayer::StartPlayback()
