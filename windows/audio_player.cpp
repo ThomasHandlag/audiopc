@@ -577,7 +577,6 @@ namespace audiopc {
 		// The session puts itself into the stopped state automatically.
 		m_state = Stopped;
 		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)}});
-		emitEvent({ {"id", hashID}, {"event", "completed"}, {"value", 1.0}});
 		return S_OK;
 	}
 

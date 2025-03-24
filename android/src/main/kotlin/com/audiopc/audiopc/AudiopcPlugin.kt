@@ -91,6 +91,13 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
                     audioPlayers.remove(id)
                 }
 
+                "getMetaData" -> {
+                    val path = call.argument<String>("path")
+                    if (path != null) {
+                        result.success(audioPlayer?.getMetaData(path))
+                    }
+                }
+
                 else -> {
                     result.notImplemented()
                 }

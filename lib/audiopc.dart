@@ -12,6 +12,12 @@ class Audiopc {
 
   double duration = 0.0;
 
+  AudiopcState _state = AudiopcState.none;
+
+  AudiopcState get state => _state;
+
+  bool isCompleted = false;
+
   PositionListener? _positionListener;
   SamplesListener? _samplesListener;
 
@@ -36,24 +42,33 @@ class Audiopc {
   //     .map((event) => event.value as String);
 
   Stream<AudiopcState> get onStateChanged => _eventStreamController.stream
-          .where((event) => event.type == PlayerEventType.position)
+          .where((event) => event.type == PlayerEventType.state)
           .map((event) {
-        final state = event.value as double;
-        switch (state) {
+        final stateValue = event.value as double;
+        if (state == AudiopcState.playing && stateValue == 5.0) {
+          isCompleted = true;
+        } else {
+          isCompleted = false;
+        }
+
+        switch (stateValue) {
           case 3.0:
             {
               _positionListener!.start();
               _samplesListener!.start();
+              _state = AudiopcState.playing;
               return AudiopcState.playing;
             }
           case 4.0:
             {
               _positionListener!.pause();
               _samplesListener!.pause();
+              _state = AudiopcState.paused;
               return AudiopcState.paused;
             }
           case 5.0:
             {
+              _state = AudiopcState.stopped;
               return AudiopcState.stopped;
             }
           default:
@@ -61,15 +76,7 @@ class Audiopc {
         }
       });
 
-  Stream<bool> get onCompleted => _eventStreamController.stream
-          .where((event) => event.type == PlayerEventType.completed)
-          .map((event) {
-        if (event.value) {
-          _positionListener!.pause();
-          _samplesListener!.pause();
-        }
-        return event.value as bool;
-      });
+  Stream<bool> get onCompleted => Stream.value(isCompleted);
 
   Audiopc({required this.id}) {
     _platform.listen(id);
@@ -127,49 +134,14 @@ class Audiopc {
     return AudioMetaData.fromMap(temp);
   }
 
-  /// Dispose the player 
-  /// 
-  /// This method should be called when the player is no longer needed. 
+  /// Dispose the player
+  ///
+  /// This method should be called when the player is no longer needed.
   /// Throws an [Exception] if trying to call any method after calling this method
   void dispose() {
     _positionListener!.stop();
     _samplesListener!.stop();
     _eventSubscription!.cancel();
     _eventStreamController.close();
-  }
-}
-
-
-class CircularBuffer<T> {
-
-  final int max;
-  final List<T> buffer=[];
-
-  CircularBuffer({required this.max});
-
-  void add(T value) {
-    if (buffer.length >= max) {
-      buffer.removeAt(0);
-    }
-    buffer.add(value);
-  }
-
-  void addAll(List<T> values) {
-    if (buffer.length + values.length > max) {
-      buffer.removeRange(0, buffer.length + values.length - max);
-    }
-    buffer.addAll(values);
-  }
-
-  T get(int index) {
-    return buffer[index];
-  }
-
-  int get length {
-    return buffer.length;
-  }
-
-  void clear() {
-    buffer.clear();
   }
 }

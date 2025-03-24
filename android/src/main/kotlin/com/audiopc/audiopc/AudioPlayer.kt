@@ -166,7 +166,6 @@ class AudioPlayer(
     }
 
     fun getPosition(): Double {
-        Log.d("AudioPlayer", "getPosition: ${player.currentPosition}")
         return when (player.currentPosition) {
             C.TIME_UNSET -> 0.0
             else -> player.currentPosition / 1000.0
@@ -180,10 +179,10 @@ class AudioPlayer(
 
     fun setSource(path: String) {
         player.setMediaItem(MediaItem.fromUri(path))
-        player.prepare()
     }
 
     fun play() {
+        player.prepare()
         player.play()
     }
 
@@ -193,5 +192,19 @@ class AudioPlayer(
 
     fun getSamples(): List<Double> {
         return samplesProcessor.samples
+    }
+
+    fun getMetaData(path: String) : Map<String, Any?> {
+        val mediaItem = MediaItem.fromUri(path)
+        val metadata = mediaItem.mediaMetadata
+        return mapOf(
+            "title" to metadata.title,
+            "artist" to metadata.artist,
+            "albumTitle" to metadata.albumTitle,
+            "artwork" to metadata.artworkData,
+            "timeReleased" to metadata.releaseDay,
+            "copyRight" to metadata.conductor,
+            "genre" to metadata.genre,
+        )
     }
 }

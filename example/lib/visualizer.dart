@@ -33,13 +33,9 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
       ..strokeJoin = StrokeJoin.round
       ..style = PaintingStyle.fill;
 
-    if (data.isEmpty) {
-      return;
-    }
-
     final maxPeaks = getPeaks(data, barCount);
 
-    for (int i = 0; i < barCount && data.isNotEmpty; i++) {
+    for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
       double barHeight = value * deltaTime;
       if (barHeight > size.height) {
@@ -129,11 +125,11 @@ class CircleAudioVisualizerPainter extends CustomPainter
     final double centerY = size.height / 2;
 
     final maxPeaks = getPeaks(data, barCount);
-    double radius = 90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * dy );
+    double radius = 90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * dy);
     // paint.color = const Color(0xFF1001FF);
     paint.color = Color.fromARGB(255, 84, 33, 61);
 
-    for (int i = 0; data.isNotEmpty && i < barCount ; i++) {
+    for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
       var barHeight = value * dy;
       if (barHeight > 100) {
@@ -157,18 +153,19 @@ class CircleAudioVisualizerPainter extends CustomPainter
     }
 
     canvas.drawCircle(Offset(centerX, centerY), radius, paint..strokeWidth = 1);
-    
+
     final paint2 = Paint()
       ..style = PaintingStyle.stroke
       ..color = Colors.white.withAlpha(100)
-      ..maskFilter =  MaskFilter.blur(BlurStyle.normal, 10)
+      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10)
       ..strokeWidth = 6;
 
     canvas.drawCircle(Offset(centerX, centerY), 90, paint2);
   }
 
   @override
-  bool shouldRepaint(CircleAudioVisualizerPainter oldDelegate) => true;
+  bool shouldRepaint(CircleAudioVisualizerPainter oldDelegate) =>
+      isPlaying && data != oldDelegate.data;
 }
 
 mixin class SpectrumProcessor {
@@ -206,7 +203,6 @@ mixin class SpectrumProcessor {
 }
 
 enum SoundRange { bass, subBass, mid, lowMid, upMid, treble, ultra }
-
 
 /**
  * 

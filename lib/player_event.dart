@@ -17,7 +17,7 @@ class DurationEvent extends PlayerEvent {
 }
 
 class StateEvent extends PlayerEvent {
-   StateEvent({required double super.value}) : super(type: PlayerEventType.position);
+   StateEvent({required double super.value}) : super(type: PlayerEventType.state);
 }
 
 class CompletedEvent extends PlayerEvent {
@@ -30,7 +30,7 @@ class ErrorEvent extends PlayerEvent {
 
 sealed class PlayerEventType {
   static const duration = 'duration';
-  static const position = 'state'; 
+  static const state = 'state'; 
   static const completed = 'completed';
   static const error = 'error';
 }

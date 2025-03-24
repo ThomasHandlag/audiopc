@@ -7,7 +7,7 @@ import 'package:audiopc/audiopc_state.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MaterialApp(theme: ThemeData.dark(useMaterial3: true), home: MyApp()));
+  runApp(MaterialApp(theme: ThemeData.dark(useMaterial3: true), debugShowCheckedModeBanner: false, home: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -23,7 +23,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   double _duration = 0.0;
   double _cDuration = 0.0;
 
-  final CircularBuffer<double> _sampleBuffer = CircularBuffer(max: 88900);
+  // final CircularBuffer<double> _sampleBuffer = CircularBuffer(max: 88900);
+  List<double> _sampleBuffer = [];
 
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -76,13 +77,13 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     _audiopcPlugin.onSamples.listen((samples) {
       setState(() {
-        _sampleBuffer.addAll(samples);
+        _sampleBuffer = samples;
       });
     });
 
     _audiopcPlugin.onCompleted.listen((completed) {
       if (completed) {
-        _sampleBuffer.clear();
+        debugPrint("Completed");  
       }
     });
   }
@@ -190,7 +191,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             painter: VisualzerPainter(
                                 clipper: const VisualizerClipper(),
                                 deltaTime: _controller.value,
-                                data: _sampleBuffer.buffer,
+                                data: _sampleBuffer,
                                 isPlaying: isPlaying),
                             size: Size(
                                 MediaQuery.of(context).size.width * 0.8, 200),
@@ -202,7 +203,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                           return CustomPaint(
                             painter: CircleAudioVisualizerPainter(
                                 _animation.value,
-                                _sampleBuffer.buffer,
+                                _sampleBuffer,
                                 isPlaying,
                                 0,
                                 64),
