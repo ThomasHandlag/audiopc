@@ -16,13 +16,16 @@ class Audiopc {
 
   AudiopcState get state => _state;
 
-  bool isCompleted = false;
+  double position = 0;
 
   PositionListener? _positionListener;
   SamplesListener? _samplesListener;
 
   Stream<double> get onPositionChanged =>
-      _positionListener!.streamControler.stream;
+      _positionListener!.streamControler.stream.where((value) {
+        position = value;
+        return true;
+      });
   Stream<List<double>> get onSamples =>
       _samplesListener!.streamControler.stream;
 
@@ -45,12 +48,6 @@ class Audiopc {
           .where((event) => event.type == PlayerEventType.state)
           .map((event) {
         final stateValue = event.value as double;
-        if (state == AudiopcState.playing && stateValue == 5.0) {
-          isCompleted = true;
-        } else {
-          isCompleted = false;
-        }
-
         switch (stateValue) {
           case 3.0:
             {
@@ -63,12 +60,10 @@ class Audiopc {
             {
               _positionListener!.pause();
               _samplesListener!.pause();
-              _state = AudiopcState.paused;
               return AudiopcState.paused;
             }
           case 5.0:
             {
-              _state = AudiopcState.stopped;
               return AudiopcState.stopped;
             }
           default:
@@ -76,7 +71,19 @@ class Audiopc {
         }
       });
 
-  Stream<bool> get onCompleted => Stream.value(isCompleted);
+  Stream<bool> get onCompleted => _eventStreamController.stream
+          .where((event) => event.type == PlayerEventType.state)
+          .map((event) {
+        final stateValue = event.value as double;
+        if ((stateValue == 5.0) &
+            (position >= duration) &
+            (state == AudiopcState.playing)) {
+          _state = AudiopcState.stopped;
+          return true;
+        } else {
+          return false;
+        }
+      });
 
   Audiopc({required this.id}) {
     _platform.listen(id);

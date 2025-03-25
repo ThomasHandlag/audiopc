@@ -7,7 +7,10 @@ import 'package:audiopc/audiopc_state.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MaterialApp(theme: ThemeData.dark(useMaterial3: true), debugShowCheckedModeBanner: false, home: MyApp()));
+  runApp(MaterialApp(
+      theme: ThemeData.dark(useMaterial3: true),
+      debugShowCheckedModeBanner: false,
+      home: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -83,7 +86,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     _audiopcPlugin.onCompleted.listen((completed) {
       if (completed) {
-        debugPrint("Completed");  
+       debugPrint("Completed");
       }
     });
   }
