@@ -27,9 +27,6 @@ namespace audiopc {
 			) override
 		{
 			setSink(move(events));
-			if (!_sink) {
-				WARNING("Sink is null");
-			}
 			return nullptr;
 		}
 

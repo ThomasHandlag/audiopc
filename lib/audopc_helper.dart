@@ -10,8 +10,7 @@ abstract class PlayerListener {
 }
 
 abstract class FrameCallBackUpdater {
-  int id;
-  FrameCallBackUpdater({required this.id});
+  FrameCallBackUpdater();
 
   /// callback function to be called when the frame is ready
   /// [timeStamp] is the time of each frame
@@ -20,7 +19,7 @@ abstract class FrameCallBackUpdater {
 
 final class PositionListener extends PlayerListener
     implements FrameCallBackUpdater {
-  PositionListener({required this.getPosition, required this.id});
+  PositionListener({required this.getPosition});
   final Future<double> Function() getPosition;
   final streamControler = StreamController<double>.broadcast();
 
@@ -41,20 +40,17 @@ final class PositionListener extends PlayerListener
   @override
   void callback(Duration? timeStamp) {
     if (isRunnin) {
-      call();
       SchedulerBinding.instance.scheduleFrameCallback(callback);
+      call();
     }
   }
 
   @override
   void stop() {
     isRunnin = false;
+    SchedulerBinding.instance.cancelFrameCallbackWithId(0);
     streamControler.close();
-    SchedulerBinding.instance.cancelFrameCallbackWithId(id);
   }
-
-  @override
-  int id;
 
   bool isRunnin = false;
 
@@ -66,7 +62,7 @@ final class PositionListener extends PlayerListener
 
 final class SamplesListener extends PlayerListener
     implements FrameCallBackUpdater {
-  SamplesListener({required this.getSamples, required this.id});
+  SamplesListener({required this.getSamples});
 
   final Future<List<double>> Function() getSamples;
   final streamControler = StreamController<List<double>>.broadcast();
@@ -82,6 +78,8 @@ final class SamplesListener extends PlayerListener
 
   @override
   void stop() {
+    isRunnin = false;
+    SchedulerBinding.instance.cancelFrameCallbackWithId(0);
     streamControler.close();
   }
 
@@ -92,13 +90,10 @@ final class SamplesListener extends PlayerListener
   }
 
   @override
-  int id;
-
-  @override
   void callback(Duration? timeStamp) {
     if (isRunnin) {
-      call();
       SchedulerBinding.instance.scheduleFrameCallback(callback);
+      call();
     }
   }
 

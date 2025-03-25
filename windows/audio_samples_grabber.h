@@ -13,7 +13,7 @@ namespace audiopc {
 	class AudioSamplesGrabber : public IMFSampleGrabberSinkCallback {
 	public:
 		ULONG m_cRef;
-		CircularBuffer samplesBuffer;
+		vector<double> m_samples;
 
 		AudioSamplesGrabber();
 		~AudioSamplesGrabber();

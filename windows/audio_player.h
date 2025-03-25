@@ -66,13 +66,6 @@ namespace audiopc {
 
 	class AudioPlayer : public IMFAsyncCallback
 	{
-	protected:
-		ULONG m_cRef;
-		AudioSamplesGrabber* m_pGrabber;
-		const UINT WM_APP_PLAYER_EVENT;
-		const std::string hashID;
-		shared_ptr<EventSink<flutter::EncodableValue>> handler;
-
 	public:
 		static HRESULT CreateInstance(std::unique_ptr<AudioPlayer>* ppCB, UINT id, 
 			std::string hashID, std::shared_ptr<EventSink<flutter::EncodableValue>>* handler
@@ -128,40 +121,26 @@ namespace audiopc {
 
 		HRESULT CanSeek(BOOL* pbCanSeek);
 		HRESULT GetCurrentPosition();
-		HRESULT GetCDurationSecond(double& duration);
+		HRESULT GetPositionSecond(double& duration);
 		HRESULT SetPosition(MFTIME hnsPosition);
 
 		HRESULT CanScrub(BOOL* pbCanScrub) const;
 		HRESULT Scrub(BOOL bScrub);
 
-		HRESULT CanFastForward(BOOL* pbCanFF);
-		HRESULT CanRewind(BOOL* pbCanRewind);
+		HRESULT CanFastForward(BOOL* pbCanFF) const;
+		HRESULT CanRewind(BOOL* pbCanRewind) const;
 		HRESULT SetRate(float fRate);
 		HRESULT FastForward();
 		HRESULT Rewind();
 		void GetSamples(vector<double>& out) const;
 		PlaybackState GetState() const;
-
-
+		std::wstring m_path;
 	protected:
-		HRESULT StartPlayer();
-		HRESULT CreateMediaSession();
-		HRESULT CloseSession();
-		HRESULT StartPlayback();
-		HRESULT CreatePlaybackTopology();
-		HRESULT AddBranchToPartialTopology(DWORD index);
-		HRESULT AddSourceNode();
-		HRESULT AddOutputNode();
-		HRESULT CreateMediaSinkActivate();
-		HRESULT OnTopologyStatus();
-		HRESULT OnPresentationEnded();
-		HRESULT OnNewPresentation();
-		HRESULT Shutdown();
-		HRESULT EventHandle();
-		HRESULT AddGrabberOutputNode();
-		void emitEvent(const std::map<std::string, flutter::EncodableValue> value) const;
-		HRESULT GetDuration();
-
+		ULONG m_cRef;
+		AudioSamplesGrabber* m_pGrabber;
+		const UINT WM_APP_PLAYER_EVENT;
+		const std::string hashID;
+		shared_ptr<EventSink<flutter::EncodableValue>> handler;
 		PlaybackState m_state;
 		HANDLE m_hCloseEvent;
 		IMFSourceResolver* m_pSourceResolver;
@@ -192,6 +171,26 @@ namespace audiopc {
 		IMFRateSupport* m_pRateSupport;
 		MFTIME m_cDuration = 0;
 
+		HRESULT StartPlayer();
+		HRESULT CreateMediaSession();
+		HRESULT CloseSession();
+		HRESULT StartPlayback();
+		HRESULT CreatePlaybackTopology();
+		HRESULT AddBranchToPartialTopology(DWORD index);
+		HRESULT AddSourceNode();
+		HRESULT AddOutputNode();
+		HRESULT CreateMediaSinkActivate();
+		HRESULT OnTopologyStatus();
+		HRESULT OnPresentationEnded();
+		HRESULT OnNewPresentation();
+		HRESULT Shutdown();
+		HRESULT EventHandle();
+		HRESULT AddGrabberOutputNode();
+
+		
+		void emitEvent(const std::map<std::string, flutter::EncodableValue> value) const;
+		HRESULT GetDuration();
+		void emitError(ERROR_TYPE e_type, const std::string message) const;
 
 		class CritSec
 		{
@@ -243,7 +242,7 @@ namespace audiopc {
 
 		HRESULT SetPositionInternal(const MFTIME& hnsPosition);
 		HRESULT CommitRateChange(float fRate, BOOL bThin);
-		float   GetNominalRate();
+		float   GetNominalRate() const;
 
 		HRESULT OnSessionStart();
 		HRESULT OnSessionStop();
