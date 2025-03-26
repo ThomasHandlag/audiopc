@@ -40,13 +40,6 @@ class Audiopc {
 
   final _eventStreamController = StreamController<PlayerEvent>.broadcast();
 
-  Stream<double> get onDurationChanged => _eventStreamController.stream
-          .where((event) => event.type == PlayerEventType.duration)
-          .map((event) {
-        _duration = event.value as double;
-        return event.value as double;
-      });
-
   // Stream<String> get onError => _eventStreamController.stream
   //     .where((event) => event.type == PlayerEventType.error)
   //     .map((event) => event.value as String);
@@ -82,7 +75,13 @@ class Audiopc {
       });
 
   StreamSubscription? stateInternal;
-  StreamSubscription? durationInternal;
+
+  Stream<double> get onDurationChanged => _eventStreamController.stream
+          .where((event) => event.type == PlayerEventType.duration)
+          .map((event) {
+        _duration = event.value as double;
+        return event.value as double;
+      });
 
   Stream<bool> get onCompleted => _eventStreamController.stream
           .where((event) => event.type == PlayerEventType.state)
@@ -170,5 +169,6 @@ class Audiopc {
     _samplesListener!.stop();
     _eventSubscription!.cancel();
     _eventStreamController.close();
+    _platform.close(id);
   }
 }

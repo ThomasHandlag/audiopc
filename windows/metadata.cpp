@@ -19,22 +19,22 @@ namespace audiopc {
 		metaData = std::map<std::string, flutter::EncodableValue>();
 		hr = MFStartup(MF_VERSION);
 		if (FAILED(hr)) {
-			std::cout << "Error starting MF" << std::endl;
 			goto done;
 		}
 		hr = CreateMediaSource(path.c_str(), &m_pSource);
 		if (FAILED(hr)) {
-			std::cout << "Error creating media source" << std::endl;
 			goto done;
 		}
 
 		hr = RetrieveMetadata(m_pSource);
 		if (FAILED(hr)) {
-			std::cout << "Error retrieving metadata" << std::endl;
 			goto done;
 		}
 
 	done:
+		if (m_pSource) {
+			m_pSource->Release();
+		}
 		return;
 	}
 
@@ -73,8 +73,6 @@ namespace audiopc {
 			);
 
 			if (FAILED(hr)) {
-				std::wcerr << L"Failed to create media source: "
-					<< std::hex << hr << std::endl;
 				goto done;
 			}
 
@@ -114,25 +112,17 @@ namespace audiopc {
 			// Get metadata
 			hr = pProvider->GetMFMetadata(nullptr, 0, 0, &pMetadata);
 			if (FAILED(hr)) {
-				std::wcerr << L"Failed to get metadata: "
-					<< std::hex << hr << std::endl;
 				goto done;
 			}
 
 			// Get all property names
 			hr = pMetadata->GetAllPropertyNames(&var);
 			if (FAILED(hr)) {
-				std::wcerr << L"Failed to get property names: "
-					<< std::hex << hr << std::endl;
 				goto done;
 			}
 
 			// Check if we have a vector of property names
 			if (var.vt == (VT_VECTOR | VT_LPWSTR)) {
-				std::wcout << L"Found " << var.calpwstr.cElems
-					<< L" metadata properties:" << std::endl;
-
-				// Iterate through all properties
 				for (ULONG i = 0; i < var.calpwstr.cElems; ++i) {
 					PROPVARIANT varValue;
 					PropVariantInit(&varValue);
@@ -145,7 +135,6 @@ namespace audiopc {
 				}
 			}
 			else {
-				std::wcerr << L"No property names found or unsupported type" << std::endl;
 				return E_FAIL;
 			}
 

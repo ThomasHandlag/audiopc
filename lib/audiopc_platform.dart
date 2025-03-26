@@ -89,27 +89,29 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
 
   @override
   void listen(String id) {
-    _eventStream[id] = eventChannel.receiveBroadcastStream()
-      .map((event) {
-        if (event['id'] == id) {
-          final eventName = event['event'] as String;
-          switch (eventName) {
-            case 'duration':
-              {
-                final duration = event['value'] as double;
-                return DurationEvent(value: duration);
-              }
-            case 'state':
-              {
-                final state = event['value'] as int;
-                return StateEvent(value: state.toDouble());
-              }
-            case 'error':
-              {
-                return ErrorEvent(value: event['value'] as String);
-              }
-          }
+    _eventStream[id] = eventChannel.receiveBroadcastStream().map((event) {
+      if (event['id'] == id) {
+        final eventName = event['event'] as String;
+        switch (eventName) {
+          case 'state':
+            {
+              final state = event['value'] as int;
+              return StateEvent(value: state.toDouble());
+            }
+          case 'error':
+            {
+              return ErrorEvent(value: event['value'] as String);
+            }
+          case 'duration':
+            {
+              return DurationEvent(value: event['value'] as double);
+            }
+          default:
+            {
+              return NoneEvent();
+            }
         }
-      });
+      }
+    });
   }
 }

@@ -110,8 +110,7 @@ namespace audiopc {
 		}
 
 		assert(m_pRate || !m_bCanScrub);
-		m_state = OpenPending;
-		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
+		
 		double duration = 0;
 		GetSecondDuration(duration);
 		emitEvent({ {"id", hashID}, {"event", "duration"}, {"value", duration} });
@@ -123,6 +122,7 @@ namespace audiopc {
 		}
 		SAFE_RELEASE(&pClock);
 		SAFE_RELEASE(&m_pTopology);
+		SAFE_RELEASE(&m_pPD);
 		return hr;
 	}
 

@@ -67,6 +67,7 @@ class AudioPlayer(
         player = ExoPlayer.Builder(context, defaultRenderersFactory).build()
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(unused: Int) {
+                Log.d("AudioPlayer", "State: $unused: ${player.duration}")
                 when (unused) {
                     Player.STATE_READY-> {
                         eventSink.success(
@@ -74,22 +75,6 @@ class AudioPlayer(
                                 "id" to id,
                                 "event" to "state",
                                 "value" to 2
-                            )
-                        )
-                    }
-                    Player.STATE_ENDED -> {
-                        eventSink.success(
-                            mapOf(
-                                "id" to id,
-                                "event" to "state",
-                                "value" to 5
-                            )
-                        )
-                        eventSink.success(
-                            mapOf(
-                                "id" to id,
-                                "event" to "completed",
-                                "value" to 1
                             )
                         )
                     }
@@ -129,7 +114,7 @@ class AudioPlayer(
 
             override fun onTimelineChanged(timeline: Timeline, reason: Int) {
                 super.onTimelineChanged(timeline, reason)
-                when(val duration = player.duration) {
+                when(player.duration) {
                     C.TIME_UNSET -> {
                         eventSink.success(
                             mapOf(
@@ -144,7 +129,7 @@ class AudioPlayer(
                             mapOf(
                                 "id" to id,
                                 "event" to "duration",
-                                "value" to duration.toDouble() / 1000.0
+                                "value" to player.duration.toDouble() / 1000.0
                             )
                         )
                     }
@@ -179,10 +164,11 @@ class AudioPlayer(
 
     fun setSource(path: String) {
         player.setMediaItem(MediaItem.fromUri(path))
+        player.prepare()
+        player.play()
     }
 
     fun play() {
-        player.prepare()
         player.play()
     }
 
@@ -197,6 +183,7 @@ class AudioPlayer(
     fun getMetaData(path: String) : Map<String, Any?> {
         val mediaItem = MediaItem.fromUri(path)
         val metadata = mediaItem.mediaMetadata
+        Log.d("AudioPlayer", "Metadata: $metadata")
         return mapOf(
             "title" to metadata.title,
             "artist" to metadata.artist,

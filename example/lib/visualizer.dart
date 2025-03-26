@@ -37,7 +37,7 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
 
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
-      double barHeight = value * deltaTime;
+      double barHeight = value * (isPlaying ? deltaTime : 1);
 
       if ((barHeight.isNaN)) {
         barHeight = 0;
@@ -130,13 +130,13 @@ class CircleAudioVisualizerPainter extends CustomPainter
     final double centerY = size.height / 2;
 
     final maxPeaks = getPeaks(data, barCount);
-    double radius = 90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * dy);
+    double radius = 90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * (isPlaying ? dy : 1));
     // paint.color = const Color(0xFF1001FF);
     paint.color = Color.fromARGB(255, 84, 33, 61);
 
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
-      var barHeight = value * dy;
+      var barHeight = value * (isPlaying ? dy : 1);
 
       if ((barHeight.isNaN)) {
         barHeight = 0;

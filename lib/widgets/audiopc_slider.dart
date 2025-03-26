@@ -25,9 +25,14 @@ class _AudiopcSliderState extends State<AudiopcSlider> {
   Widget build(BuildContext context) {
     return StreamBuilder(
         stream: widget.onPositionChanged,
+        initialData: 0.0,
         builder: (_, snapshot) {
+          var position = !isDragging ? snapshot.data ?? 0 : value;
+          if (position > widget.duration) {
+            position = widget.duration;
+          }
           return Slider(
-            value: !isDragging ? snapshot.data ?? 0 : value,
+            value: position,
             onChanged: (v) {
               setState(() {
                 value = v;

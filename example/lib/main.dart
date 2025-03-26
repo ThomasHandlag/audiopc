@@ -48,9 +48,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     _controller.forward();
 
     _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
-
     _audiopcPlugin.onDurationChanged.listen(null);
-    _audiopcPlugin.onStateChanged.listen(null);
   }
 
   double rate = 1.0;
@@ -58,6 +56,15 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   String sPath = "";
 
   AudioMetaData? snapshot;
+
+  Future<void> getMetaData(String path) async {
+    // _audiopcPlugin.getMetadata(path).then((value) {
+    //   setState(() {
+    //     snapshot = value;
+    //     debugPrint(snapshot.toString());
+    //   });
+    // });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,14 +86,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                               .then((file) {
                             if (file != null) {
                               _audiopcPlugin.play(file.path);
-                              _audiopcPlugin
-                                  .getMetadata(file.path)
-                                  .then((value) {
-                                setState(() {
-                                  snapshot = value;
-                                });
-                              });
-
+                              getMetaData(file.path);
                               setState(() {
                                 sPath = file.path;
                               });
@@ -125,13 +125,20 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                                   ? Icons.pause
                                   : Icons.play_arrow);
                             })),
-                    AudiopcSlider(
-                        duration: _audiopcPlugin.duration,
-                        onPositionChanged: _audiopcPlugin.onPositionChanged,
-                        seek: (v) {
-                          _audiopcPlugin.seek(v);
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onDurationChanged,
+                        builder: (_, val) {
+                          return AudiopcSlider(
+                              duration: val.data ?? 0,
+                              onPositionChanged:
+                                  _audiopcPlugin.onPositionChanged,
+                              seek: (v) {
+                                _audiopcPlugin.seek(v);
+                              });
                         }),
-                    Text("${_audiopcPlugin.duration}"),
+                    StreamBuilder(stream: _audiopcPlugin.onDurationChanged, builder: (_, val) {
+                      return Text("Duration: ${val.data ?? 0}");
+                    }),
                     IconButton(
                         onPressed: () {
                           setState(() {
@@ -225,4 +232,3 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     );
   }
 }
-
