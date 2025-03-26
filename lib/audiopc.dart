@@ -87,9 +87,7 @@ class Audiopc {
           .where((event) => event.type == PlayerEventType.state)
           .map((event) {
         final stateValue = event.value as double;
-        if ((stateValue == 5.0) &
-            (position >= duration) &
-            (state == AudiopcState.playing)) {
+        if ((stateValue == 5.0) & (_state == AudiopcState.playing)) {
           _state = AudiopcState.stopped;
           return true;
         } else {
