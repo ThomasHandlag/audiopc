@@ -62,7 +62,9 @@ final class PositionListener extends PlayerListener
 
 final class SamplesListener extends PlayerListener
     implements FrameCallBackUpdater {
-  SamplesListener({required this.getSamples});
+  SamplesListener({required this.getSamples}) {
+    streamControler.onCancel = stop;
+  }
 
   final Future<List<double>> Function() getSamples;
   final streamControler = StreamController<List<double>>.broadcast();

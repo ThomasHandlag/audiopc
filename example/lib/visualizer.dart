@@ -38,6 +38,11 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
       double barHeight = value * deltaTime;
+
+      if ((barHeight.isNaN)) {
+        barHeight = 0;
+      }
+
       if (barHeight > size.height) {
         barHeight = size.height;
       }
@@ -132,13 +137,15 @@ class CircleAudioVisualizerPainter extends CustomPainter
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
       var barHeight = value * dy;
-      if (barHeight > 100) {
+
+      if ((barHeight.isNaN)) {
+        barHeight = 0;
+      }
+
+      if ((barHeight > 100)) {
         barHeight = 100;
       }
 
-      if (radius > 100) {
-        radius = 100;
-      }
       final double angle = (2 * pi / barCount) * i;
       final double startX = centerX + 90 * cos(angle);
       final double startY = centerY + 90 * sin(angle);
@@ -150,6 +157,10 @@ class CircleAudioVisualizerPainter extends CustomPainter
         Offset(endX, endY),
         paint..strokeWidth = barWidth,
       );
+    }
+
+    if (radius > 100 || radius.isNaN) {
+      radius = 100;
     }
 
     canvas.drawCircle(Offset(centerX, centerY), radius, paint..strokeWidth = 1);

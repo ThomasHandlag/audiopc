@@ -10,11 +10,15 @@ class Audiopc {
   final _platform = AudiopcPlatform();
   final String id;
 
-  double duration = 0.0;
+  double _duration = 0.0;
+
+  double get duration => _duration;
 
   AudiopcState _state = AudiopcState.none;
 
   AudiopcState get state => _state;
+
+  bool get isPlaying => _state == AudiopcState.playing;
 
   double position = 0;
 
@@ -36,7 +40,7 @@ class Audiopc {
   Stream<double> get onDurationChanged => _eventStreamController.stream
           .where((event) => event.type == PlayerEventType.duration)
           .map((event) {
-        duration = event.value as double;
+        _duration = event.value as double;
         return event.value as double;
       });
 
@@ -51,25 +55,29 @@ class Audiopc {
         switch (stateValue) {
           case 3.0:
             {
-              _positionListener!.start();
-              _samplesListener!.start();
               _state = AudiopcState.playing;
               return AudiopcState.playing;
             }
           case 4.0:
             {
-              _positionListener!.pause();
-              _samplesListener!.pause();
+              _state = AudiopcState.paused;
               return AudiopcState.paused;
             }
           case 5.0:
             {
+              _state = AudiopcState.stopped;
               return AudiopcState.stopped;
             }
           default:
-            return AudiopcState.none;
+            {
+              _state = AudiopcState.none;
+              return AudiopcState.none;
+            }
         }
       });
+
+  StreamSubscription? stateInternal;
+  StreamSubscription? durationInternal;
 
   Stream<bool> get onCompleted => _eventStreamController.stream
           .where((event) => event.type == PlayerEventType.state)
@@ -105,14 +113,41 @@ class Audiopc {
   Future<void> play(String path) async {
     await _platform.setSource(path, id);
     await _platform.play(id);
+
+    durationInternal = onDurationChanged.listen((event) {
+      if (event > 0) {
+        _duration = event;
+        durationInternal!.cancel();
+        durationInternal = null;
+      }
+    });
+
+    _positionListener!.start();
+    _samplesListener!.start();
+
+    stateInternal = onStateChanged.listen((event) {
+      _state = event;
+      if (event == AudiopcState.stopped) {
+        stateInternal!.cancel();
+        stateInternal = null;
+      } else if (event == AudiopcState.paused) {
+        stateInternal?.pause();
+        stateInternal = null;
+      }
+    });
   }
 
   Future<void> resume() async {
     await _platform.play(id);
+    _positionListener!.start();
+    _samplesListener!.start();
+    stateInternal?.resume();
   }
 
   Future<void> pause() async {
     await _platform.pause(id);
+    _samplesListener!.pause();
+    _positionListener!.pause();
   }
 
   Future<void> seek(double position) async {

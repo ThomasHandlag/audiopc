@@ -23,12 +23,6 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   final _audiopcPlugin = Audiopc(id: "0");
 
-  double _duration = 0.0;
-  double _cDuration = 0.0;
-
-  // final CircularBuffer<double> _sampleBuffer = CircularBuffer(max: 88900);
-  List<double> _sampleBuffer = [];
-
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -52,48 +46,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     });
 
     _controller.forward();
-    _audiopcPlugin.onDurationChanged.listen((event) {
-      setState(() {
-        _duration = event;
-      });
-    });
 
     _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
-
-    _audiopcPlugin.onPositionChanged.listen((position) {
-      setState(() {
-        _cDuration = position;
-      });
-    });
-
-    _audiopcPlugin.onStateChanged.listen((state) {
-      if (state == AudiopcState.playing) {
-        setState(() {
-          isPlaying = true;
-        });
-      } else {
-        setState(() {
-          isPlaying = false;
-        });
-      }
-    });
-
-    _audiopcPlugin.onSamples.listen((samples) {
-      setState(() {
-        _sampleBuffer = samples;
-      });
-    });
-
-    _audiopcPlugin.onCompleted.listen((completed) {
-      if (completed) {
-       debugPrint("Completed");
-      }
-    });
   }
 
   double rate = 1.0;
-
-  bool isPlaying = false;
 
   String sPath = "";
 
@@ -152,22 +109,30 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         child: Text("Rate-: $rate")),
                     IconButton(
                         onPressed: () {
-                          if (isPlaying) {
+                          if (_audiopcPlugin.state == AudiopcState.playing) {
                             _audiopcPlugin.pause();
                           } else {
                             _audiopcPlugin.resume();
                           }
                         },
-                        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow)),
-                    Slider(
-                      value:
-                          _audiopcPlugin.duration < _cDuration ? 0 : _cDuration,
-                      onChanged: (value) {
-                        _audiopcPlugin.seek(value);
-                      },
-                      max: _duration + 1,
-                    ),
-                    Text("$_duration"),
+                        icon: Icon(_audiopcPlugin.isPlaying
+                            ? Icons.pause
+                            : Icons.play_arrow)),
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onPositionChanged,
+                        builder: (_, snapshot) {
+                          return Slider(
+                            value: _audiopcPlugin.duration <
+                                    _audiopcPlugin.position
+                                ? 0
+                                : snapshot.data ?? 0,
+                            onChanged: (value) {
+                              _audiopcPlugin.seek(value);
+                            },
+                            max: _audiopcPlugin.duration + 1,
+                          );
+                        }),
+                    Text("${_audiopcPlugin.duration}"),
                     IconButton(
                         onPressed: () {
                           setState(() {
@@ -187,36 +152,50 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         },
                         icon: const Icon(Icons.exposure_minus_1)),
                     Text("Time: $timeSec"),
-                    AnimatedBuilder(
-                        animation: _animation,
-                        builder: (_, __) {
-                          return CustomPaint(
-                            painter: VisualzerPainter(
-                                clipper: const VisualizerClipper(),
-                                deltaTime: _controller.value,
-                                data: _sampleBuffer,
-                                isPlaying: isPlaying),
-                            size: Size(
-                                MediaQuery.of(context).size.width * 0.8, 200),
-                          );
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onSamples,
+                        initialData: <double>[],
+                        builder: (context, snapshot) {
+                          return AnimatedBuilder(
+                              animation: _animation,
+                              builder: (_, __) {
+                                return CustomPaint(
+                                  painter: VisualzerPainter(
+                                      clipper: const VisualizerClipper(),
+                                      deltaTime: _controller.value,
+                                      data: snapshot.data ?? [],
+                                      isPlaying: _audiopcPlugin.isPlaying),
+                                  size: Size(
+                                      MediaQuery.of(context).size.width * 0.8,
+                                      200),
+                                );
+                              });
                         }),
-                    AnimatedBuilder(
-                        animation: _animation,
-                        builder: (_, __) {
-                          return CustomPaint(
-                            painter: CircleAudioVisualizerPainter(
-                                _animation.value,
-                                _sampleBuffer,
-                                isPlaying,
-                                0,
-                                64),
-                            size: Size(
-                                MediaQuery.of(context).size.width * 0.8, 200),
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.5,
-                              height: MediaQuery.of(context).size.width * 0.5,
-                            ),
-                          );
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onSamples.asBroadcastStream(),
+                        initialData: <double>[],
+                        builder: (context, snapshot) {
+                          return AnimatedBuilder(
+                              animation: _animation,
+                              builder: (_, __) {
+                                return CustomPaint(
+                                  painter: CircleAudioVisualizerPainter(
+                                      _animation.value,
+                                      snapshot.data ?? [],
+                                      _audiopcPlugin.isPlaying,
+                                      0,
+                                      64),
+                                  size: Size(
+                                      MediaQuery.of(context).size.width * 0.8,
+                                      200),
+                                  child: SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.5,
+                                    height:
+                                        MediaQuery.of(context).size.width * 0.5,
+                                  ),
+                                );
+                              });
                         }),
                   ],
                 )),
