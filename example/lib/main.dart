@@ -49,21 +49,26 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
     _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
     _audiopcPlugin.onDurationChanged.listen(null);
+
+    _audiopcPlugin.onCompleted.listen((val) {
+      if (val) {
+        ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text("Completed")));
+      }
+    });
   }
 
   double rate = 1.0;
 
   String sPath = "";
 
-  AudioMetaData? snapshot;
+  AudioMetaData? audioMetaData;
 
   Future<void> getMetaData(String path) async {
-    // _audiopcPlugin.getMetadata(path).then((value) {
-    //   setState(() {
-    //     snapshot = value;
-    //     debugPrint(snapshot.toString());
-    //   });
-    // });
+    final data = await _audiopcPlugin.getMetadata(path);
+    setState(() {
+      audioMetaData = data;
+    });
   }
 
   @override
@@ -136,9 +141,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                                 _audiopcPlugin.seek(v);
                               });
                         }),
-                    StreamBuilder(stream: _audiopcPlugin.onDurationChanged, builder: (_, val) {
-                      return Text("Duration: ${val.data ?? 0}");
-                    }),
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onDurationChanged,
+                        builder: (_, val) {
+                          return Text("Duration: ${val.data ?? 0}");
+                        }),
                     IconButton(
                         onPressed: () {
                           setState(() {
@@ -212,16 +219,16 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  snapshot?.title != null
+                  audioMetaData?.title != null
                       ? Text(
-                          "Title: ${snapshot?.title}",
+                          "Title: ${audioMetaData?.title}",
                           overflow: TextOverflow.ellipsis,
                         )
                       : const SizedBox(),
-                  Text("Artist: ${snapshot?.artist}"),
-                  if (snapshot != null && snapshot!.thumbnail != null)
+                  Text("Artist: ${audioMetaData?.artist}"),
+                  if (audioMetaData != null && audioMetaData!.thumbnail != null)
                     Image.memory(
-                      snapshot!.thumbnail!,
+                      audioMetaData!.thumbnail!,
                       width: 200,
                       height: 200,
                     ),

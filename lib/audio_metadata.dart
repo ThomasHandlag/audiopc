@@ -32,7 +32,7 @@ class AudioMetaData {
     final albumTitle = removeTerminator(map['albumTitle']);
     final albumArtist = removeTerminator(map['albumArtist']);
     final genre = removeTerminator(map['genre']);
-    final timeReleased = map['timeReleased'];
+    final timeReleased = int.parse(map['timeReleased'] ?? '9');
     final copyRight = removeTerminator(map['copyRight']);
 
     return AudioMetaData(
@@ -50,7 +50,7 @@ class AudioMetaData {
     if (str == null) {
       return '';
     }
-    return str.substring(0, str.length - 1);
+    return str.substring(0, !str.contains('\x00') ? str.length : str.indexOf('\x00'));
   }
 
   @override

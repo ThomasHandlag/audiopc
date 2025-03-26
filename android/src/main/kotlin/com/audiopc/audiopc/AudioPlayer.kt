@@ -67,7 +67,6 @@ class AudioPlayer(
         player = ExoPlayer.Builder(context, defaultRenderersFactory).build()
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(unused: Int) {
-                Log.d("AudioPlayer", "State: $unused: ${player.duration}")
                 when (unused) {
                     Player.STATE_READY-> {
                         eventSink.success(
@@ -75,6 +74,15 @@ class AudioPlayer(
                                 "id" to id,
                                 "event" to "state",
                                 "value" to 2
+                            )
+                        )
+                    }
+                    Player.STATE_ENDED -> {
+                        eventSink.success(
+                            mapOf(
+                                "id" to id,
+                                "event" to "state",
+                                "value" to 5
                             )
                         )
                     }
@@ -178,20 +186,5 @@ class AudioPlayer(
 
     fun getSamples(): List<Double> {
         return samplesProcessor.samples
-    }
-
-    fun getMetaData(path: String) : Map<String, Any?> {
-        val mediaItem = MediaItem.fromUri(path)
-        val metadata = mediaItem.mediaMetadata
-        Log.d("AudioPlayer", "Metadata: $metadata")
-        return mapOf(
-            "title" to metadata.title,
-            "artist" to metadata.artist,
-            "albumTitle" to metadata.albumTitle,
-            "artwork" to metadata.artworkData,
-            "timeReleased" to metadata.releaseDay,
-            "copyRight" to metadata.conductor,
-            "genre" to metadata.genre,
-        )
     }
 }

@@ -1,8 +1,11 @@
 package com.audiopc.audiopc
 
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import androidx.annotation.OptIn
+import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import io.flutter.Log
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
@@ -70,7 +73,7 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
 
                 "getSamples" -> {
                     if (audioPlayer?.getSamples() != null) {
-                        result.success(audioPlayer.getSamples().toDoubleArray())
+                        result.success(ArrayList<Double>(audioPlayer.getSamples()).toDoubleArray())
                     }
                 }
 
@@ -94,7 +97,21 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
                 "getMetaData" -> {
                     val path = call.argument<String>("path")
                     if (path != null) {
-                        result.success(audioPlayer?.getMetaData(path))
+                        val mediaMetadataRetriever = MediaMetadataRetriever()
+                        mediaMetadataRetriever.setDataSource(path)
+                        val metadataMap = mutableMapOf<String, Any?>(
+                            "title" to mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE),
+                            "artist" to mediaMetadataRetriever.extractMetadata(
+                                MediaMetadataRetriever.METADATA_KEY_ARTIST
+                            ),
+                            "album" to mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM),
+                            "artwork" to mediaMetadataRetriever.embeddedPicture,
+                            "timeReleased" to mediaMetadataRetriever.extractMetadata(
+                                MediaMetadataRetriever.METADATA_KEY_YEAR
+                            ),
+                            "genre" to mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_GENRE),
+                        )
+                        result.success(metadataMap)
                     }
                 }
 
