@@ -48,6 +48,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     _controller.forward();
 
     _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+
+    _audiopcPlugin.onDurationChanged.listen(null);
+    _audiopcPlugin.onStateChanged.listen(null);
   }
 
   double rate = 1.0;
@@ -115,22 +118,18 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             _audiopcPlugin.resume();
                           }
                         },
-                        icon: Icon(_audiopcPlugin.isPlaying
-                            ? Icons.pause
-                            : Icons.play_arrow)),
-                    StreamBuilder(
-                        stream: _audiopcPlugin.onPositionChanged,
-                        builder: (_, snapshot) {
-                          return Slider(
-                            value: _audiopcPlugin.duration <
-                                    _audiopcPlugin.position
-                                ? 0
-                                : snapshot.data ?? 0,
-                            onChanged: (value) {
-                              _audiopcPlugin.seek(value);
-                            },
-                            max: _audiopcPlugin.duration + 1,
-                          );
+                        icon: StreamBuilder(
+                            stream: _audiopcPlugin.onStateChanged,
+                            builder: (_, snapshot) {
+                              return Icon(snapshot.data == AudiopcState.playing
+                                  ? Icons.pause
+                                  : Icons.play_arrow);
+                            })),
+                    AudiopcSlider(
+                        duration: _audiopcPlugin.duration,
+                        onPositionChanged: _audiopcPlugin.onPositionChanged,
+                        seek: (v) {
+                          _audiopcPlugin.seek(v);
                         }),
                     Text("${_audiopcPlugin.duration}"),
                     IconButton(
@@ -226,3 +225,4 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     );
   }
 }
+

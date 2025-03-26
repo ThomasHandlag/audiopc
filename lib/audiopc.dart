@@ -5,6 +5,9 @@ import 'package:audiopc/audiopc_state.dart';
 import 'package:audiopc/audopc_helper.dart';
 import 'package:audiopc/audio_metadata.dart';
 import 'package:audiopc/player_event.dart';
+import 'package:flutter/material.dart';
+
+part 'widgets/audiopc_slider.dart';
 
 class Audiopc {
   final _platform = AudiopcPlatform();
@@ -56,6 +59,8 @@ class Audiopc {
           case 3.0:
             {
               _state = AudiopcState.playing;
+              _positionListener!.start();
+              _samplesListener!.start();
               return AudiopcState.playing;
             }
           case 4.0:
@@ -113,28 +118,8 @@ class Audiopc {
   Future<void> play(String path) async {
     await _platform.setSource(path, id);
     await _platform.play(id);
-
-    durationInternal = onDurationChanged.listen((event) {
-      if (event > 0) {
-        _duration = event;
-        durationInternal!.cancel();
-        durationInternal = null;
-      }
-    });
-
     _positionListener!.start();
     _samplesListener!.start();
-
-    stateInternal = onStateChanged.listen((event) {
-      _state = event;
-      if (event == AudiopcState.stopped) {
-        stateInternal!.cancel();
-        stateInternal = null;
-      } else if (event == AudiopcState.paused) {
-        stateInternal?.pause();
-        stateInternal = null;
-      }
-    });
   }
 
   Future<void> resume() async {
