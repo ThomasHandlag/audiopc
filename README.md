@@ -10,3 +10,14 @@ This project use Window Media Foundation SDK
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## setup
+ Get dependencies
+```bash
+flutter pub get
+
+```
+
+## Contribute
+
+Feel free to contribute and for more detail contact me via email 
