@@ -60,7 +60,6 @@ namespace audiopc {
 		unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
 		flutter::EncodableMap map = get<flutter::EncodableMap>(*method_call.arguments());
 
-
 		if (method_call.method_name().compare("init") == 0) {
 			HRESULT hr = S_OK;
 			auto value = map.find(flutter::EncodableValue("id"));
@@ -73,6 +72,7 @@ namespace audiopc {
 			if (SUCCEEDED(hr)) {
 				player->SetHWND(audiopc::AudiopcPlugin::hwnd);
 				players.insert({ id, std::move(player) });
+				result->Success();
 			}
 			else {
 				result->Error("Error", "Error creating player");

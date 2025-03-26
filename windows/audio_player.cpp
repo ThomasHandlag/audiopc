@@ -122,6 +122,7 @@ namespace audiopc {
 			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 		}
 		SAFE_RELEASE(&pClock);
+		SAFE_RELEASE(&m_pTopology);
 		return hr;
 	}
 
@@ -344,13 +345,11 @@ namespace audiopc {
 		HRESULT hr = S_OK;
 		UINT64 duration = 0;
 		hr = m_pPD->GetUINT64(MF_PD_DURATION, &duration);
-
 		if (FAILED(hr)) {
 			hr = MF_E_NO_DURATION;
 			emitError(WARNING, "Error get duration");
 			goto done;
 		}
-
 		m_duration = duration;
 	done:
 		return hr;
@@ -685,7 +684,6 @@ namespace audiopc {
 			hr = S_OK;
 			break;
 		}
-
 	done:
 		return hr;
 	}
