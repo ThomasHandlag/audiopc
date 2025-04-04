@@ -59,10 +59,14 @@ class Audiopc {
           case 4.0:
             {
               _state = AudiopcState.paused;
+              _positionListener!.pause();
+              _samplesListener!.pause();
               return AudiopcState.paused;
             }
           case 5.0:
             {
+              _positionListener!.pause();
+              _samplesListener!.pause();
               _state = AudiopcState.stopped;
               return AudiopcState.stopped;
             }

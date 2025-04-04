@@ -72,6 +72,9 @@ namespace audiopc {
 			if (SUCCEEDED(hr)) {
 				player->SetHWND(audiopc::AudiopcPlugin::hwnd);
 				players.insert({ id, std::move(player) });
+				thread poolThread(&AudioPlayer::StartAudioPool, players[id].get());
+				// detach the audio pool thread from the main thread to prevent blocking UI thread
+				poolThread.detach();
 				result->Success();
 			}
 			else {
@@ -146,9 +149,6 @@ namespace audiopc {
 				else if (method_call.method_name().compare("play") == 0) {
 					HRESULT hr = S_OK;
 					hr = player->Play();
-					thread poolThread(&AudioPlayer::StartAudioPool, player);
-					// detach the audio pool thread from the main thread to prevent blocking UI thread
-					poolThread.detach();
 					result->Success();
 				}
 				else if (method_call.method_name().compare("stop") == 0) {
