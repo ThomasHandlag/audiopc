@@ -16,7 +16,7 @@ class AudioMetaData {
   final String? albumTitle;
   final String? albumArtist;
   final String? genre;
-  final int? timeReleased;
+  final String? timeReleased;
   final Uint8List? thumbnail;
   final String? copyRight;
   factory AudioMetaData.fromMap(Map<String, dynamic> map) {
@@ -32,7 +32,7 @@ class AudioMetaData {
     final albumTitle = removeTerminator(map['albumTitle']);
     final albumArtist = removeTerminator(map['albumArtist']);
     final genre = removeTerminator(map['genre']);
-    final timeReleased = int.parse(map['timeReleased'] ?? '9');
+    final timeReleased = map['timeReleased'] as String;
     final copyRight = removeTerminator(map['copyRight']);
 
     return AudioMetaData(
