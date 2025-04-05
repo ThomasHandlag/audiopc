@@ -1,5 +1,5 @@
 import 'package:audiopc/audio_metadata.dart';
-import 'package:audiopc_example/visualizer.dart';
+import 'package:audiopc/widgets/visualizer.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:audiopc/audiopc.dart';
