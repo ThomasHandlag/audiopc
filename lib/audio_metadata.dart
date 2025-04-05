@@ -32,7 +32,7 @@ class AudioMetaData {
     final albumTitle = removeTerminator(map['albumTitle']);
     final albumArtist = removeTerminator(map['albumArtist']);
     final genre = removeTerminator(map['genre']);
-    final timeReleased = map['timeReleased'] as String;
+    final timeReleased = map['timeReleased'] ?? "";
     final copyRight = removeTerminator(map['copyRight']);
 
     return AudioMetaData(
