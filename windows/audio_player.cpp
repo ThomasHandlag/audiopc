@@ -110,8 +110,7 @@ namespace audiopc {
 		}
 
 		assert(m_pRate || !m_bCanScrub);
-		m_state = OpenPending;
-		emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
+		
 		double duration = 0;
 		GetSecondDuration(duration);
 		emitEvent({ {"id", hashID}, {"event", "duration"}, {"value", duration} });
@@ -122,6 +121,8 @@ namespace audiopc {
 			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
 		}
 		SAFE_RELEASE(&pClock);
+		SAFE_RELEASE(&m_pTopology);
+		SAFE_RELEASE(&m_pPD);
 		return hr;
 	}
 
@@ -344,13 +345,11 @@ namespace audiopc {
 		HRESULT hr = S_OK;
 		UINT64 duration = 0;
 		hr = m_pPD->GetUINT64(MF_PD_DURATION, &duration);
-
 		if (FAILED(hr)) {
 			hr = MF_E_NO_DURATION;
 			emitError(WARNING, "Error get duration");
 			goto done;
 		}
-
 		m_duration = duration;
 	done:
 		return hr;
@@ -685,7 +684,6 @@ namespace audiopc {
 			hr = S_OK;
 			break;
 		}
-
 	done:
 		return hr;
 	}

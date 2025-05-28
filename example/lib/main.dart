@@ -1,5 +1,5 @@
 import 'package:audiopc/audio_metadata.dart';
-import 'package:audiopc_example/visualizer.dart';
+import 'package:audiopc/widgets/visualizer.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:audiopc/audiopc.dart';
@@ -22,12 +22,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   final _audiopcPlugin = Audiopc(id: "0");
-
-  double _duration = 0.0;
-  double _cDuration = 0.0;
-
-  // final CircularBuffer<double> _sampleBuffer = CircularBuffer(max: 88900);
-  List<double> _sampleBuffer = [];
 
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -52,52 +46,30 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     });
 
     _controller.forward();
-    _audiopcPlugin.onDurationChanged.listen((event) {
-      setState(() {
-        _duration = event;
-      });
-    });
 
     _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+    _audiopcPlugin.onDurationChanged.listen(null);
 
-    _audiopcPlugin.onPositionChanged.listen((position) {
-      setState(() {
-        _cDuration = position;
-      });
-    });
-
-    _audiopcPlugin.onStateChanged.listen((state) {
-      if (state == AudiopcState.playing) {
-        setState(() {
-          isPlaying = true;
-        });
-      } else {
-        setState(() {
-          isPlaying = false;
-        });
-      }
-    });
-
-    _audiopcPlugin.onSamples.listen((samples) {
-      setState(() {
-        _sampleBuffer = samples;
-      });
-    });
-
-    _audiopcPlugin.onCompleted.listen((completed) {
-      if (completed) {
-       debugPrint("Completed");
+    _audiopcPlugin.onCompleted.listen((val) {
+      if (val) {
+        ScaffoldMessenger.of(context)
+        .showSnackBar(const SnackBar(content: Text("Completed")));
       }
     });
   }
 
   double rate = 1.0;
 
-  bool isPlaying = false;
-
   String sPath = "";
 
-  AudioMetaData? snapshot;
+  AudioMetaData? audioMetaData;
+
+  Future<void> getMetaData(String path) async {
+    final data = await _audiopcPlugin.getMetadata(path);
+    setState(() {
+      audioMetaData = data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,14 +91,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                               .then((file) {
                             if (file != null) {
                               _audiopcPlugin.play(file.path);
-                              _audiopcPlugin
-                                  .getMetadata(file.path)
-                                  .then((value) {
-                                setState(() {
-                                  snapshot = value;
-                                });
-                              });
-
+                              getMetaData(file.path);
                               setState(() {
                                 sPath = file.path;
                               });
@@ -152,22 +117,35 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         child: Text("Rate-: $rate")),
                     IconButton(
                         onPressed: () {
-                          if (isPlaying) {
+                          if (_audiopcPlugin.state == AudiopcState.playing) {
                             _audiopcPlugin.pause();
                           } else {
                             _audiopcPlugin.resume();
                           }
                         },
-                        icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow)),
-                    Slider(
-                      value:
-                          _audiopcPlugin.duration < _cDuration ? 0 : _cDuration,
-                      onChanged: (value) {
-                        _audiopcPlugin.seek(value);
-                      },
-                      max: _duration + 1,
-                    ),
-                    Text("$_duration"),
+                        icon: StreamBuilder(
+                            stream: _audiopcPlugin.onStateChanged,
+                            builder: (_, snapshot) {
+                              return Icon(snapshot.data == AudiopcState.playing
+                                  ? Icons.pause
+                                  : Icons.play_arrow);
+                            })),
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onDurationChanged,
+                        builder: (_, val) {
+                          return AudiopcSlider(
+                              duration: val.data ?? 0,
+                              onPositionChanged:
+                                  _audiopcPlugin.onPositionChanged,
+                              seek: (v) {
+                                _audiopcPlugin.seek(v);
+                              });
+                        }),
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onDurationChanged,
+                        builder: (_, val) {
+                          return Text("Duration: ${val.data ?? 0}");
+                        }),
                     IconButton(
                         onPressed: () {
                           setState(() {
@@ -187,36 +165,50 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         },
                         icon: const Icon(Icons.exposure_minus_1)),
                     Text("Time: $timeSec"),
-                    AnimatedBuilder(
-                        animation: _animation,
-                        builder: (_, __) {
-                          return CustomPaint(
-                            painter: VisualzerPainter(
-                                clipper: const VisualizerClipper(),
-                                deltaTime: _controller.value,
-                                data: _sampleBuffer,
-                                isPlaying: isPlaying),
-                            size: Size(
-                                MediaQuery.of(context).size.width * 0.8, 200),
-                          );
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onSamples,
+                        initialData: <double>[],
+                        builder: (context, snapshot) {
+                          return AnimatedBuilder(
+                              animation: _animation,
+                              builder: (_, __) {
+                                return CustomPaint(
+                                  painter: VisualzerPainter(
+                                      clipper: const VisualizerClipper(),
+                                      deltaTime: _controller.value,
+                                      data: snapshot.data ?? [],
+                                      isPlaying: _audiopcPlugin.isPlaying),
+                                  size: Size(
+                                      MediaQuery.of(context).size.width * 0.8,
+                                      200),
+                                );
+                              });
                         }),
-                    AnimatedBuilder(
-                        animation: _animation,
-                        builder: (_, __) {
-                          return CustomPaint(
-                            painter: CircleAudioVisualizerPainter(
-                                _animation.value,
-                                _sampleBuffer,
-                                isPlaying,
-                                0,
-                                64),
-                            size: Size(
-                                MediaQuery.of(context).size.width * 0.8, 200),
-                            child: SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.5,
-                              height: MediaQuery.of(context).size.width * 0.5,
-                            ),
-                          );
+                    StreamBuilder(
+                        stream: _audiopcPlugin.onSamples.asBroadcastStream(),
+                        initialData: <double>[],
+                        builder: (context, snapshot) {
+                          return AnimatedBuilder(
+                              animation: _animation,
+                              builder: (_, __) {
+                                return CustomPaint(
+                                  painter: CircleAudioVisualizerPainter(
+                                      _animation.value,
+                                      snapshot.data ?? [],
+                                      _audiopcPlugin.isPlaying,
+                                      0,
+                                      64),
+                                  size: Size(
+                                      MediaQuery.of(context).size.width * 0.8,
+                                      200),
+                                  child: SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.5,
+                                    height:
+                                        MediaQuery.of(context).size.width * 0.5,
+                                  ),
+                                );
+                              });
                         }),
                   ],
                 )),
@@ -227,16 +219,16 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  snapshot?.title != null
+                  audioMetaData?.title != null
                       ? Text(
-                          "Title: ${snapshot?.title}",
+                          "Title: ${audioMetaData?.title}",
                           overflow: TextOverflow.ellipsis,
                         )
                       : const SizedBox(),
-                  Text("Artist: ${snapshot?.artist}"),
-                  if (snapshot != null && snapshot!.thumbnail != null)
+                  Text("Artist: ${audioMetaData?.artist}"),
+                  if (audioMetaData != null && audioMetaData!.thumbnail != null)
                     Image.memory(
-                      snapshot!.thumbnail!,
+                      audioMetaData!.thumbnail!,
                       width: 200,
                       height: 200,
                     ),

@@ -85,13 +85,6 @@ class AudioPlayer(
                                 "value" to 5
                             )
                         )
-                        eventSink.success(
-                            mapOf(
-                                "id" to id,
-                                "event" to "completed",
-                                "value" to 1
-                            )
-                        )
                     }
                     else -> {
                         eventSink.success(
@@ -129,7 +122,7 @@ class AudioPlayer(
 
             override fun onTimelineChanged(timeline: Timeline, reason: Int) {
                 super.onTimelineChanged(timeline, reason)
-                when(val duration = player.duration) {
+                when(player.duration) {
                     C.TIME_UNSET -> {
                         eventSink.success(
                             mapOf(
@@ -144,7 +137,7 @@ class AudioPlayer(
                             mapOf(
                                 "id" to id,
                                 "event" to "duration",
-                                "value" to duration.toDouble() / 1000.0
+                                "value" to player.duration.toDouble() / 1000.0
                             )
                         )
                     }
@@ -179,10 +172,11 @@ class AudioPlayer(
 
     fun setSource(path: String) {
         player.setMediaItem(MediaItem.fromUri(path))
+        player.prepare()
+        player.play()
     }
 
     fun play() {
-        player.prepare()
         player.play()
     }
 
@@ -192,19 +186,5 @@ class AudioPlayer(
 
     fun getSamples(): List<Double> {
         return samplesProcessor.samples
-    }
-
-    fun getMetaData(path: String) : Map<String, Any?> {
-        val mediaItem = MediaItem.fromUri(path)
-        val metadata = mediaItem.mediaMetadata
-        return mapOf(
-            "title" to metadata.title,
-            "artist" to metadata.artist,
-            "albumTitle" to metadata.albumTitle,
-            "artwork" to metadata.artworkData,
-            "timeReleased" to metadata.releaseDay,
-            "copyRight" to metadata.conductor,
-            "genre" to metadata.genre,
-        )
     }
 }

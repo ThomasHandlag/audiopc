@@ -37,7 +37,12 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
 
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
-      double barHeight = value * deltaTime;
+      double barHeight = value * (isPlaying ? deltaTime : 1);
+
+      if ((barHeight.isNaN)) {
+        barHeight = 0;
+      }
+
       if (barHeight > size.height) {
         barHeight = size.height;
       }
@@ -125,20 +130,23 @@ class CircleAudioVisualizerPainter extends CustomPainter
     final double centerY = size.height / 2;
 
     final maxPeaks = getPeaks(data, barCount);
-    double radius = 90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * dy);
+    double radius =
+        90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * (isPlaying ? dy : 1));
     // paint.color = const Color(0xFF1001FF);
     paint.color = Color.fromARGB(255, 84, 33, 61);
 
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
-      var barHeight = value * dy;
-      if (barHeight > 100) {
+      var barHeight = value * (isPlaying ? dy : 1);
+
+      if ((barHeight.isNaN)) {
+        barHeight = 0;
+      }
+
+      if ((barHeight > 100)) {
         barHeight = 100;
       }
 
-      if (radius > 100) {
-        radius = 100;
-      }
       final double angle = (2 * pi / barCount) * i;
       final double startX = centerX + 90 * cos(angle);
       final double startY = centerY + 90 * sin(angle);
@@ -150,6 +158,10 @@ class CircleAudioVisualizerPainter extends CustomPainter
         Offset(endX, endY),
         paint..strokeWidth = barWidth,
       );
+    }
+
+    if (radius > 100 || radius.isNaN) {
+      radius = 100;
     }
 
     canvas.drawCircle(Offset(centerX, centerY), radius, paint..strokeWidth = 1);
@@ -250,3 +262,62 @@ const dradius = 90.0;
       ..style = PaintingStyle.fill;
     canvas.drawPath(path, dpaint);
  */
+
+class Visualizer extends StatefulWidget {
+  const Visualizer(
+      {super.key,
+      required this.child,
+      required this.isPlaying,
+      this.type = VisualizerType.bar,
+      required this.dataStream});
+  final Widget child;
+  final bool isPlaying;
+  final VisualizerType? type;
+  final Stream<List<double>> dataStream;
+  @override
+  State<Visualizer> createState() => _VisualizerState();
+}
+
+class _VisualizerState extends State<Visualizer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      animationBehavior: AnimationBehavior.preserve,
+    );
+    _controller.repeat(reverse: true);
+    _animation = Tween<double>(begin: 0, end: 1).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: widget.dataStream.asBroadcastStream(),
+      builder: (_, snapshot) {
+        return AnimatedBuilder(
+            animation: _animation,
+            builder: (_, __) {
+              return CustomPaint(
+                painter: CircleAudioVisualizerPainter(_animation.value,
+                    snapshot.data ?? [], widget.isPlaying, 0, 64),
+                child: widget.child,
+              );
+            });
+      },
+    );
+  }
+}
+
+enum VisualizerType { circle, bar, wave }

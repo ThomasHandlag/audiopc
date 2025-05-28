@@ -60,7 +60,6 @@ namespace audiopc {
 		unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
 		flutter::EncodableMap map = get<flutter::EncodableMap>(*method_call.arguments());
 
-
 		if (method_call.method_name().compare("init") == 0) {
 			HRESULT hr = S_OK;
 			auto value = map.find(flutter::EncodableValue("id"));
@@ -73,6 +72,10 @@ namespace audiopc {
 			if (SUCCEEDED(hr)) {
 				player->SetHWND(audiopc::AudiopcPlugin::hwnd);
 				players.insert({ id, std::move(player) });
+				thread poolThread(&AudioPlayer::StartAudioPool, players[id].get());
+				// detach the audio pool thread from the main thread to prevent blocking UI thread
+				poolThread.detach();
+				result->Success();
 			}
 			else {
 				result->Error("Error", "Error creating player");
@@ -146,9 +149,6 @@ namespace audiopc {
 				else if (method_call.method_name().compare("play") == 0) {
 					HRESULT hr = S_OK;
 					hr = player->Play();
-					thread poolThread(&AudioPlayer::StartAudioPool, player);
-					// detach the audio pool thread from the main thread to prevent blocking UI thread
-					poolThread.detach();
 					result->Success();
 				}
 				else if (method_call.method_name().compare("stop") == 0) {
@@ -161,10 +161,8 @@ namespace audiopc {
 				}
 				else if (method_call.method_name().compare("getPosition") == 0) {
 					double position = 0;
-					HRESULT hr = player->GetPositionSecond(position);
-					if (SUCCEEDED(hr)) {
-						result->Success(flutter::EncodableValue(position));
-					}
+					player->GetPositionSecond(position);
+					result->Success(flutter::EncodableValue(position));
 				}
 				else if (method_call.method_name().compare("seek") == 0) {
 					auto position = map.find(flutter::EncodableValue("position"));
@@ -176,13 +174,9 @@ namespace audiopc {
 					double positionValue = get<double>(position->second);
 
 					MFTIME time = static_cast<MFTIME>(positionValue * MICRO_TO_SECOND);
-					HRESULT hr = player->SetPosition(time);
-					if (SUCCEEDED(hr)) {
-						result->Success(flutter::EncodableValue(1.0));
-					}
-					else {
-						result->Error("Error", "Error setting position");
-					}
+					player->SetPosition(time);
+					result->Success(flutter::EncodableValue(1.0));
+					
 				}
 				else if (method_call.method_name().compare("setRate") == 0) {
 					auto rate = map.find(flutter::EncodableValue("rate"));
@@ -191,7 +185,7 @@ namespace audiopc {
 					}
 					double rateValue = get<double>(rate->second);
 					player->SetRate(static_cast<float>(rateValue));
-
+					result->Success();
 				}
 				else if (method_call.method_name().compare("getSamples") == 0) {
 					vector<double> samples = vector<double>(0, 0);

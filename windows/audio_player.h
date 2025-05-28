@@ -164,7 +164,7 @@ namespace audiopc {
 		IMFMediaType* m_pMediaType;
 		MFTIME m_duration;
 		HWND m_hwndEvent;
-		bool m_poolFlag = true;
+		std::atomic<bool> m_poolFlag = true;
 
 		IMFPresentationClock* m_pClock;
 		IMFRateControl* m_pRate;

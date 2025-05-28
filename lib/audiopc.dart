@@ -5,16 +5,23 @@ import 'package:audiopc/audiopc_state.dart';
 import 'package:audiopc/audopc_helper.dart';
 import 'package:audiopc/audio_metadata.dart';
 import 'package:audiopc/player_event.dart';
+import 'package:flutter/material.dart';
+
+part 'widgets/audiopc_slider.dart';
 
 class Audiopc {
   final _platform = AudiopcPlatform();
   final String id;
 
-  double duration = 0.0;
+  double _duration = 0.0;
+
+  double get duration => _duration;
 
   AudiopcState _state = AudiopcState.none;
 
   AudiopcState get state => _state;
+
+  bool get isPlaying => _state == AudiopcState.playing;
 
   double position = 0;
 
@@ -33,13 +40,6 @@ class Audiopc {
 
   final _eventStreamController = StreamController<PlayerEvent>.broadcast();
 
-  Stream<double> get onDurationChanged => _eventStreamController.stream
-          .where((event) => event.type == PlayerEventType.duration)
-          .map((event) {
-        duration = event.value as double;
-        return event.value as double;
-      });
-
   // Stream<String> get onError => _eventStreamController.stream
   //     .where((event) => event.type == PlayerEventType.error)
   //     .map((event) => event.value as String);
@@ -51,33 +51,47 @@ class Audiopc {
         switch (stateValue) {
           case 3.0:
             {
+              _state = AudiopcState.playing;
               _positionListener!.start();
               _samplesListener!.start();
-              _state = AudiopcState.playing;
               return AudiopcState.playing;
             }
           case 4.0:
             {
+              _state = AudiopcState.paused;
               _positionListener!.pause();
               _samplesListener!.pause();
               return AudiopcState.paused;
             }
           case 5.0:
             {
+              _positionListener!.pause();
+              _samplesListener!.pause();
+              _state = AudiopcState.stopped;
               return AudiopcState.stopped;
             }
           default:
-            return AudiopcState.none;
+            {
+              _state = AudiopcState.none;
+              return AudiopcState.none;
+            }
         }
+      });
+
+  StreamSubscription? stateInternal;
+
+  Stream<double> get onDurationChanged => _eventStreamController.stream
+          .where((event) => event.type == PlayerEventType.duration)
+          .map((event) {
+        _duration = event.value as double;
+        return event.value as double;
       });
 
   Stream<bool> get onCompleted => _eventStreamController.stream
           .where((event) => event.type == PlayerEventType.state)
           .map((event) {
         final stateValue = event.value as double;
-        if ((stateValue == 5.0) &
-            (position >= duration) &
-            (state == AudiopcState.playing)) {
+        if ((stateValue == 5.0) & (_state == AudiopcState.playing)) {
           _state = AudiopcState.stopped;
           return true;
         } else {
@@ -105,14 +119,21 @@ class Audiopc {
   Future<void> play(String path) async {
     await _platform.setSource(path, id);
     await _platform.play(id);
+    _positionListener!.start();
+    _samplesListener!.start();
   }
 
   Future<void> resume() async {
     await _platform.play(id);
+    _positionListener!.start();
+    _samplesListener!.start();
+    stateInternal?.resume();
   }
 
   Future<void> pause() async {
     await _platform.pause(id);
+    _samplesListener!.pause();
+    _positionListener!.pause();
   }
 
   Future<void> seek(double position) async {
@@ -150,5 +171,6 @@ class Audiopc {
     _samplesListener!.stop();
     _eventSubscription!.cancel();
     _eventStreamController.close();
+    _platform.close(id);
   }
 }

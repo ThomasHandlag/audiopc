@@ -93,23 +93,22 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
       if (event['id'] == id) {
         final eventName = event['event'] as String;
         switch (eventName) {
-          case 'duration':
-            {
-              final duration = event['value'] as double;
-              return DurationEvent(value: duration);
-            }
           case 'state':
             {
               final state = event['value'] as int;
               return StateEvent(value: state.toDouble());
             }
-          case 'completed':
-            {
-              return CompletedEvent(value: event['value'] == 1);
-            }
           case 'error':
             {
               return ErrorEvent(value: event['value'] as String);
+            }
+          case 'duration':
+            {
+              return DurationEvent(value: event['value'] as double);
+            }
+          default:
+            {
+              return NoneEvent();
             }
         }
       }

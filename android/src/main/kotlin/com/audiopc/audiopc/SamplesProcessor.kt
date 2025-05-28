@@ -20,9 +20,8 @@ class SamplesProcessor : AudioBufferSink {
     override fun handleBuffer(buffer: ByteBuffer) {
         val samples = leftSamples(buffer.asShortBuffer())
         this.samples = ArrayList(samples.remaining())
-        while (samples.hasRemaining()) {
-            this.samples.add(samples.get().toDouble())
-        }
+        this.samples.addAll(samples.array().map { it.toDouble() })
+        samples.clear()
     }
 
     private fun leftSamples(samples: ShortBuffer): ShortBuffer {
