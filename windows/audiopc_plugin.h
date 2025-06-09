@@ -27,7 +27,7 @@ namespace audiopc {
 
 	class AudiopcPlugin : public flutter::Plugin {
 	public:
-		map<std::string, std::unique_ptr<AudioPlayer>> players;
+		map<string, std::unique_ptr<AudioPlayer>> players;
 		static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 		static HWND hwnd;
 

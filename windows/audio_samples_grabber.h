@@ -6,19 +6,29 @@
 #include <thread>
 #include <mfidl.h>
 #include "circular_buffer.h"
+#include "event_stream_handler.h"
 
 namespace audiopc {
 
 	using std::cout, std::endl, std::vector, std::thread, std::nothrow;
+	using std::shared_ptr;
 	class AudioSamplesGrabber : public IMFSampleGrabberSinkCallback {
+	private: 
+		vector<double> m_samples;
+		std::string id;
+		shared_ptr<EventSink<flutter::EncodableValue>> handler;
+		void emitValue(const std::map<std::string, EncodableValue> value) const;
 	public:
 		ULONG m_cRef;
-		vector<double> m_samples;
 
-		AudioSamplesGrabber();
+		AudioSamplesGrabber(shared_ptr<EventSink<flutter::EncodableValue>> *handler, const std::string id);
 		~AudioSamplesGrabber();
 		// IUnknown methods
-		static HRESULT CreateInstance(AudioSamplesGrabber** ppCB);
+		static HRESULT CreateInstance(
+			AudioSamplesGrabber** ppCB, 
+			std::string id,
+			shared_ptr<EventSink<flutter::EncodableValue>>* handler
+		);
 
 		// IUnknown methods
 		STDMETHODIMP QueryInterface(REFIID iid, void** ppv);

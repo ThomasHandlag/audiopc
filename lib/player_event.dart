@@ -32,9 +32,20 @@ class DurationEvent extends PlayerEvent {
       : super(type: PlayerEventType.duration);
 }
 
+class CompletedEvent extends PlayerEvent {
+  CompletedEvent({required super.value}) : super(type: PlayerEventType.completed);
+}
+
+class SamplesEvent extends PlayerEvent {
+  SamplesEvent({required List<double> super.value})
+      : super(type: PlayerEventType.samples);
+}
+
 sealed class PlayerEventType {
   static const state = 'state';
   static const error = 'error';
   static const duration = 'duration';
   static const none = 'none';
+  static const samples = 'samples';
+  static const completed = 'completed';
 }

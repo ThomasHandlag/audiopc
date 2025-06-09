@@ -31,16 +31,6 @@ class AudiopcPlatform extends AudiopcPlatformInterface with AudioEventChannel {
     return await _call('pause', {}, id);
   }
 
-  /// Gets the samples data from the player.
-  @override
-  Future<Float64List?> getSamples(String id) async {
-    try {
-      return await _listen<Float64List>('getSamples', id);
-    } catch (e) {
-      return null;
-    }
-  }
-
   @override
   Future<void> seek(double position, String id) async {
     return await _call('seek', {"position": position}, id);
@@ -106,6 +96,17 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
             {
               return DurationEvent(value: event['value'] as double);
             }
+          case 'samples':
+            {
+              final samples = (event['value'] as List<dynamic>)
+                  .map((e) => e as double)
+                  .toList();
+              return SamplesEvent(value: samples);
+            }
+          case 'completed':
+            {
+              return CompletedEvent(value: event['value'] as bool);
+            }
           default:
             {
               return NoneEvent();
@@ -115,3 +116,5 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
     });
   }
 }
+
+

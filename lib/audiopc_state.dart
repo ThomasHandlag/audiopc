@@ -1,4 +1,4 @@
-enum AudiopcState {
+enum PlayerState {
   none,
   playing,
   paused,

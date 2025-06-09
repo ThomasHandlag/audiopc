@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:audiopc/audiopc_platform.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
@@ -46,10 +44,6 @@ abstract class AudioMethodChannelInterface {
 
   Future<void> pause(String id) {
     throw UnimplementedError('pause() has not been implemented.');
-  }
-
-  Future<Float64List?> getSamples(String id) {
-    throw UnimplementedError('getVolume() has not been implemented.');
   }
 
   Future<void> seek(double position, String id) {

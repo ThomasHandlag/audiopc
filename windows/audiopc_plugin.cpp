@@ -30,7 +30,6 @@ namespace audiopc {
 	HWND audiopc::AudiopcPlugin::hwnd = nullptr;
 	shared_ptr<EventSink<EncodableValue>> audiopc::EventStreamHandler::_sink = nullptr;
 
-
 	// static
 	void AudiopcPlugin::RegisterWithRegistrar(
 		flutter::PluginRegistrarWindows* registrar) {
@@ -63,12 +62,9 @@ namespace audiopc {
 		if (method_call.method_name().compare("init") == 0) {
 			HRESULT hr = S_OK;
 			auto value = map.find(flutter::EncodableValue("id"));
-			if (value == map.end()) {
-				result->Error("Error", "ID is required, found 0");
-			}
 			string id = get<string>(value->second);
 			unique_ptr<AudioPlayer> player;
-			hr = AudioPlayer::CreateInstance(&player, AudioPlayer::m_playerCount, id, &audiopc::EventStreamHandler::_sink);
+			hr = AudioPlayer::CreateInstance(&player, id, &audiopc::EventStreamHandler::_sink);
 			if (SUCCEEDED(hr)) {
 				player->SetHWND(audiopc::AudiopcPlugin::hwnd);
 				players.insert({ id, std::move(player) });
@@ -83,9 +79,6 @@ namespace audiopc {
 		}
 		else if (method_call.method_name().compare("getMetaData") == 0) {
 			auto value = map.find(flutter::EncodableValue("path"));
-			if (value == map.end()) {
-				result->Error("Error", "Empty path");
-			}
 			string pathStr = get<string>(value->second);
 			wstring pathWStr(pathStr.begin(), pathStr.end());
 			AudioMetaData audioMetaData(pathWStr);
@@ -103,14 +96,9 @@ namespace audiopc {
 			}
 			string id = get<string>(value->second);
 			AudioPlayer* player = players[id].get();
-
 			if (player) {
 				if (method_call.method_name().compare("setSource") == 0) {
 					auto path = map.find(flutter::EncodableValue("path"));
-
-					if (path == map.end()) {
-						result->Error("Error", "Empty path");
-					}
 
 					string pathStr = get<string>(path->second);
 					wstring pathWStr(pathStr.begin(), pathStr.end());
@@ -166,31 +154,16 @@ namespace audiopc {
 				}
 				else if (method_call.method_name().compare("seek") == 0) {
 					auto position = map.find(flutter::EncodableValue("position"));
-
-					if (position == map.end()) {
-						result->Error("Error", "Position is not provided");
-					}
-
 					double positionValue = get<double>(position->second);
-
 					MFTIME time = static_cast<MFTIME>(positionValue * MICRO_TO_SECOND);
 					player->SetPosition(time);
 					result->Success(flutter::EncodableValue(1.0));
-					
 				}
 				else if (method_call.method_name().compare("setRate") == 0) {
 					auto rate = map.find(flutter::EncodableValue("rate"));
-					if (rate == map.end()) {
-						result->Error("Error", "Rate is not provided");
-					}
 					double rateValue = get<double>(rate->second);
 					player->SetRate(static_cast<float>(rateValue));
 					result->Success();
-				}
-				else if (method_call.method_name().compare("getSamples") == 0) {
-					vector<double> samples = vector<double>(0, 0);
-					player->GetSamples(samples);
-					result->Success(flutter::EncodableValue(samples));
 				}
 				else {
 					result->NotImplemented();
@@ -206,6 +179,5 @@ namespace audiopc {
 	}
 
 	AudiopcPlugin::~AudiopcPlugin() {
-		players.clear();
 	}
 }  // namespace audiopc

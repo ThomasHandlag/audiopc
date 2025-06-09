@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:fftea/fftea.dart';
 
 class VisualzerPainter extends CustomPainter with SpectrumProcessor {
-  VisualzerPainter(
-      {required this.clipper,
-      required this.deltaTime,
-      required this.data,
-      required this.isPlaying});
+  VisualzerPainter({
+    required this.clipper,
+    required this.deltaTime,
+    required this.data,
+    required this.isPlaying,
+  });
   final CustomClipper<Path> clipper;
   final List<double> data;
   final double deltaTime;
@@ -18,20 +19,30 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
   void paint(Canvas canvas, Size size) {
     var path = clipper.getClip(size);
     int barCount = 64;
-    final Paint backgroundPaint = Paint()
-      ..color = Colors.black.withAlpha(255 ~/ 2)
-      ..style = PaintingStyle.fill;
+    final Paint backgroundPaint =
+        Paint()
+          ..color = Colors.black.withAlpha(255 ~/ 2)
+          ..style = PaintingStyle.fill;
     canvas.drawPath(path, backgroundPaint);
 
     // Spacing between bars
     double barWidth = size.width / (barCount * 1.5);
     double spacing = barWidth / 2;
 
-    final barPainter = Paint()
-      ..color = const Color.fromARGB(220, 87, 255, 36)
-      ..strokeWidth = barWidth
-      ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.fill;
+    final barPainter =
+        Paint()
+          ..color = const Color.fromARGB(220, 87, 255, 36)
+          ..strokeWidth = barWidth
+          ..shader = const LinearGradient(
+            colors: [
+              Color.fromARGB(255, 31, 236, 255),
+              Color.fromARGB(255, 87, 255, 36),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+          ..strokeJoin = StrokeJoin.round
+          ..style = PaintingStyle.fill;
 
     final maxPeaks = getPeaks(data, barCount);
 
@@ -54,11 +65,12 @@ class VisualzerPainter extends CustomPainter with SpectrumProcessor {
       canvas.drawLine(startOffset, endOffset, barPainter);
     }
 
-    final Paint shadowPaint = Paint()
-      ..color = Colors.black.withAlpha(255 ~/ 2)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 5;
+    final Paint shadowPaint =
+        Paint()
+          ..color = Colors.black.withAlpha(255 ~/ 2)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5;
 
     path.shift(const Offset(-0, 10));
     // Draw the shadow
@@ -96,26 +108,20 @@ class VisualizerClipper extends CustomClipper<Path> {
 class CircleAudioVisualizerPainter extends CustomPainter
     with SpectrumProcessor {
   List<double> data;
-
-  final colors = <Color>[
-    Colors.cyan.shade500,
-    Colors.blue.shade500,
-    Colors.purple.shade500,
-    Colors.pink.shade300,
-    Colors.red.shade500,
-    Colors.orange.shade500,
-    Colors.yellow.shade500,
-    Colors.green.shade500,
-    Colors.brown.shade500,
-  ];
-
   double dy;
   bool isPlaying;
   int currentPosition;
   int numbars;
+  final Color? color;
 
   CircleAudioVisualizerPainter(
-      this.dy, this.data, this.isPlaying, this.currentPosition, this.numbars);
+    this.dy,
+    this.data,
+    this.isPlaying,
+    this.currentPosition,
+    this.numbars, {
+    this.color,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -131,13 +137,13 @@ class CircleAudioVisualizerPainter extends CustomPainter
 
     final maxPeaks = getPeaks(data, barCount);
     double radius =
-        90 + ((data.isNotEmpty ? maxPeaks[20] : 1) * (isPlaying ? dy : 1));
+        90 + ((data.isNotEmpty ? maxPeaks[20] : 0) * (isPlaying ? dy : 0));
     // paint.color = const Color(0xFF1001FF);
-    paint.color = Color.fromARGB(255, 84, 33, 61);
+    paint.color = color?.withAlpha(255) ?? Color.fromARGB(255, 84, 33, 61);
 
     for (int i = 0; data.isNotEmpty & (i < barCount); i++) {
       final value = maxPeaks[i] * size.height / maxPeaks.reduce(max);
-      var barHeight = value * (isPlaying ? dy : 1);
+      var barHeight = value * (isPlaying ? dy : 0);
 
       if ((barHeight.isNaN)) {
         barHeight = 0;
@@ -166,11 +172,12 @@ class CircleAudioVisualizerPainter extends CustomPainter
 
     canvas.drawCircle(Offset(centerX, centerY), radius, paint..strokeWidth = 1);
 
-    final paint2 = Paint()
-      ..style = PaintingStyle.stroke
-      ..color = Colors.white.withAlpha(100)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10)
-      ..strokeWidth = 6;
+    final paint2 =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..color = Colors.white.withAlpha(100)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10)
+          ..strokeWidth = 6;
 
     canvas.drawCircle(Offset(centerX, centerY), 90, paint2);
   }
@@ -200,7 +207,7 @@ mixin class SpectrumProcessor {
     for (var frame in spectrogram) {
       for (int j = 0; j < (frame.length); j++) {
         double magnitude = frame[j];
-        double freq = j * 44800 / 4096;
+        double freq = j * data.length / 4096;
 
         for (int i = 0; i < 64; i++) {
           if (freq >= freqBin[i] && freq <= freqBin[i + 1]) {
@@ -216,64 +223,20 @@ mixin class SpectrumProcessor {
 
 enum SoundRange { bass, subBass, mid, lowMid, upMid, treble, ultra }
 
-/**
- * 
- * 
-const dradius = 90.0;
-    final Path path = Path();
-    for (int i = 0; i < 1 && (maxPeaks.isNotEmpty); i++) {
-      final double startAngle = i * (pi / 2) + dy * maxPeaks[0];
-      final double endAngle = (i + 1) * (pi / 2) + dy * maxPeaks[0];
-
-      final Offset startPoint = Offset(
-        centerX + dradius * cos(startAngle),
-        centerY + dradius * sin(startAngle),
-      );
-      final Offset endPoint = Offset(
-        centerX + dradius * cos(endAngle),
-        centerY + dradius * sin(endAngle),
-      );
-
-      final Offset controlPoint1 = Offset(
-        centerX + dradius * cos(startAngle + pi / 6) / cos(pi / 6),
-        centerY + dradius * sin(startAngle + pi / 6) / cos(pi / 6),
-      );
-      final Offset controlPoint2 = Offset(
-        centerX + dradius * cos(endAngle - pi / 6) / cos(pi / 6),
-        centerY + dradius * sin(endAngle - pi / 6) / cos(pi / 6),
-      );
-
-      if (i == 0) {
-        path.moveTo(startPoint.dx, startPoint.dy);
-      }
-
-      path.cubicTo(
-        controlPoint1.dx,
-        controlPoint1.dy,
-        controlPoint2.dx,
-        controlPoint2.dy,
-        endPoint.dx,
-        endPoint.dy,
-      );
-    }
-    final dpaint = Paint()
-      ..color = Color.fromARGB(117, 116, 236, 255)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(path, dpaint);
- */
-
 class Visualizer extends StatefulWidget {
-  const Visualizer(
-      {super.key,
-      required this.child,
-      required this.isPlaying,
-      this.type = VisualizerType.bar,
-      required this.dataStream});
+  const Visualizer({
+    super.key,
+    required this.child,
+    required this.isPlaying,
+    this.type = VisualizerType.bar,
+    this.color,
+    required this.dataStream,
+  });
   final Widget child;
   final bool isPlaying;
   final VisualizerType? type;
   final Stream<List<double>> dataStream;
+  final Color? color;
   @override
   State<Visualizer> createState() => _VisualizerState();
 }
@@ -307,14 +270,21 @@ class _VisualizerState extends State<Visualizer>
       stream: widget.dataStream.asBroadcastStream(),
       builder: (_, snapshot) {
         return AnimatedBuilder(
-            animation: _animation,
-            builder: (_, __) {
-              return CustomPaint(
-                painter: CircleAudioVisualizerPainter(_animation.value,
-                    snapshot.data ?? [], widget.isPlaying, 0, 64),
-                child: widget.child,
-              );
-            });
+          animation: _animation,
+          builder: (_, __) {
+            return CustomPaint(
+              painter: CircleAudioVisualizerPainter(
+                _animation.value,
+                color: widget.color,
+                snapshot.data ?? [],
+                widget.isPlaying,
+                0,
+                64,
+              ),
+              child: widget.child,
+            );
+          },
+        );
       },
     );
   }
