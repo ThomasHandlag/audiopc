@@ -3,6 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/issues)
+[![GitHub top language](https://img.shields.io/github/languages/top/ThomasHandlag/audiopc)]
 
 ## 🎶 Seamless Audio Integration for Flutter
 
@@ -12,12 +13,16 @@ Whether you're building a music player, a podcast app, a voice memo recorder, or
 
 ## ✨ Features
 
-* **[Feature 1]:** Audio streaming from internet
-* **[Feature 2]:** Realtime audio processing
-* **[Feature 3]:** Read audio metadata
-* **[Feature 4]:** Control audio output - still in development
-* **[Feature 5]:** Support Windows, Android, and Linux(under development)
-* **[Feature 6]:** Support for various audio formats e.g., MP3, WAV, AAC
+- **Audio playback:**
+- **Audio metadata:** Read audio metadata
+- **Supported platform:** Support Windows, Android
+- **Audio formats:** Support for various audio formats e.g., MP3, WAV, AAC
+
+## 🚧Expect to achieve
+
+- **Properly stream audio:**
+- **Realtime audio processing:** Like equalizer
+- **More supported platform: ** Like IOS, MacOS, and Linux
 
 ## 🚀 Getting Started
 
@@ -28,8 +33,7 @@ To use this plugin, add `audio` as a dependency in your `pubspec.yaml` file as g
 dependencies:
   flutter:
     sdk: flutter
-  audipc: 
+  audipc:
     path: https://github.com/ThomasHandlag/audiopc
-
 # end dependencies
 ```
