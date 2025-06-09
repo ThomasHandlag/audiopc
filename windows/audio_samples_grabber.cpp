@@ -3,16 +3,21 @@
 
 namespace audiopc {
 
-	AudioSamplesGrabber::AudioSamplesGrabber() : m_cRef(1) {
+	AudioSamplesGrabber::AudioSamplesGrabber(
+		shared_ptr<EventSink<flutter::EncodableValue>>* handler,
+		const std::string id) : m_cRef(1), handler(*handler) {
+		this->id = id;
 	}
 
 	AudioSamplesGrabber::~AudioSamplesGrabber() {
 		m_samples.clear();
 	}
 
-	HRESULT AudioSamplesGrabber::CreateInstance(AudioSamplesGrabber** ppCB)
+	HRESULT AudioSamplesGrabber::CreateInstance(
+		AudioSamplesGrabber** ppCB, std::string id,
+		shared_ptr<EventSink<flutter::EncodableValue>>* handler)
 	{
-		*ppCB = new (nothrow) AudioSamplesGrabber();
+		*ppCB = new (nothrow) AudioSamplesGrabber(handler, id);
 
 		if (ppCB == NULL)
 		{
@@ -90,15 +95,37 @@ namespace audiopc {
 		DWORD dwSampleSize)
 	{
 		vector<double> samples;
-		for (DWORD i = 0; i < dwSampleSize; i+=2) {
-			// Combine two bytes into one int16_t
-			int16_t int16_sample = static_cast<int16_t>(pSampleBuffer[i] | (pSampleBuffer[i + 1] << 8));
-			double sample = static_cast<double>(int16_sample / 32768.0); // 32768 = 2^15
+		samples.reserve(dwSampleSize / 2);
+		for (DWORD i = 0; i < dwSampleSize; i += 2) {
+			int16_t int16_sample = static_cast<int16_t>(
+				static_cast<uint8_t>(pSampleBuffer[i]) |
+				(static_cast<uint8_t>(pSampleBuffer[i + 1]) << 8)
+				);
+
+			// Normalize the sample to a double in the range [-1.0, 1.0]
+			double sample = static_cast<double>(int16_sample) / 32768.0;
+
 			samples.push_back(sample);
 		}
-		m_samples = samples;
+		if (handler) {
+			// Emit the samples to the event handler
+			emitValue({ {"id", id},
+				{"event", "samples"},
+				{"value", flutter::EncodableValue(samples)}
+				});
+		}
 
 		return S_OK;
+	}
+
+	void AudioSamplesGrabber::emitValue(const std::map<std::string, EncodableValue> value) const {
+		if (handler) {
+			flutter::EncodableMap map;
+			for (auto& [key, data] : value) {
+				map[EncodableValue(key)] = data;
+			}
+			handler->Success(EncodableValue(map));
+		}
 	}
 
 	STDMETHODIMP AudioSamplesGrabber::OnShutdown()

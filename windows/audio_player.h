@@ -67,12 +67,12 @@ namespace audiopc {
 	class AudioPlayer : public IMFAsyncCallback
 	{
 	public:
-		static HRESULT CreateInstance(std::unique_ptr<AudioPlayer>* ppCB, UINT id, 
+		static UINT m_playerCount;
+		static HRESULT CreateInstance(std::unique_ptr<AudioPlayer>* ppCB,
 			std::string hashID, std::shared_ptr<EventSink<flutter::EncodableValue>>* handler
 		);
-		static int m_playerCount;
 		AudioPlayer(
-			AudioSamplesGrabber** grabber, UINT id, std::string hashID, 
+			AudioSamplesGrabber** grabber, std::string hashID, 
 			std::shared_ptr<EventSink<flutter::EncodableValue>>* handler
 		);
 		~AudioPlayer();
@@ -114,8 +114,6 @@ namespace audiopc {
 			while (m_poolFlag) {
 				this->EventHandle();
 			}
-			std::cout << "End of audio playback\n";
-
 			return S_OK;
 		};
 
@@ -132,7 +130,6 @@ namespace audiopc {
 		HRESULT SetRate(float fRate);
 		HRESULT FastForward();
 		HRESULT Rewind();
-		void GetSamples(vector<double>& out) const;
 		PlaybackState GetState() const;
 		std::wstring m_path;
 	protected:

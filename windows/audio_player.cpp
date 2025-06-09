@@ -6,9 +6,9 @@ namespace audiopc {
 	using std::get, std::string, std::wstring, std::vector, std::thread, std::chrono::milliseconds;
 	using flutter::EncodableValue, flutter::EventSink;
 
-	int audiopc::AudioPlayer::m_playerCount = 0;
+	UINT AudioPlayer::m_playerCount = 0;
 
-	HRESULT AudioPlayer::CreateInstance(unique_ptr<AudioPlayer>* ppCB, UINT id, string hashID, shared_ptr<EventSink<EncodableValue>>* handler)
+	HRESULT AudioPlayer::CreateInstance(std::unique_ptr<AudioPlayer>* ppCB, string hashID, shared_ptr<EventSink<EncodableValue>>* handler)
 	{
 		HRESULT hr = S_OK;
 		if (ppCB == NULL)
@@ -16,9 +16,9 @@ namespace audiopc {
 			return E_POINTER;
 		}
 		AudioSamplesGrabber* pGrabber;
-		hr = AudioSamplesGrabber::CreateInstance(&pGrabber);
+		hr = AudioSamplesGrabber::CreateInstance(&pGrabber, hashID, handler);
 		
-		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, id, hashID, handler);
+		AudioPlayer* pPlayer = new (nothrow) AudioPlayer(&pGrabber, hashID, handler);
 		if (pPlayer == NULL)
 		{
 			return E_OUTOFMEMORY;
@@ -54,14 +54,10 @@ namespace audiopc {
 		HRESULT hr_Tmp = S_OK;
 
 		hr = MFCreateMediaType(&m_pMediaType);
-		if (FAILED(hr)) {
-			emitError(WARNING, "Error create media type");
-		}
 
 		m_pMediaType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
 		m_pMediaType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
 		m_pMediaType->SetUINT32(MF_MT_AUDIO_NUM_CHANNELS, 1);
-		m_pMediaType->SetUINT32(MF_MT_AUDIO_SAMPLES_PER_SECOND, 44800);
 		m_pMediaType->SetUINT32(MF_MT_AUDIO_BITS_PER_SAMPLE, 16);
 
 		hr = CreateMediaSession();
@@ -79,7 +75,8 @@ namespace audiopc {
 			&m_pSourceUnk
 		);
 		if (FAILED(hr)) {
-			emitEvent({ {"id", hashID}, {"event", "error"}, {"value", "Invalid source path"} });
+			emitError(FATAL, "Invalid source path");
+			goto done;
 		}
 		CHECK_FAILED(hr);
 		hr = m_pSourceUnk->QueryInterface(IID_PPV_ARGS(&m_pSource));
@@ -227,24 +224,22 @@ namespace audiopc {
 		return hr;
 	}
 
-	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, UINT id, string hashID, shared_ptr<EventSink<EncodableValue>>* handler) :
+	AudioPlayer::AudioPlayer(AudioSamplesGrabber** GCB, string hashID, shared_ptr<EventSink<EncodableValue>>* handler) :
 		m_cRef(1), m_pSourceResolver(NULL), m_pEvent(NULL), m_pTopology(NULL), handler(*handler),
 		m_pSource(NULL), m_hCloseEvent(NULL), m_state(Closed), m_eType(MEUnknown),
 		m_pSourceUnk(NULL), m_pSession(NULL), m_pStreamDescriptor(NULL), m_poolFlag(true),
 		m_duration(NULL), m_pClock(NULL), m_pRate(NULL), m_pRateSupport(NULL), m_bCanScrub(FALSE),
 		m_pGrabber(*GCB), m_pOutputNode(NULL), m_pSinkActivate(NULL), m_pPD(NULL),
-		m_pSourceNode(NULL), hashID(hashID), WM_APP_PLAYER_EVENT(WM_APP + id) {
-		m_playerCount++;
+		m_pSourceNode(NULL), hashID(hashID), WM_APP_PLAYER_EVENT(WM_APP + (++m_playerCount)) {
 	}
 
 	AudioPlayer::~AudioPlayer() {
 		m_poolFlag = false;
 		handler.reset();
-		m_playerCount--;
 		CloseSession();
 		assert(m_pSession == 0);
 		Shutdown();
-		
+		m_playerCount--;
 	}
 
 	HRESULT AudioPlayer::StartPlayback()
@@ -380,7 +375,6 @@ namespace audiopc {
 		{
 			// Unknown stream type. 
 			hr = E_FAIL;
-			// Optionally, you could deselect this stream instead of failing.
 		}
 
 		CHECK_FAILED(hr);
@@ -988,12 +982,11 @@ namespace audiopc {
 		varStart.vt = VT_I8;
 		varStart.hVal.QuadPart = hnsPosition;
 
-		hr = m_pSession->Start(NULL, &varStart);
+		hr = m_pSession->Start(&GUID_NULL, &varStart);
 		
 		if (SUCCEEDED(hr))
 		{
-			m_state = Started;
-			emitEvent({ {"id", hashID}, {"event", "state"}, {"value", static_cast<int>(m_state)} });
+			Play();
 			// Store the pending state.
 			m_sState.command = CmdStart;
 			m_sState.hnsStart = hnsPosition;
@@ -1001,9 +994,6 @@ namespace audiopc {
 		}
 		return hr;
 	}
-
-
-
 
 	// Sets the playback rate.
 
@@ -1169,7 +1159,7 @@ namespace audiopc {
 			m_sState.command = CmdStop;
 			hr = CommitRateChange(1.0f, FALSE);
 		}
-
+		emitEvent({ {"id", hashID}, {"event", "completed"}, {"value", true} });
 		return hr;
 	}
 
@@ -1235,10 +1225,6 @@ namespace audiopc {
 		return m_state;
 	}
 
-	void AudioPlayer::GetSamples(vector<double>& out) const {
-		out = m_pGrabber->m_samples;
-	}
-	
 	void AudioPlayer::emitEvent(const std::map<std::string, EncodableValue> value) const {
 		if (handler) {
 			flutter::EncodableMap map;
@@ -1254,7 +1240,7 @@ namespace audiopc {
 			emitEvent({ {"id", hashID}, {"event", "error"}, {"value", error} });
 		}
 		else {
-			handler->Error(error);
+			emitEvent({ {"id", hashID}, {"event", "fatal"}, {"value", error} });
 		}
 	}
 }
