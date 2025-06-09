@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/github/license/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/issues)
-[![GitHub top language](https://img.shields.io/github/languages/top/ThomasHandlag/audiopc)]
+![GitHub top language](https://img.shields.io/github/languages/top/ThomasHandlag/audiopc)
 
 ## 🎶 Seamless Audio Integration for Flutter
 
