@@ -1,7 +1,7 @@
 name: audiopc
-description: "A new Flutter project."
+description: "A simple audio player for PC, with a focus on performance and efficiency."
 version: 0.0.1
-homepage:
+repository: https://github.com/ThomasHandlag/audiopc
 
 environment:
   sdk: ^3.7.0

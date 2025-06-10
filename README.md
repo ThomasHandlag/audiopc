@@ -18,6 +18,16 @@ Whether you're building a music player, a podcast app, a voice memo recorder, or
 - **Supported platform:** Support Windows, Android
 - **Audio formats:** Support for various audio formats e.g., MP3, WAV, AAC
 
+## 🖥️ Platform Compatibility
+
+| Platform | Supported | Notes                |
+|----------|:---------:|----------------------|
+| Android  |    ✅     | Full support         |
+| Windows  |    ✅     | Full support         |
+| iOS      |    🚧     | Planned              |
+| macOS    |    🚧     | Planned              |
+| Linux    |    🚧     | Planned  
+
 ## 🚧Expect to achieve
 
 - **Properly stream audio:**
