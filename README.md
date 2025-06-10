@@ -37,3 +37,31 @@ dependencies:
     path: https://github.com/ThomasHandlag/audiopc
 # end dependencies
 ```
+
+```dart
+// play audio
+final player = Audiopc(id: "0");
+player.play(file.path);
+
+player.onPositionChanged.listen((position) {
+  // listen to position change
+});
+
+player.onStateChanged.listen((state) {
+    //listen to state changed
+});
+
+player.state;
+
+// get audio metadata
+AudioMetaData? metadata;
+
+metadata = await player.getMetaData(file.path);
+print(metadata?.artist ?? "");
+
+// samples data
+player.onSamples.listen((samples) {
+  List<double> data = samples;
+  // do something with samples
+});
+```
