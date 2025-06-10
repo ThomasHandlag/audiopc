@@ -1,7 +1,7 @@
 name: audiopc
 description: "A new Flutter project."
 version: 0.0.1
-homepage:
+repository: https://github.com/ThomasHandlag/audiopc
 
 environment:
   sdk: ^3.7.0
