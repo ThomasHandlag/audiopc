@@ -18,7 +18,6 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.audio.TeeAudioProcessor
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
-import io.flutter.Log
 import io.flutter.plugin.common.EventChannel
 import java.util.ArrayList
 
@@ -27,6 +26,7 @@ class AudioPlayer(
     private var id: String,
     private var eventSink: EventChannel.EventSink,
     context: Context,
+    private var handler: Handler
 ) {
     private var player: ExoPlayer
     private lateinit var samplesProcessor: SamplesProcessor
@@ -44,7 +44,7 @@ class AudioPlayer(
                     eventListener: AudioRendererEventListener,
                     out: ArrayList<Renderer>,
                 ) {
-                    samplesProcessor = SamplesProcessor()
+                    samplesProcessor = SamplesProcessor(eventSink, id, handler)
                     val teeAudioProcessor = TeeAudioProcessor(samplesProcessor)
                     val defaultAudioSink = DefaultAudioSink.Builder(context).setAudioProcessors(
                         arrayOf(
@@ -85,6 +85,12 @@ class AudioPlayer(
                                 "value" to 5
                             )
                         )
+
+                        eventSink.success(mapOf(
+                            "id" to id,
+                            "event" to "completed",
+                            "value" to true
+                        ))
                     }
                     else -> {
                         eventSink.success(

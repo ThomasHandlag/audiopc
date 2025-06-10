@@ -1,7 +1,9 @@
 package com.audiopc.audiopc
 
+import android.app.Activity
 import android.content.Context
 import android.media.MediaMetadataRetriever
+import android.os.Handler
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -22,6 +24,7 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
     private lateinit var eventChannel: EventChannel
     private lateinit var eventStreamHandler: EventStreamHandler
     private lateinit var context: Context
+    private lateinit var handler: Handler
 
     private val audioPlayers: MutableMap<String, AudioPlayer> = mutableMapOf()
 
@@ -32,13 +35,14 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
         eventStreamHandler = EventStreamHandler()
         eventChannel.setStreamHandler(eventStreamHandler)
         context = flutterPluginBinding.applicationContext
+        handler = Handler(context.mainLooper)
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
         val id = call.argument<String>("id")
         if (call.method == "init") {
             if (id != null) {
-                val audioPlayer = AudioPlayer(id, eventStreamHandler.sink!!, context)
+                val audioPlayer = AudioPlayer(id, eventStreamHandler.sink!!, context, handler)
                 audioPlayers[id] = audioPlayer
             } else {
                 result.error(
@@ -68,13 +72,6 @@ class AudiopcPlugin : FlutterPlugin, MethodCallHandler {
                 "pause" -> {
                     audioPlayer?.pause()
                 }
-
-                "getSamples" -> {
-                    if (audioPlayer?.getSamples() != null) {
-                        result.success(ArrayList<Double>(audioPlayer.getSamples()).toDoubleArray())
-                    }
-                }
-
                 "seek" -> {
                     audioPlayer?.seek(call.argument<Double>("position") ?: 0.0)
                 }
