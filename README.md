@@ -43,8 +43,10 @@ To use this plugin, add `audio` as a dependency in your `pubspec.yaml` file as g
 dependencies:
   flutter:
     sdk: flutter
-  audipc:
-    path: https://github.com/ThomasHandlag/audiopc
+  audiopc: ^0.0.1
+# audiopc:
+    git:
+      url: "https://github.com/ThomasHandlag/audiopc"
 # end dependencies
 ```
 
