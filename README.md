@@ -4,6 +4,8 @@
 [![GitHub stars](https://img.shields.io/github/stars/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/issues)
 ![GitHub top language](https://img.shields.io/github/languages/top/ThomasHandlag/audiopc)
+![Pub Points](https://img.shields.io/pub/points/audiopc)
+
 
 ## 🎶 Seamless Audio Integration for Flutter
 
