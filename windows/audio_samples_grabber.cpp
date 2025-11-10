@@ -94,19 +94,25 @@ namespace audiopc {
 		LONGLONG llSampleTime, LONGLONG llSampleDuration, const BYTE* pSampleBuffer,
 		DWORD dwSampleSize)
 	{
+		// Pre-allocate vector with exact size needed
+		const size_t sampleCount = dwSampleSize / 2;
 		vector<double> samples;
-		samples.reserve(dwSampleSize / 2);
-		for (DWORD i = 0; i < dwSampleSize; i += 2) {
-			int16_t int16_sample = static_cast<int16_t>(
-				static_cast<uint8_t>(pSampleBuffer[i]) |
-				(static_cast<uint8_t>(pSampleBuffer[i + 1]) << 8)
-				);
+		samples.reserve(sampleCount);
+		
+		// Process samples in a more cache-friendly manner
+		// Convert int16 samples to normalized doubles
+		const uint8_t* buffer = pSampleBuffer;
+		for (size_t i = 0; i < dwSampleSize; i += 2) {
+			// Combine two bytes into int16 using little-endian format
+			const int16_t int16_sample = static_cast<int16_t>(
+				buffer[i] | (buffer[i + 1] << 8)
+			);
 
-			// Normalize the sample to a double in the range [-1.0, 1.0]
-			double sample = static_cast<double>(int16_sample) / 32768.0;
-
-			samples.push_back(sample);
+			// Normalize to [-1.0, 1.0] range
+			// Using multiplication is faster than division
+			samples.push_back(static_cast<double>(int16_sample) * (1.0 / 32768.0));
 		}
+		
 		if (handler) {
 			// Emit the samples to the event handler
 			emitValue({ {"id", id},

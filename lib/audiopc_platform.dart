@@ -98,9 +98,8 @@ mixin AudioEventChannel implements AudioEventChannelInterface {
             }
           case 'samples':
             {
-              final samples = (event['value'] as List<dynamic>)
-                  .map((e) => e as double)
-                  .toList();
+              // Optimize: Use List.from with type casting for better performance
+              final samples = List<double>.from(event['value'] as List);
               return SamplesEvent(value: samples);
             }
           case 'completed':

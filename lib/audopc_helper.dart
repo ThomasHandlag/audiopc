@@ -19,9 +19,12 @@ abstract class FrameCallBackUpdater {
 
 final class PositionListener extends PlayerListener
     implements FrameCallBackUpdater {
-  PositionListener({required this.getPosition});
+  PositionListener({required this.getPosition, this.updateIntervalMs = 100});
   final Future<double> Function() getPosition;
   final streamControler = StreamController<double>.broadcast();
+  final int updateIntervalMs;
+  
+  Duration? _lastUpdateTime;
 
   Stream<double> get positionStream => streamControler.stream;
 
@@ -34,6 +37,7 @@ final class PositionListener extends PlayerListener
   @override
   void start() {
     isRunnin = true;
+    _lastUpdateTime = null;
     callback(null);
   }
 
@@ -41,6 +45,16 @@ final class PositionListener extends PlayerListener
   void callback(Duration? timeStamp) {
     if (isRunnin) {
       SchedulerBinding.instance.scheduleFrameCallback(callback);
+      
+      // Throttle position updates to reduce overhead
+      if (timeStamp != null && _lastUpdateTime != null) {
+        final elapsed = timeStamp.inMilliseconds - _lastUpdateTime!.inMilliseconds;
+        if (elapsed < updateIntervalMs) {
+          return;
+        }
+      }
+      
+      _lastUpdateTime = timeStamp;
       call();
     }
   }
@@ -48,6 +62,7 @@ final class PositionListener extends PlayerListener
   @override
   void stop() {
     isRunnin = false;
+    _lastUpdateTime = null;
     SchedulerBinding.instance.cancelFrameCallbackWithId(0);
     streamControler.close();
   }
