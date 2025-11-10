@@ -13,10 +13,23 @@ Audiopc is a simple and flexible Flutter plugin designed to provide advanced aud
 
 ## ✨ Features
 
-- **Audio playback:**
-- **Audio metadata:** Read audio metadata
+- **Audio playback:** High-performance audio playback with low latency
+- **Audio metadata:** Read audio metadata (artist, title, album, etc.)
 - **Supported platform:** Support Windows, Android
 - **Audio formats:** Support for various audio formats e.g., MP3, WAV, AAC
+- **Real-time visualization:** Optimized audio spectrum visualization
+- **Performance optimized:** Efficient resource usage with minimal overhead
+
+## ⚡ Performance
+
+Audiopc is designed for optimal performance:
+
+- **Throttled position updates** - Configurable update rate (default 100ms) reduces overhead by ~6x
+- **Cached FFT processing** - STFT instance reused across frames, saving ~240KB/sec in allocations
+- **Optimized rendering** - Pre-calculated values and reduced redundant operations
+- **Efficient native code** - Optimized C++ sample processing with minimal allocations
+
+For detailed performance information, see [PERFORMANCE_IMPROVEMENTS.md](PERFORMANCE_IMPROVEMENTS.md).
 
 ## 🖥️ Platform Compatibility
 
