@@ -22,7 +22,10 @@ class _MyAppState extends State<MyApp> {
 
   String status = 'Idle';
   String bufferedSamples = '0';
+  String positionMillis = '0';
+  String durationMillis = '-1';
   bool isUrlSource = false;
+  double _sliderPosition = 0;
 
   @override
   void dispose() {
@@ -36,7 +39,21 @@ class _MyAppState extends State<MyApp> {
   void updateBufferedSamples() {
     setState(() {
       bufferedSamples = player.bufferedSamples.toString();
+      positionMillis = player.positionMillis.toString();
+      durationMillis = player.durationMillis.toString();
+      final pos = int.tryParse(positionMillis) ?? 0;
+      _sliderPosition = pos.toDouble();
     });
+  }
+
+  void seekToMillis(double ms) {
+    final target = ms.toInt();
+    player.seek(target);
+    setState(() {
+      _sliderPosition = ms;
+      status = 'Seek requested: $target ms';
+    });
+    updateBufferedSamples();
   }
 
   void loadSource() {
@@ -51,44 +68,40 @@ class _MyAppState extends State<MyApp> {
     final success = isUrlSource
         ? player.setUrlSource(source)
         : player.setFileSource(source);
-    final error = player.lastError;
 
     setState(() {
       status = success
           ? 'Source loaded.'
-          : 'Failed to load source${error.isNotEmpty ? ': $error' : '.'}';
+          : 'Failed to load source';
     });
     updateBufferedSamples();
   }
 
   void play() {
     final success = player.play();
-    final error = player.lastError;
     setState(() {
       status = success
           ? 'Playing.'
-          : 'Play failed${error.isNotEmpty ? ': $error' : '.'}';
+          : 'Play failed';
     });
     updateBufferedSamples();
   }
 
   void pause() {
     final success = player.pause();
-    final error = player.lastError;
     setState(() {
       status = success
           ? 'Paused.'
-          : 'Pause failed${error.isNotEmpty ? ': $error' : '.'}';
+          : 'Pause failed';
     });
   }
 
   void stop() {
     final success = player.stop();
-    final error = player.lastError;
     setState(() {
       status = success
           ? 'Stopped.'
-          : 'Stop failed${error.isNotEmpty ? ': $error' : '.'}';
+          : 'Stop failed';
       bufferedSamples = '0';
     });
   }
@@ -99,12 +112,11 @@ class _MyAppState extends State<MyApp> {
 
     final volumeOk = player.setVolume(volume);
     final lowPassOk = player.setLowPassHz(lowPass);
-    final error = player.lastError;
 
     setState(() {
       status = volumeOk && lowPassOk
           ? 'Processing updated.'
-          : 'Failed to update processing${error.isNotEmpty ? ': $error' : '.'}';
+          : 'Failed to update processing';
     });
   }
 
@@ -114,6 +126,24 @@ class _MyAppState extends State<MyApp> {
     if (result != null && result.files.single.path != null) {
       sourceController.text = result.files.single.path!;
     }
+  }
+
+  String _formatTime(int ms) {
+    final seconds = ms ~/ 1000;
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  initState() {
+    super.initState();
+    player.positionStreamController.stream.listen((pos) {
+      setState(() {
+        positionMillis = pos.toString();
+        _sliderPosition = pos.toDouble();
+      });
+    });
   }
 
   @override
@@ -128,13 +158,13 @@ class _MyAppState extends State<MyApp> {
         body: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(20),
-            children: [
+              children: [
               Text(
                 'CPAL backend ready: ${backendInfo.isAvailable}',
                 style: Theme.of(context).textTheme.titleMedium,
-              ),
+                ),
               const SizedBox(height: 8),
-              Text(
+                Text(
                 'Output sample rate: ${backendInfo.defaultOutputSampleRate}',
               ),
               Text('Output channels: ${backendInfo.defaultOutputChannels}'),
@@ -205,12 +235,42 @@ class _MyAppState extends State<MyApp> {
                 child: const Text('Apply processing'),
               ),
               const SizedBox(height: 20),
+              Text(
+                'Seek position',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                spacing: 12,
+                children: [
+                  Text(_formatTime(int.tryParse(positionMillis) ?? 0)),
+                  Expanded(
+                    child: Slider(
+                      value: _sliderPosition,
+                      min: 0,
+                      max: (int.tryParse(durationMillis) ?? 0).toDouble().clamp(0, double.maxFinite),
+                      onChanged: (value) {
+                        setState(() {
+                          _sliderPosition = value;
+                        });
+                      },
+                      onChangeEnd: (value) {
+                        seekToMillis(value);
+                      },
+                    ),
+                  ),
+                  Text(_formatTime(int.tryParse(durationMillis) ?? 0)),
+                ],
+              ),
+              const SizedBox(height: 20),
               FilledButton.tonal(
                 onPressed: updateBufferedSamples,
                 child: const Text('Refresh buffered samples'),
               ),
               const SizedBox(height: 12),
               Text('Buffered samples: $bufferedSamples'),
+              Text('Position (ms): $positionMillis'),
+              Text('Duration (ms): $durationMillis'),
               const SizedBox(height: 24),
               Text(
                 'Status: $status',
@@ -220,11 +280,11 @@ class _MyAppState extends State<MyApp> {
               const Text(
                 'Supported formats are handled by Symphonia in the Rust backend.\n'
                 'For internet playback, provide a direct media URL.',
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
     );
   }
 }

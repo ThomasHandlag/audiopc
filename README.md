@@ -42,3 +42,7 @@ For local development:
 4. Generate source `dart run tools/gen.dart`
 
 The native asset pipeline will build the Rust library automatically.
+
+## Maintenance
+
+For Rust backend architecture, FFI conventions, and API update workflow, see `rust_backend/MAINTAINING.md`.

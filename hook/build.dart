@@ -19,7 +19,7 @@ void main(List<String> args) async {
     final packageName = input.packageName;
     final rustBuilder = RustBuilder(
       cratePath: 'rust_backend',
-      assetName: 'src/$packageName.g.dart',
+      assetName: '$packageName.g.dart',
       buildMode: BuildMode.release,
     );
 

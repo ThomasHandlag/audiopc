@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  file_picker: ^11.0.1
   audiopc:
     # When depending on this package from a real application you should use:
     #   audiopc: ^x.y.z
@@ -43,6 +42,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  file_picker: ^11.0.2
 
 dev_dependencies:
   flutter_test:
