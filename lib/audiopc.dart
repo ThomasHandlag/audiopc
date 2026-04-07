@@ -1,153 +1,81 @@
-import 'dart:async';
+import 'dart:ffi' as ffi;
 
-import 'package:audiopc/audiopc_platform.dart';
-import 'package:audiopc/audiopc_state.dart';
-import 'package:audiopc/audopc_helper.dart';
-import 'package:audiopc/audio_metadata.dart';
-import 'package:audiopc/player_event.dart';
-import 'package:flutter/material.dart';
+import 'package:ffi/ffi.dart';
 
-part 'widgets/audiopc_slider.dart';
+import 'src/audiopc.g.dart' as bindings;
 
-class Audiopc {
-  final _platform = AudiopcPlatform();
-  final String id;
 
-  double _duration = 0.0;
-  double get duration => _duration;
+class AudioBackendInfo {
+  final int defaultOutputSampleRate;
+  final int defaultOutputChannels;
+  final int outputDeviceCount;
 
-  PlayerState _state = PlayerState.none;
-  PlayerState get state => _state;
+  const AudioBackendInfo({
+    required this.defaultOutputSampleRate,
+    required this.defaultOutputChannels,
+    required this.outputDeviceCount,
+  });
 
-  bool get isPlaying => _state == PlayerState.playing;
-  bool get isPaused => _state == PlayerState.paused;
+  bool get isAvailable =>
+      defaultOutputSampleRate > 0 &&
+      defaultOutputChannels > 0 &&
+      outputDeviceCount >= 0;
+}
 
-  PositionListener? _positionListener;
+AudioBackendInfo getAudioBackendInfo() {
+  return AudioBackendInfo(
+    defaultOutputSampleRate: bindings.audiopc_default_output_sample_rate(),
+    defaultOutputChannels: bindings.audiopc_default_output_channels(),
+    outputDeviceCount: bindings.audiopc_output_device_count(),
+  );
+}
 
-  Stream<double> get onPositionChanged =>
-      _positionListener!.streamControler.stream;
+class AudiopcPlayer {
+  static bool _ok(int code) => code == 0;
 
-  StreamSubscription<dynamic>? _eventSubscription;
+  String get lastError {
+    final len = bindings.audiopc_last_error_message_length();
+    if (len <= 0) {
+      return '';
+    }
 
-  final _eventStreamController = StreamController<PlayerEvent>.broadcast();
-
-  Stream<String> get onError => _eventStreamController.stream
-      .where((event) => event.type == PlayerEventType.error)
-      .map((event) => event.value as String);
-
-  Stream<PlayerState> get onStateChanged => _eventStreamController.stream
-      .where((event) => event.type == PlayerEventType.state)
-      .map((event) {
-        final stateValue = event.value as double;
-        switch (stateValue) {
-          case 3.0:
-            {
-              return PlayerState.playing;
-            }
-          case 4.0:
-            {
-              return PlayerState.paused;
-            }
-          case 5.0:
-            {
-              return PlayerState.stopped;
-            }
-          default:
-            {
-              return PlayerState.none;
-            }
-        }
-      });
-
-  Stream<List<double>> get onSamples => _eventStreamController.stream
-      .where((event) => event.type == PlayerEventType.samples)
-      .map((event) {
-        return event.value as List<double>;
-      });
-
-  Stream<double> get onDurationChanged => _eventStreamController.stream
-      .where((event) => event.type == PlayerEventType.duration)
-      .map((event) {
-        return event.value as double;
-      });
-
-  Stream<bool> get onCompleted => _eventStreamController.stream
-      .where((event) => event.type == PlayerEventType.completed)
-      .map((event) {
-        return event.value as bool;
-      });
-
-  Audiopc({required this.id}) {
-    _platform.listen(id);
-
-    _eventSubscription = _platform.eventStream[id].listen((event) {
-      _eventStreamController.add(event);
-    });
-    _platform.init(id);
-
-    _positionListener = PositionListener(getPosition: getPosition);
-    onDurationChanged.listen((duration) {
-      _duration = duration;
-    });
-
-    onStateChanged.listen((state) {
-      _state = state;
-      if (state == PlayerState.playing) {
-        _positionListener!.start();
+    final buffer = calloc<ffi.Char>(len + 1);
+    try {
+      final copied = bindings.audiopc_last_error_message_copy(buffer, len + 1);
+      if (copied <= 0) {
+        return '';
       }
-    });
-
-    onError.listen((error) {
-      debugPrint("Audiopc Error: $error");
-    });
+      return buffer.cast<Utf8>().toDartString();
+    } finally {
+      calloc.free(buffer);
+    }
   }
 
-  Future<void> play(String path) async {
-    await _platform.setSource(path, id);
-    await _platform.play(id);
-    _positionListener!.start();
+  bool setFileSource(String path) {
+    final ptr = path.toNativeUtf8().cast<ffi.Char>();
+    try {
+      return _ok(bindings.audiopc_set_source_path(ptr));
+    } finally {
+      calloc.free(ptr);
+    }
   }
 
-  Future<void> resume() async {
-    await _platform.play(id);
-    _positionListener!.start();
+  bool setUrlSource(String url) {
+    final ptr = url.toNativeUtf8().cast<ffi.Char>();
+    try {
+      return _ok(bindings.audiopc_set_source_url(ptr));
+    } finally {
+      calloc.free(ptr);
+    }
   }
 
-  Future<void> pause() async {
-    await _platform.pause(id);
-    _positionListener!.pause();
-  }
+  bool play() => _ok(bindings.audiopc_play());
+  bool pause() => _ok(bindings.audiopc_pause());
+  bool stop() => _ok(bindings.audiopc_stop());
 
-  Future<void> seek(double position) async {
-    await _platform.seek(position, id);
-  }
+  bool setVolume(double value) => _ok(bindings.audiopc_set_volume(value));
 
-  Future<void> setVolume() async {
-    await _platform.setVolume(id);
-  }
+  bool setLowPassHz(double hz) => _ok(bindings.audiopc_set_lowpass_hz(hz));
 
-  Future<void> setRate(double rate) async {
-    await _platform.setRate(rate, id);
-  }
-
-  Future<double> getPosition() async {
-    return await _platform.getPosition(id) ?? 0.0;
-  }
-
-  Future<AudioMetaData> getMetadata(String path) async {
-    final metadata = await _platform.getMetadata(path) ?? {};
-    final temp = metadata.map((key, value) => MapEntry(key as String, value));
-    return AudioMetaData.fromMap(temp);
-  }
-
-  /// Dispose the player
-  ///
-  /// This method should be called when the player is no longer needed.
-  /// Throws an [Exception] if trying to call any method after calling this method
-  void dispose() {
-    _positionListener!.stop();
-    _eventSubscription!.cancel();
-    _eventStreamController.close();
-    _platform.close(id);
-  }
+  int get bufferedSamples => bindings.audiopc_buffered_samples();
 }

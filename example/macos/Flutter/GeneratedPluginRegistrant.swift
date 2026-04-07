@@ -5,10 +5,8 @@
 import FlutterMacOS
 import Foundation
 
-import audiopc
-import file_selector_macos
+import file_picker
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  AudiopcPlugin.register(with: registry.registrar(forPlugin: "AudiopcPlugin"))
-  FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
+  FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
 }

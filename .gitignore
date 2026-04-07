@@ -5,11 +5,9 @@
 *.swp
 .DS_Store
 .atom/
-.build/
 .buildlog/
 .history
 .svn/
-.swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -28,6 +26,7 @@ migrate_working_dir/
 /pubspec.lock
 **/doc/api/
 .dart_tool/
-.flutter-plugins
 .flutter-plugins-dependencies
-build/
+/build/
+/coverage/
+.g.dart

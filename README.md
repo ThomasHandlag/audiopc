@@ -1,79 +1,44 @@
-# Audiopc
+# audiopc
 
-[![GitHub license](https://img.shields.io/github/license/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/blob/main/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/ThomasHandlag/audiopc?style=flat-square)](https://github.com/ThomasHandlag/audiopc/issues)
-![GitHub top language](https://img.shields.io/github/languages/top/ThomasHandlag/audiopc)
-![Pub Points](https://img.shields.io/pub/points/audiopc)
+Rust-powered Flutter FFI plugin with a CPAL backend for desktop audio playback and processing.
 
+## Features
 
-## 🎶 Seamless Audio Integration for Flutter
+- Play local audio files through CPAL.
+- Stream audio from direct internet URLs.
+- Decode common formats through Symphonia.
+- Apply volume and low-pass processing in the audio callback.
+- Query the active output device configuration.
 
-Audiopc is a simple and flexible Flutter plugin designed to provide advanced audio capabilities to your applications. Leveraging native code for optimal performance and access to platform-specific features, this plugin allows you to effortlessly integrate a wide range of audio functionalities, from playback to advanced audio processing.
-
-## ✨ Features
-
-- **Audio playback:**
-- **Audio metadata:** Read audio metadata
-- **Supported platform:** Support Windows, Android
-- **Audio formats:** Support for various audio formats e.g., MP3, WAV, AAC
-
-## 🖥️ Platform Compatibility
-
-| Platform | Supported | Notes                |
-|----------|:---------:|----------------------|
-| Android  |    ✅     | Full support         |
-| Windows  |    ✅     | Full support         |
-| iOS      |    🚧     | Planned              |
-| macOS    |    🚧     | Planned              |
-| Linux    |    🚧     | Planned  
-
-## 🚧Expect to achieve
-
-- **Properly stream audio:**
-- **Realtime audio processing:** Like equalizer
-- **More supported platform: ** Like IOS, MacOS, and Linux
-
-## 🚀 Getting Started
-
-To use this plugin, add `audio` as a dependency in your `pubspec.yaml` file as github path.
-
-```yaml
-# dependencies
-dependencies:
-  flutter:
-    sdk: flutter
- #audiopc: ^0.0.1
-  audiopc:
-    git:
-      url: "https://github.com/ThomasHandlag/audiopc"
-# end dependencies
-```
+## Dart API
 
 ```dart
-// play audio
-final player = Audiopc(id: "0");
-player.play(file.path);
+import 'package:audiopc/audiopc.dart';
 
-player.onPositionChanged.listen((position) {
-  // listen to position change
-});
+final value = sum(24, 18);
+final asyncValue = await sumAsync(24, 18);
 
-player.onStateChanged.listen((state) {
-    //listen to state changed
-});
+final backend = getAudioBackendInfo();
+print(backend.defaultOutputSampleRate);
+print(backend.defaultOutputChannels);
+print(backend.outputDeviceCount);
 
-player.state;
-
-// get audio metadata
-AudioMetaData? metadata;
-
-metadata = await player.getMetaData(file.path);
-print(metadata?.artist ?? "");
-
-// samples data
-player.onSamples.listen((samples) {
-  List<double> data = samples;
-  // do something with samples
-});
+final player = AudiopcPlayer();
+player.setFileSource('C:/music/song.mp3');
+player.setVolume(0.8);
+player.setLowPassHz(12_000);
+player.play();
 ```
+
+## Build
+
+This package uses a native build hook in `hook/build.dart` and compiles `rust_backend/Cargo.toml` via `native_toolchain_rust`.
+
+For local development:
+
+1. Install Rust toolchain (`rustup`, `cargo`).
+2. Run `flutter pub get` in this package.
+3. Run example app/tests normally (`flutter test`, `flutter run`, `flutter build ...`).
+4. Generate source `dart run tools/gen.dart`
+
+The native asset pipeline will build the Rust library automatically.
