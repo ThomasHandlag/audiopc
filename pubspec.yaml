@@ -1,5 +1,5 @@
 name: audiopc
-description: "A new Dart FFI package project."
+description: "A Rust-powered Flutter FFI audio plugin for local file playback, direct URL streaming, and audio processing via a CPAL backend."
 version: 0.0.1
 
 environment:

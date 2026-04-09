@@ -1,6 +1,8 @@
 # audiopc
 
-Rust-powered Flutter FFI plugin with a CPAL backend for audio playback and processing.
+Rust-powered Flutter FFI audio plugin with a CPAL backend for playback and processing.
+
+The plugin is designed for Flutter apps that need native audio output with support for local files, direct internet URLs, common codec decoding through Symphonia, and simple in-callback processing such as volume and low-pass control.
 
 ## Features
 
