@@ -1,6 +1,6 @@
 # audiopc_example
 
-Demonstrates how to use the audiopc package.
+Demonstrates how to use the audiopc plugin.
 
 ## Getting Started
 

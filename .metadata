@@ -7,7 +7,7 @@ version:
   revision: "ff37bef603469fb030f2b72995ab929ccfc227f0"
   channel: "stable"
 
-project_type: package_ffi
+project_type: plugin_ffi
 
 # Tracks metadata for the flutter migrate command
 migration:
@@ -25,9 +25,6 @@ migration:
       create_revision: ff37bef603469fb030f2b72995ab929ccfc227f0
       base_revision: ff37bef603469fb030f2b72995ab929ccfc227f0
     - platform: macos
-      create_revision: ff37bef603469fb030f2b72995ab929ccfc227f0
-      base_revision: ff37bef603469fb030f2b72995ab929ccfc227f0
-    - platform: web
       create_revision: ff37bef603469fb030f2b72995ab929ccfc227f0
       base_revision: ff37bef603469fb030f2b72995ab929ccfc227f0
     - platform: windows

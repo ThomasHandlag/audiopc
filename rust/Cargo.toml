@@ -1,0 +1,25 @@
+[package]
+name = "audiopc"
+
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+cpal = { version = "0.17.3"}
+jni = "0.21"
+once_cell = "1.21"
+reqwest = { version = "0.12", default-features = false, features = [
+    "blocking",
+    "rustls-tls",
+] }
+symphonia = { version = "0.5", features = ["all"] }
+log = "0.4.29"
+rustfft = "6.2"
+ndk-context = "0.1.1"
+
+[build-dependencies]
+cbindgen = "0.29.2"
+
