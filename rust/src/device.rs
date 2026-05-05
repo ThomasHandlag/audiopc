@@ -156,8 +156,6 @@ impl DeviceManager {
     }
 }
 
-// ── Background device watcher ─────────────────────────────────────────────────
-
 /// Starts a background thread that polls for device changes and emits
 /// [`AudioEvent::DeviceAdded`] / [`AudioEvent::DeviceRemoved`] /
 /// [`AudioEvent::DefaultDeviceChanged`] events.

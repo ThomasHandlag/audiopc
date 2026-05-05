@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
-import 'package:audiopc_ffi/audiopc_ffi.dart';
+import 'package:audiopc/audiopc.dart';
 
 const assetPath = "test/assets/";
 
-/// Placeholder test entrypoint for the audiopc_ffi package.
+/// Placeholder test entrypoint for the audiopc package.
 void main() {
   test("Device capabilities", () {
-    final player = AudiopcNative();
+    final player = AudioPlayer();
     final backendInfo = player.getAudioBackendInfo();
 
     expect(
@@ -19,7 +19,7 @@ void main() {
   });
 
   group("Test playback features", () {
-    final player = AudiopcNative();
+    final player = AudioPlayer();
 
     Uint8List testAudioData = Uint8List.fromList(
       List.generate(44100 * 2, (i) => (i % 256).toUnsigned(8)),

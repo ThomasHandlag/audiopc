@@ -34,7 +34,7 @@ mod android_init {
     static ANDROID_APP_CONTEXT: OnceCell<GlobalRef> = OnceCell::new();
 
     #[unsafe(no_mangle)]
-    pub extern "system" fn Java_com_example_audiopc_1ffi_AudiopcBridge_nativeInit(
+    pub extern "system" fn Java_com_thugbn_audiopc_AudiopcBridge_nativeInit(
         mut env: JNIEnv,
         _class: JClass,
         context: JObject,

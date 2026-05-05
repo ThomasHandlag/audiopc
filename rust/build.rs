@@ -11,7 +11,7 @@ fn create_rust_to_dart_bindings() {
     let output_header = PathBuf::from(&crate_dir)
         .join("..")
         .join("src")
-        .join("audiopc_ffi.h");
+        .join("audiopc.h");
 
     // let language = if target_os == "android" {
     //     cbindgen::Language::Cxx

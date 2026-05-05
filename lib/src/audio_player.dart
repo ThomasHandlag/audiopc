@@ -1,6 +1,4 @@
-export 'package:audiopc_interface/audiopc_interface.dart';
-
-import 'dart:async';
+import 'dart:async' show Timer;
 import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'dart:typed_data';
@@ -8,10 +6,10 @@ import 'dart:typed_data';
 import 'package:audiopc_interface/audiopc_interface.dart';
 import 'package:ffi/ffi.dart';
 
-import 'audiopc_ffi.g.dart' as bindings;
+import '../audiopc.g.dart' as bindings;
 
 /// Native player implementation backed by Rust FFI.
-class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
+class AudioPlayer with PlayerStateMixin implements AudiopcInterface {
   static bool _ok(int code) => code == 0;
 
   late final Timer _positionTimer;
@@ -28,7 +26,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   }
 
   /// Creates a player and starts a periodic position publisher.
-  AudiopcNative() {
+  AudioPlayer() {
     _positionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (state == PlayerState.playing) {
         positionController.add(positionMillis);
@@ -225,7 +223,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
 
   /// Retrieves the current metadata snapshot from the native backend.
   @override
-  MetaData getMetadata(String url) {
+  Future<MetaData> getMetadata(String url) async {
     const maxLen = 8192; // Must match Rust buffer size
     final ptr = calloc<ffi.Char>(maxLen);
     final urlPtr = url.toNativeUtf8();
@@ -249,7 +247,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
 
   /// Retrieves the thumbnail image data from the native backend.
   @override
-  Uint8List? getThumbnail(String url, {int maxSize = 20 * 1024 * 1024}) {
+  Future<Uint8List?> getThumbnail(String url, {int maxSize = 20 * 1024 * 1024}) async {
     final urlPtr = url.toNativeUtf8().cast<ffi.Char>();
     try {
       // First, query size (requires API change to support this)
@@ -305,6 +303,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   /// Sets high-pass cutoff in Hz. Use 0 to disable filtering.
   ///
   /// A high-pass filter allows frequencies above the specified cutoff frequency to pass through while attenuating frequencies below it.
+  @override
   bool setHighPassHz(double hz) {
     final code = bindings.audiopc_set_high_pass_filter(
       hz,
@@ -334,6 +333,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   /// which affects the bandwidth of the boost or cut around the center frequency.
   /// A higher Q value results in a narrower bandwidth,
   /// while a lower Q value results in a wider bandwidth.
+  @override
   bool setPeakFilter(double centerHz, double gainDb, double q) {
     final code = bindings.audiopc_set_peak_filter(centerHz, gainDb, q);
     return _ok(code);
@@ -350,6 +350,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   ///
   /// The `q` parameter controls the quality factor of the filter,
   /// which affects the slope of the boost or cut around the cutoff frequency.
+  @override
   bool setLowShelfFilter(double cutoffHz, double gainDb, double q) {
     final code = bindings.audiopc_set_low_shelf_filter(cutoffHz, gainDb, q);
     return _ok(code);
@@ -367,6 +368,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   /// The `q` parameter controls the quality factor of the filter,
   /// which affects the slope of the boost or cut around the cutoff frequency.
   /// A higher Q value results in a steeper slope, while a lower Q value results in a gentler slope.
+  @override
   bool setHighShelfFilter(double cutoffHz, double gainDb, double q) {
     final code = bindings.audiopc_set_high_shelf_filter(cutoffHz, gainDb, q);
     return _ok(code);
@@ -377,7 +379,8 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   ///
   /// The `centerHz` parameter specifies the center frequency of the notch in Hz,
   /// and `q` controls the quality factor (bandwidth) of the notch.
-  bool setNotchFilter(double centerHz, double q) {
+  @override
+  bool setNotchFilter(double centerHz, double q, _) {
     final code = bindings.audiopc_set_notch_filter(centerHz, q);
 
     return _ok(code);
@@ -387,5 +390,25 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   bool clearFilter() {
     final code = bindings.audiopc_clear_filters();
     return _ok(code);
+  }
+  
+  @override
+  bool setBandPassHz(double min, double max) {
+    return setBandPassFilter(min, max);
+  }
+  
+  @override
+  bool setCombFilter(double delayMs, double feedback, double damp) {
+    return true;
+  }
+  
+  @override
+  bool setRate(double value) {
+    return setPlaybackRate(value);
+  }
+  
+  @override
+  bool setReverb(double roomSize, double damping, double wetLevel, double dryLevel) {
+    return true;
   }
 }

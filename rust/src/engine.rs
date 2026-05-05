@@ -53,7 +53,7 @@ use crate::enums::{
     DECODE_BACKPRESSURE_SLEEP_MS, DEFAULT_VISUALIZER_BAR_COUNT, MAX_RATE, MIN_RATE,
 };
 use crate::error::AudioError;
-use crate::events::{event_channel, AudioEvent, EventSender};
+use crate::events::{event_channel};
 use crate::http_stream::HttpStream;
 use crate::player_state::{PlaybackStatus, PlayerState, ResampleState, SharedPlayback};
 use crate::processor::VisualizerProcessor;
@@ -97,9 +97,6 @@ pub struct AudioEngine {
 
     // ── Visualizer ────────────────────────────────────────────────────────
     visualizer_processor: VisualizerProcessor,
-
-    // ── Event system ──────────────────────────────────────────────────────
-    event_tx: EventSender,
 
     // ── Device watcher ─────────────────────────────────────────────────────
     /// Set to `true` to stop the device watcher thread.
@@ -156,23 +153,8 @@ impl AudioEngine {
             source_duration_millis:  -1,
             decode_start_millis:     0,
             visualizer_processor:    VisualizerProcessor::new(DEFAULT_VISUALIZER_BAR_COUNT),
-            event_tx,
             device_watcher_stop,
         })
-    }
-
-    // ── Event subscription ────────────────────────────────────────────────
-
-    /// Return the shared event sender.
-    ///
-    /// Callers can obtain independent receiver streams by calling
-    /// `event_sender().subscribe()`.
-    pub fn event_sender(&self) -> EventSender {
-        self.event_tx.clone()
-    }
-
-    fn emit(&self, ev: AudioEvent) {
-        let _ = self.event_tx.send(ev);
     }
 
     // ── Stream lifecycle ──────────────────────────────────────────────────
@@ -207,13 +189,10 @@ impl AudioEngine {
 
         let shared   = Arc::clone(&self.shared);
         let channels = self.out_channels;
-        let event_tx = self.event_tx.clone();
 
         let err_fn = {
-            let tx = event_tx.clone();
             move |err: StreamError| {
                 error!("Stream Error: {err}");
-                let _ = tx.send(AudioEvent::Error(AudioError::StreamBuild(err.to_string())));
                 thread::spawn(|| {
                     // Signal the FFI layer to rebuild the stream.
                     crate::ffi::revise_stream();
@@ -306,9 +285,6 @@ impl AudioEngine {
             s.status          = PlaybackStatus::Idle;
         }
         self.visualizer_processor.reset();
-        self.emit(AudioEvent::TrackChanged {
-            metadata: crate::events::TrackMetadata::default(),
-        });
     }
 
     // ── Playback control ──────────────────────────────────────────────────
@@ -333,7 +309,6 @@ impl AudioEngine {
             s.status = PlaybackStatus::Idle;
         }
         self.visualizer_processor.reset();
-        self.emit(AudioEvent::PlaybackStopped);
     }
 
     pub fn set_volume(&mut self, volume: f32) {
@@ -683,7 +658,6 @@ impl AudioEngine {
         let out_channels    = self.out_channels;
         let out_sample_rate = self.out_sample_rate;
         let start_millis    = self.decode_start_millis;
-        let event_tx        = self.event_tx.clone();
 
         if let Ok(mut s) = self.shared.lock() {
             s.stream_finished = false;
@@ -697,7 +671,6 @@ impl AudioEngine {
                 out_channels,
                 out_sample_rate,
                 start_millis,
-                event_tx,
             ) {
                 error!("Decode thread ended with error: {err}");
             }
@@ -855,7 +828,6 @@ fn decode_and_feed(
     out_channels:    usize,
     out_sample_rate: u32,
     start_millis:    i32,
-    event_tx:        EventSender,
 ) -> Result<(), String> {
     let media  = media_source_from_owned(source)?;
     let mss    = MediaSourceStream::new(media, MediaSourceStreamOptions::default());
@@ -902,7 +874,7 @@ fn decode_and_feed(
         let decoded = match decoder.decode(&packet) {
             Ok(b) => b,
             Err(SymphoniaError::DecodeError(e)) => {
-                let _ = event_tx.send(AudioEvent::DecoderWarning(e.to_string()));
+                warn!("Decode error: {e}. Skipping packet.");
                 continue;
             }
             Err(SymphoniaError::IoError(_)) => break Ok(()),

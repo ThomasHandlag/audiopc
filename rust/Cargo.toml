@@ -1,5 +1,5 @@
 [package]
-name = "audiopc_ffi"
+name = "audiopc"
 
 version = "0.1.0"
 edition = "2024"

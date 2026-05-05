@@ -10,7 +10,7 @@ void main(List<String> args) async {
     }
 
     await const RustBuilder(
-      assetName: 'audiopc_ffi.g.dart',
+      assetName: 'audiopc.g.dart',
       cratePath: 'rust',
     ).run(input: input, output: output);
   });
