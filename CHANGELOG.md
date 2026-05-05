@@ -1,5 +1,9 @@
 # Plugin change logs
 
+## VERSION 0.1.2+1
+
+* Update documentation
+
 ## VERSION 0.1.2
 
 * BREAKING: merge with audiopc_ffi

@@ -1,6 +1,6 @@
 name: audiopc
 description: "A Rust-powered Flutter FFI audio plugin for local file playback, direct URL streaming, and audio processing via a CPAL backend."
-version: 0.1.2
+version: 0.1.2+1
 homepage: https://app.bustify.dev
 repository: https://github.com/thomashandlag/audiopc
 
