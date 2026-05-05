@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:audiopc_ffi/audiopc_ffi.dart';
-import 'package:audiopc_ffi_example/filters.dart';
+import 'package:audiopc/audiopc.dart';
+import 'package:audiopc_example/filters.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide MetaData;
@@ -23,7 +23,7 @@ class _MyAppState extends State<MyApp> {
   static const int _visualizerFps = 60;
   static const int _spectrumBinCount = 64;
 
-  final AudiopcNative player = AudiopcNative();
+  final AudioPlayer player = AudioPlayer();
   final sourceController = TextEditingController();
   final lowPassController = TextEditingController(text: '0');
   late final backendInfo = player.getAudioBackendInfo();

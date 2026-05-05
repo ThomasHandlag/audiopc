@@ -6,10 +6,10 @@ import 'dart:typed_data';
 import 'package:audiopc_interface/audiopc_interface.dart';
 import 'package:ffi/ffi.dart';
 
-import '../audiopc_ffi.g.dart' as bindings;
+import '../audiopc.g.dart' as bindings;
 
 /// Native player implementation backed by Rust FFI.
-class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
+class AudioPlayer with PlayerStateMixin implements AudiopcInterface {
   static bool _ok(int code) => code == 0;
 
   late final Timer _positionTimer;
@@ -26,7 +26,7 @@ class AudiopcNative with PlayerStateMixin implements AudiopcInterface {
   }
 
   /// Creates a player and starts a periodic position publisher.
-  AudiopcNative() {
+  AudioPlayer() {
     _positionTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       if (state == PlayerState.playing) {
         positionController.add(positionMillis);

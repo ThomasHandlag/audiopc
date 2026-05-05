@@ -1,20 +1,20 @@
 cmake_minimum_required(VERSION 3.10)
 
 # 1. Add CXX (C++) to the supported languages
-project(audiopc_ffi_library VERSION 0.0.1 LANGUAGES C)
+project(audiopc_library VERSION 0.0.1 LANGUAGES C)
 
-add_library(audiopc_ffi SHARED
-  "audiopc_ffi.c"
+add_library(audiopc SHARED
+  "audiopc.c"
 )
 
-set_target_properties(audiopc_ffi PROPERTIES
-  PUBLIC_HEADER audiopc_ffi.h
-  OUTPUT_NAME "audiopc_ffi"
+set_target_properties(audiopc PROPERTIES
+  PUBLIC_HEADER audiopc.h
+  OUTPUT_NAME "audiopc"
 )
 
-target_compile_definitions(audiopc_ffi PUBLIC DART_SHARED_LIB)
+target_compile_definitions(audiopc PUBLIC DART_SHARED_LIB)
 
 if (ANDROID)
   # Support Android 15 16k page size
-  target_link_options(audiopc_ffi PRIVATE "-Wl,-z,max-page-size=16384")
+  target_link_options(audiopc PRIVATE "-Wl,-z,max-page-size=16384")
 endif()

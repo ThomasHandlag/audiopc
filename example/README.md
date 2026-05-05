@@ -1,6 +1,6 @@
-# audiopc_ffi_example
+# audiopc_example
 
-Demonstrates how to use the audiopc_ffi plugin.
+Demonstrates how to use the audiopc plugin.
 
 ## Getting Started
 

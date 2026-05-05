@@ -1,17 +1,17 @@
-import 'package:audiopc_ffi/audiopc_ffi.dart';
+import 'package:audiopc/audiopc.dart';
 import 'package:flutter/material.dart';
 
 class FilterControls extends StatefulWidget {
   const FilterControls({super.key, required this.player});
 
-  final AudiopcNative player;
+  final AudioPlayer player;
 
   @override
   State<FilterControls> createState() => _FilterControlsState();
 }
 
 class _FilterControlsState extends State<FilterControls> {
-  AudiopcNative get player => widget.player;
+  AudioPlayer get player => widget.player;
 
   double peak = 1000;
   double lowShelf = 100;

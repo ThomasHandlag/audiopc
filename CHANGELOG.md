@@ -1,5 +1,9 @@
 # Plugin change logs
 
+## VERSION 0.0.4
+
+* BREAKING: merge with audiopc_ffi
+
 ## VERSION 0.0.3+1
 
 * Fix: mismatch android package name

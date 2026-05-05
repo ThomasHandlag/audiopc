@@ -1,10 +1,10 @@
-package com.thugbn.audiopc_ffi;
+package com.thugbn.audiopc;
 
 import android.content.Context;
 
 public final class AudiopcBridge {
     static {
-        System.loadLibrary("audiopc_ffi");
+        System.loadLibrary("audiopc");
     }
 
     private AudiopcBridge() {}

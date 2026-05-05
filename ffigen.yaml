@@ -1,17 +1,17 @@
 # Run with `dart run ffigen --config ffigen.yaml`.
 name: AudiopcBindings
 ffi-native:
-  asset-id: 'package:audiopc_ffi/audiopc_ffi.g.dart'
+  asset-id: 'package:audiopc/audiopc.g.dart'
 description: |
-  Bindings for `src/audiopc_ffi.h`.
+  Bindings for `src/audiopc.h`.
 
   Regenerate bindings with `dart run ffigen --config ffigen.yaml`.
-output: 'lib/audiopc_ffi.g.dart'
+output: 'lib/audiopc.g.dart'
 headers:
   entry-points:
-    - 'src/audiopc_ffi.h'
+    - 'src/audiopc.h'
   include-directives:
-    - 'src/audiopc_ffi.h'
+    - 'src/audiopc.h'
 comments:
   style: any
   length: full

@@ -17,13 +17,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.1"
-  audiopc_ffi:
+  audiopc:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.0.3"
+    version: "0.0.4"
   audiopc_interface:
     dependency: transitive
     description:

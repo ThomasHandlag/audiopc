@@ -1,8 +1,8 @@
-name: audiopc_ffi
+name: audiopc
 description: "A Rust-powered Flutter FFI audio plugin for local file playback, direct URL streaming, and audio processing via a CPAL backend."
-version: 0.0.3+1
+version: 0.0.4
 homepage: https://app.bustify.dev
-repository: https://github.com/thomashandlag/audiopc_ffi
+repository: https://github.com/thomashandlag/audiopc
 
 environment:
   sdk: ^3.11.1
@@ -25,7 +25,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.thugbn.audiopc_ffi
+        package: com.thugbn.audiopc
         ffiPlugin: true
       ios:
         ffiPlugin: true

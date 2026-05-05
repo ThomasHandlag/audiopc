@@ -1,7 +1,7 @@
-package com.example.audiopc_ffi_example
+package com.example.audiopc_example
 
 import android.os.Bundle
-import com.thugbn.audiopc_ffi.AudiopcBridge
+import com.thugbn.audiopc.AudiopcBridge
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity() {
