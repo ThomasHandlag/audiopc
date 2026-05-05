@@ -1,95 +1,71 @@
-# audiopc
+# 🎧 audiopc
 
-A new Flutter FFI plugin project.
+[![pub package](https://img.shields.io/pub/v/audiopc.svg)](https://pub.dev/packages/audiopc)
+[![likes](https://img.shields.io/pub/likes/audiopc)](https://pub.dev/packages/audiopc/score)
+[![license](https://img.shields.io/github/license/thomashandlag/audiopc)](https://github.com/thomashandlag/audiopc/blob/main/LICENSE)
+[![stars](https://img.shields.io/github/stars/thomashandlag/audiopc)](https://github.com/thomashandlag/audiopc)
+[![issues](https://img.shields.io/github/issues/thomashandlag/audiopc)](https://github.com/thomashandlag/audiopc/issues)
+![Pub Points](https://img.shields.io/pub/points/audiopc)
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter
-[FFI plugin](https://flutter.dev/to/ffi-package),
-a specialized package that includes native code directly invoked with Dart FFI.
+## 🚀 Overview
 
-## Project structure
+**audiopc** is a Rust-powered Flutter audio plugin built using **FFI** and powered by the **CPAL** backend.  
+It provides low-level, high-performance audio playback and processing for Flutter applications.
 
-This template uses the following structure:
+Designed for developers who want more control over audio pipelines, `audiopc` supports decoding, streaming, and real-time audio processing directly inside the audio callback.
 
-* `src`: Contains the native source code, and a CmakeFile.txt file for building
-  that source code into a dynamic library.
+---
 
-* `lib`: Contains the Dart code that defines the API of the plugin, and which
-  calls into the native code using `dart:ffi`.
+## ✨ Features
 
-* platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
-  for building and bundling the native code library with the platform application.
+- 🎵 Play local audio files via native CPAL backend  
+- 🌐 Stream audio from direct internet URLs  
+- 🧩 Decode multiple formats using **Symphonia**  
+- 🎚️ Real-time processing (volume & low-pass filter)  
+- 🔊 Access and query active output device configuration  
+- ⚡ High-performance Rust core with Flutter FFI bridge
 
-## Building and bundling native code
+| Feature          | Status |
+| ---------------- | ------ |
+| Local Playback   | ✅      |
+| URL Streaming    | ✅      |
+| Format Decoding  | ✅      |
+| Audio Processing | ✅      |
+| Device Query     | ✅      |
 
-The `pubspec.yaml` specifies FFI plugins as follows:
+## 📦 Installation
 
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        ffiPlugin: true
-```
-
-This configuration invokes the native build for the various target platforms
-and bundles the binaries in Flutter applications using these FFI plugins.
-
-This can be combined with dartPluginClass, such as when FFI is used for the
-implementation of one platform in a federated plugin:
-
-```yaml
-  plugin:
-    implements: some_other_plugin
-    platforms:
-      some_platform:
-        dartPluginClass: SomeClass
-        ffiPlugin: true
-```
-
-A plugin can have both FFI and method channels:
+Add to your `pubspec.yaml`:
 
 ```yaml
-  plugin:
-    platforms:
-      some_platform:
-        pluginClass: SomeName
-        ffiPlugin: true
+dependencies:
+  audiopc: ^0.1.3
 ```
 
-The native build systems that are invoked by FFI (and method channel) plugins are:
+```kotlin
+  // Add these line of code to your MainActivity.kt
+  import com.thugbn.audiopc.AudiopcBridge
+  AudiopcBridge.init(applicationContext)
+```
 
-* For Android: Gradle, which invokes the Android NDK for native builds.
-  * See the documentation in android/build.gradle.
-* For iOS and MacOS: Xcode, via CocoaPods.
-  * See the documentation in ios/audiopc.podspec.
-  * See the documentation in macos/audiopc.podspec.
-* For Linux and Windows: CMake.
-  * See the documentation in linux/CMakeLists.txt.
-  * See the documentation in windows/CMakeLists.txt.
+## Usage
 
-## Binding to native code
+```dart
+import 'package:audiopc/audiopc.dart';
 
-To use the native code, bindings in Dart are needed.
-To avoid writing these by hand, they are generated from the header file
-(`src/audiopc.h`) by `package:ffigen`.
-Regenerate the bindings by running `dart run ffigen --config ffigen.yaml`.
+final player = AudioPlayer();
 
-## Invoking native code
+player.playSource("youraudio_file");
 
-Very short-running native functions can be directly invoked from any isolate.
-For example, see `sum` in `lib/audiopc.dart`.
+// Adjust volume
+player.setVolume(0.8);
 
-Longer-running functions should be invoked on a helper isolate to avoid
-dropping frames in Flutter applications.
-For example, see `sumAsync` in `lib/audiopc.dart`.
+// Apply low-pass filter
+player.setRate(0.5);
+```
 
-## Flutter help
+## ⭐ Support
 
-For help getting started with Flutter, view our
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-
-The plugin project was generated without specifying the `--platforms` flag, so no platforms are currently supported.
-To add platforms, run `flutter create -t plugin_ffi --platforms <platforms> .` in this directory.
-You can also find a detailed instruction on how to add platforms in the `pubspec.yaml` at https://flutter.dev/to/pubspec-plugin-platforms.
+If you find this project useful, consider giving it a ⭐ on GitHub!
