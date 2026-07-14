@@ -1,3 +1,2 @@
-library audiopc;
-
-export 'src/rust/frb_generated.dart' show RustLib;
+export 'package:audiopc_interface/audiopc_interface.dart';
+export 'src/audio_player.dart';
