@@ -9,7 +9,6 @@ use std::{
     time::Duration,
 };
 
-use cpal::SupportedStreamConfig;
 use flutter_rust_bridge::frb;
 use symphonia::core::{
     audio::GenericAudioBufferRef,
@@ -24,7 +23,10 @@ use tempfile::tempfile;
 use crate::{
     api::{
         enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE},
-        renderer::state::{AudioState, ResampleState},
+        renderer::{
+            output::AudioOuputConfig,
+            state::{AudioState, ResampleState},
+        },
         source::{AudioSource, http_stream::HttpStream},
     },
     error,
@@ -36,21 +38,21 @@ type BoxedMediaSource = Box<dyn symphonia::core::io::MediaSource>;
 pub struct DecodePool {
     stop_flag: Arc<AtomicBool>,
     pool: Option<JoinHandle<()>>,
-    pub duration: i32,
-    pub source: Option<AudioSource>
+    pub(crate) duration: i32,
+    pub(crate) source: Option<AudioSource>,
 }
 
 impl DecodePool {
-    pub fn new() -> DecodePool {
+    pub(crate) fn new() -> DecodePool {
         DecodePool {
             pool: None,
             stop_flag: Arc::new(AtomicBool::new(true)),
             duration: -1,
-            source: None
+            source: None,
         }
     }
 
-    pub fn stop(&mut self) {
+    pub(crate) fn stop(&mut self) {
         self.stop_flag.store(true, Ordering::SeqCst);
         if let Some(handle) = self.pool.take() {
             let _ = handle.join();
@@ -58,15 +60,15 @@ impl DecodePool {
         self.stop_flag.store(false, Ordering::SeqCst);
     }
 
-    pub fn set_source(&mut self, source: AudioSource) {
+    pub(crate) fn set_source(&mut self, source: AudioSource) {
         self.source = Some(source);
     }
 
-    pub fn build<F>(
+    pub(crate) fn build<F>(
         &mut self,
         f: F,
         state: Arc<Mutex<AudioState>>,
-        output_config: SupportedStreamConfig,
+        output_config: AudioOuputConfig,
     ) -> JoinHandle<()>
     where
         F: Fn() + Send + 'static,
@@ -84,8 +86,8 @@ impl DecodePool {
                     source,
                     stop_flag,
                     state,
-                    output_config.channels() as usize,
-                    output_config.sample_rate(),
+                    output_config.channels as usize,
+                    output_config.sample_rate,
                     f,
                 );
             })

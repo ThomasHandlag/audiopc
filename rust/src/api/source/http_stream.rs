@@ -5,15 +5,15 @@ use symphonia::core::io::MediaSource;
 
 #[frb(opaque)]
 pub struct HttpStream {
-   pub url: reqwest::Url,
-   pub client: Client,
-    pub(crate) response: Option<reqwest::blocking::Response>,
-   pub pos: u64,
-   pub len: Option<u64>,
+    url: reqwest::Url,
+    client: Client,
+    response: Option<reqwest::blocking::Response>,
+    pos: u64,
+    len: Option<u64>,
 }
 
 impl HttpStream {
-    pub fn new(url_str: &str) -> Result<Self, String> {
+     pub(crate) fn new(url_str: &str) -> Result<Self, String> {
         let client = Client::new();
         let url = reqwest::Url::parse(url_str).map_err(|e| format!("Invalid URL: {e}"))?;
 
@@ -37,7 +37,7 @@ impl HttpStream {
         })
     }
 
-   pub fn send_range_request(&mut self, start: u64) -> Result<(), std::io::Error> {
+    pub(crate) fn send_range_request(&mut self, start: u64) -> Result<(), std::io::Error> {
         let range = format!("bytes={}-", start);
         let res = self.client.get(self.url.clone())
             .header(reqwest::header::RANGE, range)

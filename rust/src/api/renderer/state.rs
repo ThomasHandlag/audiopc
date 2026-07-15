@@ -25,10 +25,10 @@ pub enum PlaybackState {
 #[frb(opaque)]
 pub struct ResampleState {
     /// Current fractional position within the current packet (source frames).
-    pub pos: f64,
+    pub(crate) pos: f64,
     /// The last *source* frame of the previous packet, used as the left
     /// neighbour for the first interpolated output sample of the next packet.
-    pub carry: Vec<f32>,
+    pub(crate) carry: Vec<f32>,
 }
 
 impl ResampleState {
@@ -69,16 +69,16 @@ impl BuffConfig {
 
 #[frb(opaque)]
 pub struct AudioState {
-    pub pl_state: PlaybackState,
-    pub pl_rate: f32,
-    pub start_millies: i32,
-    pub queue: VecDeque<f32>,
-    pub visualizer: VecDeque<f32>,
-    pub volumn: f32,
-    pub emitted_samples: u64,
-    pub underrun_count: u32,
-    pub effects: Vec<AudioProcessor>,
-    pub stream_ended: bool,
+    pub(crate) pl_state: PlaybackState,
+    pub(crate) pl_rate: f32,
+    pub(crate) start_millies: i32,
+    pub(crate) queue: VecDeque<f32>,
+    pub(crate) visualizer: VecDeque<f32>,
+    pub(crate) volumn: f32,
+    pub(crate) emitted_samples: u64,
+    pub(crate) underrun_count: u32,
+    pub(crate) effects: Vec<AudioProcessor>,
+    pub(crate) stream_ended: bool,
     config: BuffConfig,
     v_config: BuffConfig,
 }
@@ -110,7 +110,9 @@ impl AudioState {
         let raw = match self.queue.pop_front() {
             Some(s) => {
                 self.emitted_samples = self.emitted_samples.saturating_add(1);
-                self.start_millies += self.compute_millies(self.compute_source(channels as u16), channels);
+                let mut source_pos = self.compute_source(channels as u16);
+                source_pos += self.pl_rate as f64;
+                self.start_millies += self.compute_millies(source_pos, channels);
                 s
             }
             None => {
@@ -131,27 +133,21 @@ impl AudioState {
         sample
     }
 
-    pub fn compute_source(&self, channels: u16) -> u64 {
+    pub fn compute_source(&self, channels: u16) -> f64 {
         let target = self.start_millies;
         let target_samples = ((target as u64)
             .saturating_mul(self.config.sample_rate as u64)
             .saturating_mul(channels as u64)
-            / 1000) as u64;
+            / 1000) as f64;
         target_samples
     }
 
-    pub fn compute_millies(&self, source_pos: u64, channels: usize) -> i32 {
+    pub fn compute_millies(&self, source_pos: f64, channels: usize) -> i32 {
         let secs =
-            source_pos as f64 / (self.config.sample_rate as f64 * channels as f64);
+            source_pos / (self.config.sample_rate as f64 * channels as f64);
 
         Duration::from_secs_f64(secs.max(0.0)).as_millis() as i32
     }
-
-    // pub fn to_start_millies(&self, out_sample_rate: u32, out_channels: u16) -> i32 {
-
-    // }
-
-    // ── Position helpers ──────────────────────────────────────────────────
 
     /// Current playback position in milliseconds.
     pub fn position(&self, out_channels: usize) -> i32 {

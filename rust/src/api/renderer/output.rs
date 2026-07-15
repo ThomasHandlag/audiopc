@@ -11,7 +11,7 @@ use crate::{
 use cpal::{
     BufferSize,
     ErrorKind::DeviceChanged,
-    OutputCallbackInfo, SampleFormat, Stream, StreamConfig, SupportedStreamConfig,
+    OutputCallbackInfo, SampleFormat, Stream, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 use crossbeam_channel::Sender;
@@ -19,14 +19,18 @@ use flutter_rust_bridge::frb;
 
 #[frb(opaque)]
 pub struct AudioOutput {
-    pub(crate) stream: Option<Stream>,
-    pub state: Arc<Mutex<AudioState>>,
-    pub cmd_tx: Sender<AudioCommand>,
-    pub out_config: SupportedStreamConfig,
+    stream: Option<Stream>,
+    state: Arc<Mutex<AudioState>>,
+    cmd_tx: Sender<AudioCommand>,
+}
+
+pub struct AudioOuputConfig {
+    pub sample_rate: u32,
+    pub channels: u16,
 }
 
 impl AudioOutput {
-    pub fn get_output_config() -> SupportedStreamConfig {
+    pub(crate) fn get_output_config() -> AudioOuputConfig {
         let device = cpal::default_host()
             .default_output_device()
             .expect("No ouput device found");
@@ -35,23 +39,24 @@ impl AudioOutput {
             .default_output_config()
             .expect("Could not create output");
 
-        output_config
+        AudioOuputConfig{
+            sample_rate: output_config.sample_rate(),
+            channels: output_config.channels()
+        }
     }
 
-    pub fn new(
+    pub(crate) fn new(
         cmd_tx: Sender<AudioCommand>,
         state: Arc<Mutex<AudioState>>,
-        out_config: SupportedStreamConfig,
     ) -> AudioOutput {
         AudioOutput {
             cmd_tx,
             state,
             stream: None,
-            out_config,
         }
     }
 
-    pub fn build(&mut self) -> Result<(), String> {
+    pub(crate) fn build(&mut self) -> Result<(), String> {
         let device = cpal::default_host()
             .default_output_device()
             .expect("No ouput device found");
@@ -72,7 +77,6 @@ impl AudioOutput {
         let state = Arc::clone(&self.state);
 
         let out_channels = output_config.channels() as usize;
-        let sample_rate = output_config.sample_rate();
 
         let err_fn = move |e: cpal::Error| {
             let _ = match e.kind() {
@@ -125,21 +129,6 @@ impl AudioOutput {
         Ok(())
     }
 
-    pub fn get_config() -> Result<StreamConfig, String> {
-        let device = cpal::default_host()
-            .default_output_device()
-            .expect("No ouput device found");
-
-        let output_config = device
-            .default_output_config()
-            .map_err(|e| AudioError::from(e).to_string())?;
-
-        Ok(StreamConfig {
-            channels: output_config.channels(),
-            sample_rate: output_config.sample_rate(),
-            buffer_size: BufferSize::Default,
-        })
-    }
 }
 
 fn write_output_f32(

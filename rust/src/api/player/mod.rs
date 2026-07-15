@@ -33,9 +33,9 @@ impl AudioPlayer {
 
         let out_config = AudioOutput::get_output_config();
 
-        let sample_rate = out_config.sample_rate();
+        let sample_rate = out_config.sample_rate;
 
-        let channels = out_config.channels();
+        let channels = out_config.channels;
 
         let max_samples = (sample_rate as usize)
             .saturating_mul(channels as usize)
@@ -54,7 +54,6 @@ impl AudioPlayer {
         let output = Arc::new(Mutex::new(AudioOutput::new(
             tx,
             Arc::clone(&state),
-            out_config,
         )));
 
         AudioPlayer {

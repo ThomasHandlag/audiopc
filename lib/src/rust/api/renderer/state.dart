@@ -4,64 +4,22 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../frb_generated.dart';
-import '../source/filter.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
-import 'package:freezed_annotation/freezed_annotation.dart' hide protected;
-part 'state.freezed.dart';
 
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `PlaybackState`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `eq`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioState>>
 abstract class AudioState implements RustOpaqueInterface {
-  List<AudioProcessor> get effects;
-
-  BigInt get emittedSamples;
-
-  double get plRate;
-
-  PlaybackState get plState;
-
-  VecDequeF32 get queue;
-
-  int get startMillies;
-
-  bool get streamEnded;
-
-  int get underrunCount;
-
-  VecDequeF32 get visualizer;
-
-  double get volumn;
-
-  set effects(List<AudioProcessor> effects);
-
-  set emittedSamples(BigInt emittedSamples);
-
-  set plRate(double plRate);
-
-  set plState(PlaybackState plState);
-
-  set queue(VecDequeF32 queue);
-
-  set startMillies(int startMillies);
-
-  set streamEnded(bool streamEnded);
-
-  set underrunCount(int underrunCount);
-
-  set visualizer(VecDequeF32 visualizer);
-
-  set volumn(double volumn);
-
   /// Clear all transient audio state without touching volume / rate / device.
   Future<void> clearAudioState();
 
   Future<int> computeMillies({
-    required BigInt sourcePos,
+    required double sourcePos,
     required BigInt channels,
   });
 
-  Future<BigInt> computeSource({required int channels});
+  Future<double> computeSource({required int channels});
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<AudioState> newInstance({
@@ -88,14 +46,6 @@ abstract class AudioState implements RustOpaqueInterface {
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ResampleState>>
 abstract class ResampleState implements RustOpaqueInterface {
-  Float32List get carry;
-
-  double get pos;
-
-  set carry(Float32List carry);
-
-  set pos(double pos);
-
   static Future<ResampleState> default_() =>
       RustLib.instance.api.crateApiRendererStateResampleStateDefault();
 
@@ -105,9 +55,6 @@ abstract class ResampleState implements RustOpaqueInterface {
 
   Future<void> reset();
 }
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VecDeque < f32 >>>
-abstract class VecDequeF32 implements RustOpaqueInterface {}
 
 class BuffConfig {
   final int sampleRate;
@@ -143,17 +90,4 @@ class BuffConfig {
           sampleRate == other.sampleRate &&
           maxSamples == other.maxSamples &&
           mQueueSec == other.mQueueSec;
-}
-
-@freezed
-sealed class PlaybackState with _$PlaybackState {
-  const PlaybackState._();
-
-  const factory PlaybackState.idle() = PlaybackState_Idle;
-  const factory PlaybackState.buffering() = PlaybackState_Buffering;
-  const factory PlaybackState.playing() = PlaybackState_Playing;
-  const factory PlaybackState.paused() = PlaybackState_Paused;
-  const factory PlaybackState.stopped() = PlaybackState_Stopped;
-  const factory PlaybackState.completed() = PlaybackState_Completed;
-  const factory PlaybackState.error(String field0) = PlaybackState_Error;
 }
