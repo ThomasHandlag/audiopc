@@ -1,8 +1,8 @@
 use std::{collections::VecDeque, time::Duration};
 
 use crate::api::{
+    filters::AudioProcessor,
     renderer::state::PlaybackState::{Idle, Playing},
-    source::filter::AudioProcessor,
 };
 use flutter_rust_bridge::frb;
 
@@ -14,7 +14,19 @@ pub enum PlaybackState {
     Paused,
     Stopped,
     Completed,
-    Error(String),
+}
+
+impl PlaybackState {
+    pub fn id(&self) -> i32 {
+        match self {
+            PlaybackState::Idle => 0,
+            PlaybackState::Buffering => 1,
+            PlaybackState::Playing => 2,
+            PlaybackState::Paused => 3,
+            PlaybackState::Stopped => 4,
+            PlaybackState::Completed => 5,
+        }
+    }
 }
 
 /// Carries fractional position and boundary samples across decode packets.
@@ -143,8 +155,7 @@ impl AudioState {
     }
 
     pub fn compute_millies(&self, source_pos: f64, channels: usize) -> i32 {
-        let secs =
-            source_pos / (self.config.sample_rate as f64 * channels as f64);
+        let secs = source_pos / (self.config.sample_rate as f64 * channels as f64);
 
         Duration::from_secs_f64(secs.max(0.0)).as_millis() as i32
     }

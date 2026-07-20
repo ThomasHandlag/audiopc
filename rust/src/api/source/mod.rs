@@ -1,5 +1,4 @@
 pub mod decode;
-pub mod filter;
 pub mod http_stream;
 
 /// Typed audio source.

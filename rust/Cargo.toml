@@ -5,11 +5,11 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-crate-type = ["rlib", "cdylib", "staticlib"]
-
-[[bin]]
-name = "my_app"
-path = "src/main.rs"
+crate-type = [
+    # "rlib", 
+    "cdylib", 
+    "staticlib"
+]
 
 [dependencies]
 cpal = { version = "0.18.1"}
@@ -24,7 +24,7 @@ crossbeam-channel = "0.5.16"
 flutter_rust_bridge = "=2.12.0"
 
 [target.'cfg(target_os = "android")'.dependencies]
-jni = "0.22.4"
+jni = "0.21"
 ndk-context = "0.1.1"
 
 [lints.rust]

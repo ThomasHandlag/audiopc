@@ -6,50 +6,23 @@
 import '../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `write_output_f32`, `write_output_i16`, `write_output_u16`
+// These functions are ignored because they are not marked as `pub`: `build`, `get_output_config`, `new`, `write_output_f32`, `write_output_i16`, `write_output_u16`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AudioOutput`
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < Mutex < AudioState > >>>
-abstract class ArcMutexAudioState implements RustOpaqueInterface {}
+class AudioOuputConfig {
+  final int sampleRate;
+  final int channels;
 
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioOutput>>
-abstract class AudioOutput implements RustOpaqueInterface {
-  SenderAudioCommand get cmdTx;
+  const AudioOuputConfig({required this.sampleRate, required this.channels});
 
-  SupportedStreamConfig get outConfig;
+  @override
+  int get hashCode => sampleRate.hashCode ^ channels.hashCode;
 
-  ArcMutexAudioState get state;
-
-  set cmdTx(SenderAudioCommand cmdTx);
-
-  set outConfig(SupportedStreamConfig outConfig);
-
-  set state(ArcMutexAudioState state);
-
-  Future<void> build();
-
-  static Future<StreamConfig> getConfig() =>
-      RustLib.instance.api.crateApiRendererOutputAudioOutputGetConfig();
-
-  static Future<SupportedStreamConfig> getOutputConfig() =>
-      RustLib.instance.api.crateApiRendererOutputAudioOutputGetOutputConfig();
-
-  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<AudioOutput> newInstance({
-    required SenderAudioCommand cmdTx,
-    required ArcMutexAudioState state,
-    required SupportedStreamConfig outConfig,
-  }) => RustLib.instance.api.crateApiRendererOutputAudioOutputNew(
-    cmdTx: cmdTx,
-    state: state,
-    outConfig: outConfig,
-  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AudioOuputConfig &&
+          runtimeType == other.runtimeType &&
+          sampleRate == other.sampleRate &&
+          channels == other.channels;
 }
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Sender < AudioCommand >>>
-abstract class SenderAudioCommand implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<StreamConfig>>
-abstract class StreamConfig implements RustOpaqueInterface {}
-
-// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SupportedStreamConfig>>
-abstract class SupportedStreamConfig implements RustOpaqueInterface {}

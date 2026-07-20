@@ -1,19 +1,25 @@
 import 'dart:async';
 
 import 'package:audiopc/audiopc.dart';
-import 'package:audiopc_example/filters.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
+import 'package:device_audio_query/device_audio_query.dart';
+// import 'package:audiopc_example/filters.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide MetaData;
 
 /// Example app entry point.
-void main() {
-  runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: MyApp()));
+void main() async {
+  await RustLib.init();
+  final player = PcPlayer.instance();
+  runApp(
+    MaterialApp(debugShowCheckedModeBanner: false, home: MyApp(player: player)),
+  );
 }
 
 /// Demo app showing source loading, playback control, and visualization.
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.player});
+
+  final PcPlayer player;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -23,10 +29,16 @@ class _MyAppState extends State<MyApp> {
   static const int _visualizerFps = 60;
   static const int _spectrumBinCount = 64;
 
-  final AudioPlayer player = AudioPlayer();
+  PcPlayer get player => widget.player;
+
   final sourceController = TextEditingController();
   final lowPassController = TextEditingController(text: '0');
-  late final backendInfo = player.getAudioBackendInfo();
+  final query = DeviceAudioQuery();
+
+  bool _hasPermission = false;
+
+  late final VisualizerProcessor processor;
+  // late final backendInfo = player.getAudioBackendInfo();
 
   late final Timer _visualizerTimer;
 
@@ -74,7 +86,7 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    player.playSource(source);
+    player.playSource(AudioSource.path(source));
 
     setState(() {});
   }
@@ -99,67 +111,46 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _volumePercent = sliderValue;
     });
-    player.setVolume(_volumeFromSlider(sliderValue));
+    player.setVolumn(_volumeFromSlider(sliderValue));
   }
 
   /// Updates spectrum bars from the current visualizer frame.
-  void _updateSpectrum() {
-    final next = player.getVisualizerSpectrum(_spectrumBinCount);
-    if (next.isEmpty) {
-      return;
-    }
+  // void _updateSpectrum() async {
+  //   final config = player.getConfig();
+  //   final next = await processor.compute(
+  //     samples: await player.samplesData(),
+  //     channels: BigInt.from(1),
+  //     sampleRate: config.sampleRate,
+  //     playing: player.isPlaying(),
+  //   );
+  //   if (next.isEmpty) {
+  //     return;
+  //   }
 
-    if (!mounted) {
-      return;
-    }
+  //   if (!mounted) {
+  //     return;
+  //   }
 
-    setState(() {
-      _spectrumBars = next;
-    });
-  }
+  //   setState(() {
+  //     _spectrumBars = next;
+  //   });
+  // }
 
-  MetaData? _metadata;
-
-  void _getMetadata() async {
-    final url = sourceController.text.trim();
-    if (url.isEmpty) {
-      return;
-    }
-
-    final metadata = await player.getMetadata(url);
-    setState(() {
-      _metadata = metadata;
-    });
-  }
-
-  void _getThumb() async {
-    final url = sourceController.text.trim();
-    if (url.isEmpty) {
-      return;
-    }
-
-    final thumbData = await player.getThumbnail(url);
-    if (thumbData == null) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No thumbnail available for this audio file'),
-        ),
-      );
-      return;
-    }
-    setState(() {
-      _thumbByte = thumbData;
-    });
-  }
-
-  Uint8List? _thumbByte;
+  // Uint8List? _thumbByte;
 
   /// Opens a file picker and fills the source field.
   Future<void> _selectFile() async {
-    final result = await FilePicker.pickFiles(type: FileType.audio);  
+    if (!_hasPermission) {
+      return;
+    }
 
-    final path = result?.files.single.path;
+    final songs = await query.querySongs();
+
+    if (songs.isEmpty) {
+      return;
+    }
+
+    final path = songs.first.data;
     if (path != null) {
       sourceController.text = path;
     }
@@ -176,15 +167,39 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+
+    processor = VisualizerProcessor(
+      barCount: BigInt.from(64),
+      fftSize: BigInt.from(2048),
+    );
+
+    _checkPermission();
+
     _visualizerTimer = Timer.periodic(
       const Duration(milliseconds: 100 ~/ _visualizerFps),
-      (_) => _updateSpectrum(),
+      // (_) => _updateSpectrum(),
+      (_) => {}
     );
     player.positionStream.listen((pos) {
       setState(() {
         _sliderPosition = pos.toDouble();
       });
     });
+  }
+
+  Future<void> _checkPermission() async {
+    final status = await query.checkPermission();
+    if (!mounted) return;
+    setState(() {
+      _hasPermission = status == PermissionStatus.granted;
+    });
+    if (!_hasPermission) {
+      final requested = await query.requestPermission();
+      if (!mounted) return;
+      setState(() {
+        _hasPermission = requested == PermissionStatus.granted;
+      });
+    }
   }
 
   double _rate = 1.0;
@@ -195,7 +210,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _rate = rate;
     });
-    player.setPlaybackRate(rate);
+    player.setRate(rate);
   }
 
   @override
@@ -209,7 +224,6 @@ class _MyAppState extends State<MyApp> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            bool isWide = constraints.maxWidth > 600;
             return Padding(
               padding: const EdgeInsets.all(20.0),
               child: SingleChildScrollView(
@@ -245,7 +259,7 @@ class _MyAppState extends State<MyApp> {
                           )
                         else
                           ElevatedButton(
-                            onPressed: _selectFile,
+                            onPressed: _hasPermission ? _selectFile : null,
                             child: const Text('Select a file'),
                           ),
                         const SizedBox(width: 12),
@@ -256,52 +270,15 @@ class _MyAppState extends State<MyApp> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    if (_metadata != null || _thumbByte != null)
-                      Card(
-                        elevation: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: isWide
-                              ? Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (_thumbByte != null)
-                                      Image.memory(
-                                        _thumbByte!,
-                                        width: 150,
-                                        height: 150,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    if (_thumbByte != null)
-                                      const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _buildMetadataInfo(textTheme),
-                                    ),
-                                  ],
-                                )
-                              : Column(
-                                  children: [
-                                    if (_thumbByte != null)
-                                      Image.memory(
-                                        _thumbByte!,
-                                        width: double.infinity,
-                                        height: 200,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    if (_thumbByte != null)
-                                      const SizedBox(height: 16),
-                                    _buildMetadataInfo(textTheme),
-                                  ],
-                                ),
-                        ),
-                      ),
-                    const SizedBox(height: 24),
                     _buildPlaybackControls(),
                     const SizedBox(height: 20),
                     Text('Seek position', style: textTheme.titleMedium),
                     _buildSeekSlider(),
                     const SizedBox(height: 20),
-                    Text('Rate ${_rateLabel(_rate)}', style: textTheme.titleMedium),
+                    Text(
+                      'Rate ${_rateLabel(_rate)}',
+                      style: textTheme.titleMedium,
+                    ),
                     Slider(
                       value: _rate,
                       min: 0.5,
@@ -327,10 +304,8 @@ class _MyAppState extends State<MyApp> {
                     Text('Spectrum visualizer', style: textTheme.titleMedium),
                     const SizedBox(height: 8),
                     _buildVisualizer(),
-                    const SizedBox(height: 20),
-                    _buildBackendInfo(textTheme),
-                    const SizedBox(height: 16),
-                    FilterControls(player: player),
+                    // const SizedBox(height: 16),
+                    // FilterControls(player: player),
                   ],
                 ),
               ),
@@ -338,24 +313,6 @@ class _MyAppState extends State<MyApp> {
           },
         ),
       ),
-    );
-  }
-
-  Widget _buildMetadataInfo(TextTheme textTheme) {
-    if (_metadata == null) {
-      return const Text('No metadata loaded');
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Title: ${_metadata!.title}', style: textTheme.titleMedium),
-        Text('Artist: ${_metadata!.artist}'),
-        Text('Album: ${_metadata!.album}'),
-        Text('Genre: ${_metadata!.genre}'),
-        Text('Year: ${_metadata!.year}'),
-        Text('Track: ${_metadata!.trackNumber}'),
-        Text('Disc: ${_metadata!.discNumber}'),
-      ],
     );
   }
 
@@ -368,15 +325,15 @@ class _MyAppState extends State<MyApp> {
         StreamBuilder(
           stream: player.stateStream,
           builder: (context, snapshot) {
-            final state = snapshot.data ?? PlayerState.stopped;
+            final state = snapshot.data ?? PlaybackState.stopped;
             return FloatingActionButton(
               onPressed: () {
                 switch (state) {
-                  case PlayerState.playing:
+                  case PlaybackState.playing:
                     player.pause();
                     break;
-                  case PlayerState.paused:
-                  case PlayerState.idle:
+                  case PlaybackState.paused:
+                  case PlaybackState.idle:
                     player.play();
                     break;
                   case _:
@@ -384,7 +341,7 @@ class _MyAppState extends State<MyApp> {
                 }
               },
               child: Icon(
-                state == PlayerState.playing ? Icons.pause : Icons.play_arrow,
+                state == PlaybackState.playing ? Icons.pause : Icons.play_arrow,
               ),
             );
           },
@@ -393,11 +350,6 @@ class _MyAppState extends State<MyApp> {
           onPressed: stop,
           backgroundColor: Colors.red,
           child: const Icon(Icons.stop),
-        ),
-        OutlinedButton(onPressed: _getThumb, child: const Text('Load Thumb')),
-        OutlinedButton(
-          onPressed: _getMetadata,
-          child: const Text('Get metadata'),
         ),
       ],
     );
@@ -416,13 +368,10 @@ class _MyAppState extends State<MyApp> {
               child: Slider(
                 value: _sliderPosition.clamp(
                   0,
-                  player.durationMillis.toDouble().clamp(0, double.maxFinite),
+                  player.duration.toDouble().clamp(0, double.maxFinite),
                 ),
                 min: 0,
-                max: player.durationMillis.toDouble().clamp(
-                  0,
-                  double.maxFinite,
-                ),
+                max: player.duration.toDouble().clamp(0, double.maxFinite),
                 onChanged: (value) {
                   setState(() {
                     _sliderPosition = value;
@@ -433,7 +382,7 @@ class _MyAppState extends State<MyApp> {
                 },
               ),
             ),
-            Text(_formatTime(player.durationMillis)),
+            Text(_formatTime(player.duration)),
           ],
         );
       },
@@ -467,28 +416,6 @@ class _MyAppState extends State<MyApp> {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBackendInfo(TextTheme textTheme) {
-    return ExpansionTile(
-      title: Text('Backend Info', style: textTheme.titleMedium),
-      children: [
-        Text('CPAL backend ready: ${backendInfo.isAvailable}'),
-        const SizedBox(height: 8),
-        Text('Output sample rate: ${backendInfo.defaultOutputSampleRate}'),
-        Text('Output channels: ${backendInfo.defaultOutputChannels}'),
-        Text('Output device count: ${backendInfo.outputDeviceCount}'),
-        const SizedBox(height: 12),
-        Text('Buffered samples: $bufferedSamples'),
-        Text('Position (ms): $positionMillis'),
-        Text('Duration (ms): $durationMillis'),
-        const SizedBox(height: 12),
-        const Text(
-          'Supported formats are handled by Symphonia in the Rust backend.\n'
-          'For internet playback, provide a direct media URL.',
-        ),
-      ],
     );
   }
 }

@@ -4,6 +4,9 @@ pub mod renderer;
 pub mod common;
 pub mod enums;
 pub mod error;
+pub mod visualizer;
+pub mod filters;
+
 
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {

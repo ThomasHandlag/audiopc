@@ -22,14 +22,10 @@ use tempfile::tempfile;
 
 use crate::{
     api::{
-        enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE},
-        renderer::{
-            output::AudioOuputConfig,
-            state::{AudioState, ResampleState},
-        },
-        source::{AudioSource, http_stream::HttpStream},
-    },
-    error,
+        enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE}, renderer::{
+            output::AudioOuputConfig, state::{AudioState, PlaybackState, ResampleState},
+        }, source::{AudioSource, http_stream::HttpStream},
+    }, error,
 };
 
 type BoxedMediaSource = Box<dyn symphonia::core::io::MediaSource>;
@@ -237,6 +233,7 @@ where
 
     if let Ok(mut s) = shared.lock() {
         s.stream_ended = true;
+        s.pl_state = PlaybackState::Completed;
     }
 
     decode_result

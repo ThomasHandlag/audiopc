@@ -5,11 +5,8 @@ use flutter_rust_bridge::frb;
 
 use crate::{
     api::{
-        enums::AudioCommand,
-        renderer::{output::AudioOutput, state::PlaybackState},
-        source::{AudioSource, decode::DecodePool},
-    },
-    warn,
+        enums::AudioCommand, filters::AudioProcessor, renderer::{output::{AudioOuputConfig, AudioOutput}, state::PlaybackState}, source::{AudioSource, decode::DecodePool}
+    }, warn,
 };
 
 use crate::api::{
@@ -26,6 +23,7 @@ pub struct AudioPlayer {
 }
 
 impl AudioPlayer {
+    #[frb(sync)]
     pub fn new() -> AudioPlayer {
         let decode = DecodePool::new();
 
@@ -51,10 +49,7 @@ impl AudioPlayer {
 
         let state = Arc::new(Mutex::new(AudioState::new(0, config, v_config)));
 
-        let output = Arc::new(Mutex::new(AudioOutput::new(
-            tx,
-            Arc::clone(&state),
-        )));
+        let output = Arc::new(Mutex::new(AudioOutput::new(tx, Arc::clone(&state))));
 
         AudioPlayer {
             decode,
@@ -64,6 +59,8 @@ impl AudioPlayer {
         }
     }
 
+    /// Set source for preparing to play.
+    #[frb(sync)]
     pub fn set_source(&mut self, source: AudioSource) {
         self.decode.stop();
         self.decode.set_source(source);
@@ -74,6 +71,8 @@ impl AudioPlayer {
         });
     }
 
+    /// Play current audio source. If current source is empty then an error will be throw.
+    #[frb(sync)]
     pub fn play(&mut self) {
         let rc = self.cmd_rc.clone();
 
@@ -103,6 +102,23 @@ impl AudioPlayer {
         );
     }
 
+    /// Pause curent playing song.
+    #[frb(sync)]
+    pub fn pause(&mut self) {
+        if let Ok(mut s) = self
+            .state
+            .lock() {
+                s.pl_state = PlaybackState::Paused
+            }
+    }
+
+    #[frb(sync)]
+    pub fn is_completed(&self) -> bool {
+        self.state.lock().map(|v| v.pl_state == PlaybackState::Completed).unwrap_or(false)
+    }
+
+    /// Whether player is playing or not.
+    #[frb(sync)]
     pub fn is_playing(&self) -> bool {
         self.state
             .lock()
@@ -110,6 +126,7 @@ impl AudioPlayer {
             .unwrap_or(false)
     }
 
+    /// Play audio at given position in millisecond.
     pub fn seek(&mut self, position: i32) {
         let mut target = position.max(0);
         if self.decode.duration > 0 {
@@ -130,28 +147,79 @@ impl AudioPlayer {
             s.queue.clear();
             s.visualizer.clear();
             s.emitted_samples = 0;
-            s.stream_ended= false;
+            s.stream_ended = false;
         }
 
-        let can_play = self.decode.source.is_some() && self.state.lock().map(|v| v.start_millies < self.decode.duration).unwrap_or(false);
+        let can_play = self.decode.source.is_some()
+            && self
+                .state
+                .lock()
+                .map(|v| v.start_millies < self.decode.duration)
+                .unwrap_or(false);
 
         if was_playing || can_play {
             self.play();
         }
     }
 
+    /// Stop current playing audio.
     pub fn stop(&mut self) {
         self.decode.stop();
         if let Ok(mut s) = self.state.lock() {
             s.clear_audio_state();
-            s.pl_state = PlaybackState::Idle;
+            s.pl_state = PlaybackState::Stopped;
         }
     }
 
-    pub fn set_volume(&mut self, volume: f32) {
+    /// Set volume of ouput audio.
+    pub fn set_volumn(&mut self, volumn: f32) {
         if let Ok(mut s) = self.state.lock() {
-            s.volumn = volume.clamp(0.0, 1.0);
+            s.volumn = volumn.clamp(0.0, 1.0);
         }
+    }
+
+    /// Set playback speed of output audio.
+    pub fn set_rate(&mut self, rate: f32) {
+        if let Ok(mut s) = self.state.lock() {
+            s.pl_rate = rate.clamp(0.2, 3.0)
+        }
+    }
+
+    /// Add Effect to output audio.
+    pub fn add_effect(&mut self, effect: AudioProcessor) {
+        if let Ok(mut s) = self.state.lock() {
+           s.effects.push(effect);
+        }
+    }
+
+    /// Duration in millisecond of current source.
+    #[frb(sync)]
+    pub fn duration_millis(&self) -> i32 {
+        self.decode.duration
+    }
+
+    /// Clear the effect chain of every output channel.
+    pub fn clear_effects(&mut self) {
+        if let Ok(mut s) = self.state.lock() {
+            s.effects.clear();
+        }
+    }
+
+    pub fn position(&self) -> i32 {
+        self.state.lock().map(|v| v.start_millies).unwrap_or(-1)
+    }
+
+    pub fn get_state(&self) -> i32 {
+        self.state.lock().map(|v| v.pl_state.id()).unwrap_or(1)
+    }
+
+    pub fn samples_data(&self) -> Vec<f32> {
+        self.state.lock().map(|v| v.visualizer.iter().copied().collect::<Vec<f32>>()).unwrap_or(vec![])
+    }
+
+    #[frb(sync)]
+    pub fn get_output_config(&self) -> AudioOuputConfig {
+        AudioOutput::get_output_config()
     }
 }
 

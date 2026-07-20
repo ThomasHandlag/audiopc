@@ -4,24 +4,55 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'filters.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
+import 'renderer/output.dart';
 import 'source.dart';
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>>
 abstract class AudioPlayer implements RustOpaqueInterface {
-  Future<bool> isPlaying();
+  /// Add Effect to output audio.
+  Future<void> addEffect({required AudioProcessor effect});
 
-  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<AudioPlayer> newInstance() =>
-      RustLib.instance.api.crateApiPlayerAudioPlayerNew();
+  /// Clear the effect chain of every output channel.
+  Future<void> clearEffects();
 
-  Future<void> play();
+  /// Duration in millisecond of current source.
+  int durationMillis();
 
+  AudioOuputConfig getOutputConfig();
+
+  Future<int> getState();
+
+  bool isCompleted();
+
+  /// Whether player is playing or not.
+  bool isPlaying();
+
+  factory AudioPlayer() => RustLib.instance.api.crateApiPlayerAudioPlayerNew();
+
+  /// Pause curent playing song.
+  void pause();
+
+  /// Play current audio source. If current source is empty then an error will be throw.
+  void play();
+
+  Future<int> position();
+
+  Future<Float32List> samplesData();
+
+  /// Play audio at given position in millisecond.
   Future<void> seek({required int position});
 
-  Future<void> setSource({required AudioSource source});
+  /// Set playback speed of output audio.
+  Future<void> setRate({required double rate});
 
-  Future<void> setVolume({required double volume});
+  /// Set source for preparing to play.
+  void setSource({required AudioSource source});
 
+  /// Set volume of ouput audio.
+  Future<void> setVolumn({required double volumn});
+
+  /// Stop current playing audio.
   Future<void> stop();
 }

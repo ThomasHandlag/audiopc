@@ -1,4 +1,4 @@
-package com.thugbn.audiopc;
+package com.thugbn.audiopc
 
 import android.content.Context
 import androidx.annotation.NonNull
