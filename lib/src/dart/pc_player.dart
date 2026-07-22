@@ -55,8 +55,8 @@ final class PcPlayer {
   int get duration => getDuration();
 
   /// Jump to the given position in milliseconds.
-  Future<void> seek(int target) async {
-    await player.seek(position: target);
+  void seek(int target) {
+    player.seek(position: target);
   }
 
   /// Set and play the audio.
@@ -73,6 +73,10 @@ final class PcPlayer {
   /// Pause the ouput stream.
   void pause() {
     player.pause();
+  }
+
+  void resume() {
+    player.resume();
   }
 
   /// Stop audio playback.
@@ -111,7 +115,7 @@ final class PcPlayer {
   }
 
   /// Return current output config.
-  AudioOuputConfig getConfig() {
+  AudioOutputConfig getConfig() {
     return player.getOutputConfig();
   }
 

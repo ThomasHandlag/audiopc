@@ -13,28 +13,21 @@ abstract class AudioState implements RustOpaqueInterface {
   /// Clear all transient audio state without touching volume / rate / device.
   Future<void> clearAudioState();
 
-  Future<int> computeMillies({
-    required double sourcePos,
-    required BigInt channels,
-  });
-
-  Future<double> computeSource({required int channels});
-
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<AudioState> newInstance({
-    required int startMillies,
     required BuffConfig config,
     required BuffConfig vConfig,
+    required BigInt channels,
   }) => RustLib.instance.api.crateApiRendererStateAudioStateNew(
-    startMillies: startMillies,
     config: config,
     vConfig: vConfig,
+    channels: channels,
   );
 
   Future<double> nextSample({required BigInt channels});
 
   /// Current playback position in milliseconds.
-  Future<int> position({required BigInt outChannels});
+  Future<int> position();
 
   /// Push up to `max_samples - queue.len()` samples.  Returns the count
   /// actually pushed; caller retries the rest after sleeping.

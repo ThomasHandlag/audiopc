@@ -1,8 +1,7 @@
 use std::{collections::VecDeque, time::Duration};
 
 use crate::api::{
-    filters::AudioProcessor,
-    renderer::state::PlaybackState::{Idle, Playing},
+    filters::AudioProcessor, renderer::{state::PlaybackState::{Idle, Playing}},
 };
 use flutter_rust_bridge::frb;
 
@@ -83,7 +82,7 @@ impl BuffConfig {
 pub struct AudioState {
     pub(crate) pl_state: PlaybackState,
     pub(crate) pl_rate: f32,
-    pub(crate) start_millies: i32,
+    pub(crate) source_position: f64,
     pub(crate) queue: VecDeque<f32>,
     pub(crate) visualizer: VecDeque<f32>,
     pub(crate) volumn: f32,
@@ -93,14 +92,15 @@ pub struct AudioState {
     pub(crate) stream_ended: bool,
     config: BuffConfig,
     v_config: BuffConfig,
+    channels: usize
 }
 
 impl AudioState {
-    pub fn new(start_millies: i32, config: BuffConfig, v_config: BuffConfig) -> AudioState {
+    pub fn new(config: BuffConfig, v_config: BuffConfig, channels: usize) -> AudioState {
         AudioState {
             pl_rate: 1.0,
             pl_state: Idle,
-            start_millies,
+            source_position: 0.0,
             effects: vec![],
             underrun_count: 0,
             emitted_samples: 0,
@@ -110,6 +110,7 @@ impl AudioState {
             stream_ended: false,
             config,
             v_config,
+            channels
         }
     }
 
@@ -122,9 +123,7 @@ impl AudioState {
         let raw = match self.queue.pop_front() {
             Some(s) => {
                 self.emitted_samples = self.emitted_samples.saturating_add(1);
-                let mut source_pos = self.compute_source(channels as u16);
-                source_pos += self.pl_rate as f64;
-                self.start_millies += self.compute_millies(source_pos, channels);
+                self.source_position += self.pl_rate as f64;
                 s
             }
             None => {
@@ -138,42 +137,34 @@ impl AudioState {
             }
         };
 
-        let sample = raw * self.volumn;
+        let mut sample = raw * self.volumn;
+
+        let channel_index = (self.emitted_samples as usize) % channels;
+
+        if let Some(effect) = self.effects.get_mut(channel_index) {
+            sample = effect.process(sample);
+        }
+
 
         let sample = sample.clamp(-1.0, 1.0);
         self.push_visualizer_sample(sample);
         sample
     }
 
-    pub fn compute_source(&self, channels: u16) -> f64 {
-        let target = self.start_millies;
-        let target_samples = ((target as u64)
-            .saturating_mul(self.config.sample_rate as u64)
-            .saturating_mul(channels as u64)
-            / 1000) as f64;
-        target_samples
-    }
-
-    pub fn compute_millies(&self, source_pos: f64, channels: usize) -> i32 {
-        let secs = source_pos / (self.config.sample_rate as f64 * channels as f64);
-
-        Duration::from_secs_f64(secs.max(0.0)).as_millis() as i32
-    }
-
     /// Current playback position in milliseconds.
-    pub fn position(&self, out_channels: usize) -> i32 {
-        if self.config.sample_rate == 0 || out_channels == 0 {
+    pub fn position(&self) -> i32 {
+        if self.config.sample_rate == 0 {
             return 0;
         }
         let secs =
-            self.start_millies as f64 / (self.config.sample_rate as f64 * out_channels as f64);
+            self.source_position as f64 / (self.config.sample_rate as f64 * self.channels as f64);
         Duration::from_secs_f64(secs.max(0.0)).as_millis() as i32
     }
 
     /// Clear all transient audio state without touching volume / rate / device.
     pub fn clear_audio_state(&mut self) {
         self.emitted_samples = 0;
-        self.start_millies = 0;
+        self.source_position = 0.0;
         self.stream_ended = true;
         self.underrun_count = 0;
         self.effects = vec![];

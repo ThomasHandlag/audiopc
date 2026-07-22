@@ -1,7 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:audiopc/audiopc.dart';
-import 'package:device_audio_query/device_audio_query.dart';
+import 'package:file_picker/file_picker.dart';
 // import 'package:audiopc_example/filters.dart';
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide MetaData;
@@ -33,9 +34,6 @@ class _MyAppState extends State<MyApp> {
 
   final sourceController = TextEditingController();
   final lowPassController = TextEditingController(text: '0');
-  final query = DeviceAudioQuery();
-
-  bool _hasPermission = false;
 
   late final VisualizerProcessor processor;
   // late final backendInfo = player.getAudioBackendInfo();
@@ -48,7 +46,7 @@ class _MyAppState extends State<MyApp> {
   bool isUrlSource = false;
   double _sliderPosition = 0;
   double _volumePercent = 100;
-  List<double> _spectrumBars = List<double>.filled(_spectrumBinCount, 0);
+  final List<double> _spectrumBars = List<double>.filled(_spectrumBinCount, 0);
 
   @override
   void dispose() {
@@ -140,17 +138,11 @@ class _MyAppState extends State<MyApp> {
 
   /// Opens a file picker and fills the source field.
   Future<void> _selectFile() async {
-    if (!_hasPermission) {
-      return;
-    }
+    final result = await FilePicker.pickFiles(
+      type: .audio,
+    );
 
-    final songs = await query.querySongs();
-
-    if (songs.isEmpty) {
-      return;
-    }
-
-    final path = songs.first.data;
+    final path = result?.files.single.path;
     if (path != null) {
       sourceController.text = path;
     }
@@ -173,12 +165,10 @@ class _MyAppState extends State<MyApp> {
       fftSize: BigInt.from(2048),
     );
 
-    _checkPermission();
-
     _visualizerTimer = Timer.periodic(
       const Duration(milliseconds: 100 ~/ _visualizerFps),
       // (_) => _updateSpectrum(),
-      (_) => {}
+      (_) => {},
     );
     player.positionStream.listen((pos) {
       setState(() {
@@ -187,26 +177,13 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> _checkPermission() async {
-    final status = await query.checkPermission();
-    if (!mounted) return;
-    setState(() {
-      _hasPermission = status == PermissionStatus.granted;
-    });
-    if (!_hasPermission) {
-      final requested = await query.requestPermission();
-      if (!mounted) return;
-      setState(() {
-        _hasPermission = requested == PermissionStatus.granted;
-      });
-    }
-  }
-
   double _rate = 1.0;
 
   String _rateLabel(double rate) => '${rate.toStringAsFixed(2)}x';
 
   void setRate(double rate) {
+    log(rate.toString());
+
     setState(() {
       _rate = rate;
     });
@@ -259,7 +236,7 @@ class _MyAppState extends State<MyApp> {
                           )
                         else
                           ElevatedButton(
-                            onPressed: _hasPermission ? _selectFile : null,
+                            onPressed:  _selectFile,
                             child: const Text('Select a file'),
                           ),
                         const SizedBox(width: 12),
@@ -334,7 +311,7 @@ class _MyAppState extends State<MyApp> {
                     break;
                   case PlaybackState.paused:
                   case PlaybackState.idle:
-                    player.play();
+                    player.resume();
                     break;
                   case _:
                     break;

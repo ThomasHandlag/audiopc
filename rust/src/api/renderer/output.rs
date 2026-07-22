@@ -24,13 +24,13 @@ pub struct AudioOutput {
     cmd_tx: Sender<AudioCommand>,
 }
 
-pub struct AudioOuputConfig {
+pub struct AudioOutputConfig {
     pub sample_rate: u32,
     pub channels: u16,
 }
 
 impl AudioOutput {
-    pub(crate) fn get_output_config() -> AudioOuputConfig {
+    pub(crate) fn get_output_config() -> AudioOutputConfig {
         let device = cpal::default_host()
             .default_output_device()
             .expect("No ouput device found");
@@ -39,7 +39,7 @@ impl AudioOutput {
             .default_output_config()
             .expect("Could not create output");
 
-        AudioOuputConfig{
+        AudioOutputConfig{
             sample_rate: output_config.sample_rate(),
             channels: output_config.channels()
         }
@@ -57,6 +57,9 @@ impl AudioOutput {
     }
 
     pub(crate) fn build(&mut self) -> Result<(), String> {
+        if self.stream.is_some() {
+            return Ok(());
+        }
         let device = cpal::default_host()
             .default_output_device()
             .expect("No ouput device found");

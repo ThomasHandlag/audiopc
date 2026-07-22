@@ -23,7 +23,7 @@ use tempfile::tempfile;
 use crate::{
     api::{
         enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE}, renderer::{
-            output::AudioOuputConfig, state::{AudioState, PlaybackState, ResampleState},
+            output::AudioOutputConfig, state::{AudioState, PlaybackState, ResampleState},
         }, source::{AudioSource, http_stream::HttpStream},
     }, error,
 };
@@ -34,6 +34,7 @@ type BoxedMediaSource = Box<dyn symphonia::core::io::MediaSource>;
 pub struct DecodePool {
     stop_flag: Arc<AtomicBool>,
     pool: Option<JoinHandle<()>>,
+    pub decode_start: i32,
     pub(crate) duration: i32,
     pub(crate) source: Option<AudioSource>,
 }
@@ -45,6 +46,7 @@ impl DecodePool {
             stop_flag: Arc::new(AtomicBool::new(true)),
             duration: -1,
             source: None,
+            decode_start: 0
         }
     }
 
@@ -54,28 +56,36 @@ impl DecodePool {
             let _ = handle.join();
         }
         self.stop_flag.store(false, Ordering::SeqCst);
+        self.pool = None;
     }
 
     pub(crate) fn set_source(&mut self, source: AudioSource) {
+        self.duration = estimate_duration_millis(&source).unwrap_or(-1);
         self.source = Some(source);
+    }
+
+    pub fn is_decoding(&self) -> bool {
+        self.pool.is_some()
     }
 
     pub(crate) fn build<F>(
         &mut self,
         f: F,
         state: Arc<Mutex<AudioState>>,
-        output_config: AudioOuputConfig,
-    ) -> JoinHandle<()>
+        output_config: AudioOutputConfig,
+    ) 
     where
         F: Fn() + Send + 'static,
     {
+        self.stop_flag.store(false, Ordering::SeqCst);
+
         let stop_flag = Arc::clone(&self.stop_flag);
 
         let source = self.source.clone().expect("Source is empty!");
 
-        self.duration = estimate_duration_millis(&source).unwrap_or(-1);
+        let decode_start = self.decode_start;
 
-        thread::Builder::new()
+        let thr_handle = thread::Builder::new()
             .name("Decode thread".to_string())
             .spawn(move || {
                 let _ = decode_and_feed(
@@ -84,10 +94,13 @@ impl DecodePool {
                     state,
                     output_config.channels as usize,
                     output_config.sample_rate,
+                    decode_start,
                     f,
                 );
             })
-            .expect("Can not start decode thread")
+            .expect("Can not start decode thread");
+
+        self.pool = Some(thr_handle);
     }
 }
 
@@ -97,6 +110,7 @@ fn decode_and_feed<F>(
     shared: Arc<Mutex<AudioState>>,
     out_channels: usize,
     out_sample_rate: u32,
+    decode_start: i32,
     f: F,
 ) -> Result<(), String>
 where
@@ -142,7 +156,7 @@ where
         .map(|s| s.pl_rate.clamp(MIN_RATE, MAX_RATE))
         .unwrap_or(1.0);
 
-    let start_millis = shared.lock().map(|v| v.start_millies).unwrap_or(0);
+    let start_millis = decode_start;
 
     let mut resample_state = ResampleState::new();
     let mut skip_output_samples = source_millis_to_output_samples(

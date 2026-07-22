@@ -20,7 +20,7 @@ abstract class AudioPlayer implements RustOpaqueInterface {
   /// Duration in millisecond of current source.
   int durationMillis();
 
-  AudioOuputConfig getOutputConfig();
+  AudioOutputConfig getOutputConfig();
 
   Future<int> getState();
 
@@ -39,10 +39,12 @@ abstract class AudioPlayer implements RustOpaqueInterface {
 
   Future<int> position();
 
+  void resume();
+
   Future<Float32List> samplesData();
 
   /// Play audio at given position in millisecond.
-  Future<void> seek({required int position});
+  void seek({required int position});
 
   /// Set playback speed of output audio.
   Future<void> setRate({required double rate});

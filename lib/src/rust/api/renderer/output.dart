@@ -9,11 +9,11 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // These functions are ignored because they are not marked as `pub`: `build`, `get_output_config`, `new`, `write_output_f32`, `write_output_i16`, `write_output_u16`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `AudioOutput`
 
-class AudioOuputConfig {
+class AudioOutputConfig {
   final int sampleRate;
   final int channels;
 
-  const AudioOuputConfig({required this.sampleRate, required this.channels});
+  const AudioOutputConfig({required this.sampleRate, required this.channels});
 
   @override
   int get hashCode => sampleRate.hashCode ^ channels.hashCode;
@@ -21,7 +21,7 @@ class AudioOuputConfig {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is AudioOuputConfig &&
+      other is AudioOutputConfig &&
           runtimeType == other.runtimeType &&
           sampleRate == other.sampleRate &&
           channels == other.channels;
