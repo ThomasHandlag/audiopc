@@ -1,7 +1,8 @@
 use std::{collections::VecDeque, time::Duration};
 
 use crate::api::{
-    filters::AudioProcessor, renderer::{state::PlaybackState::{Idle, Playing}},
+    filters::{effects::EffectsChain, equalizer::Equalizer},
+    renderer::state::PlaybackState::{Idle, Playing},
 };
 use flutter_rust_bridge::frb;
 
@@ -88,11 +89,12 @@ pub struct AudioState {
     pub(crate) volumn: f32,
     pub(crate) emitted_samples: u64,
     pub(crate) underrun_count: u32,
-    pub(crate) effects: Vec<AudioProcessor>,
+    pub effects: EffectsChain,
+    pub equalizer: Equalizer,
     pub(crate) stream_ended: bool,
     config: BuffConfig,
     v_config: BuffConfig,
-    channels: usize
+    channels: usize,
 }
 
 impl AudioState {
@@ -101,7 +103,8 @@ impl AudioState {
             pl_rate: 1.0,
             pl_state: Idle,
             source_position: 0.0,
-            effects: vec![],
+            effects: EffectsChain::empty(),
+            equalizer: Equalizer::new(config.sample_rate as f32),
             underrun_count: 0,
             emitted_samples: 0,
             volumn: 1.0,
@@ -110,12 +113,12 @@ impl AudioState {
             stream_ended: false,
             config,
             v_config,
-            channels
+            channels,
         }
     }
 
     #[inline]
-    pub fn next_sample(&mut self, channels: usize) -> f32 {
+    pub fn next_sample(&mut self) -> f32 {
         if self.pl_state != Playing {
             return 0.0;
         }
@@ -130,21 +133,17 @@ impl AudioState {
                 if self.stream_ended {
                     self.pl_state = PlaybackState::Completed;
                 } else {
-                    // Queue empty but stream not done → underrun.
                     self.underrun_count = self.underrun_count.saturating_add(1);
                 }
                 return 0.0;
             }
         };
 
-        let mut sample = raw * self.volumn;
+        let sample = raw * self.volumn;
 
-        let channel_index = (self.emitted_samples as usize) % channels;
+        let sample = self.equalizer.process(sample);
 
-        if let Some(effect) = self.effects.get_mut(channel_index) {
-            sample = effect.process(sample);
-        }
-
+        let sample = self.effects.process(sample);
 
         let sample = sample.clamp(-1.0, 1.0);
         self.push_visualizer_sample(sample);
@@ -163,11 +162,29 @@ impl AudioState {
 
     /// Clear all transient audio state without touching volume / rate / device.
     pub fn clear_audio_state(&mut self) {
+        self.queue.clear();
+        self.visualizer.clear();
         self.emitted_samples = 0;
         self.source_position = 0.0;
         self.stream_ended = true;
         self.underrun_count = 0;
-        self.effects = vec![];
+    }
+
+    pub fn set_equalizer(&mut self, equalizer: Equalizer) {
+        self.equalizer = equalizer;
+    }
+
+    pub fn set_effect(&mut self, effects: EffectsChain) {
+        self.effects = effects;
+    }
+
+    pub fn clear_effects(&mut self) {
+        self.effects = EffectsChain::empty();
+    }
+
+    /// Clear all equalizer bands
+    pub fn clear_eq(&mut self) {
+        self.equalizer.clear_bands();
     }
 
     pub fn push_visualizer_sample(&mut self, sample: f32) {
@@ -180,6 +197,14 @@ impl AudioState {
         self.visualizer.push_back(sample);
     }
 
+    pub fn update_device_config(&mut self, config: BuffConfig, v_config: BuffConfig, channels: usize) {
+        self.config = config;
+        self.v_config = v_config;
+        self.channels = channels;
+        self.queue = VecDeque::with_capacity(self.config.max_samples);
+        self.visualizer = VecDeque::with_capacity(self.v_config.max_samples);
+    }
+
     /// Push up to `max_samples - queue.len()` samples.  Returns the count
     /// actually pushed; caller retries the rest after sleeping.
     pub fn push_samples_bounded(&mut self, samples: &[f32]) -> usize {
@@ -187,5 +212,27 @@ impl AudioState {
         let push_count = samples.len().min(available);
         self.queue.extend(samples.iter().take(push_count).copied());
         push_count
+    }
+
+    /// Copy the most recent interleaved samples needed for FFT analysis.
+    pub fn visualizer_window(&self, max_samples: usize) -> Vec<f32> {
+        let start = self.visualizer.len().saturating_sub(max_samples);
+        self.visualizer.iter().skip(start).copied().collect()
+    }
+
+    /// Copy the most recent `out.len()` samples from the visualiser ring into
+    /// `out`.  Returns the number of samples written.
+    pub fn copy_latest_visualizer_samples(&self, size: usize) -> Vec<f32> {
+        let mut out = vec![];
+        if self.visualizer.is_empty() {
+            return vec![0.0; size];
+        }
+        let count = size.min(self.visualizer.len());
+        let skip = self.visualizer.len().saturating_sub(count);
+        for (_, s) in self.visualizer.iter().skip(skip).take(count).enumerate() {
+            // out[i] = *s;
+            out.push(*s);
+        }
+        out
     }
 }

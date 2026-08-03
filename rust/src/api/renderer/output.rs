@@ -1,4 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
+use parking_lot::Mutex;
 
 use crate::{
     api::{
@@ -6,11 +8,11 @@ use crate::{
         error::AudioError,
         renderer::state::AudioState,
     },
-    debug,
+    info,
 };
 use cpal::{
     BufferSize,
-    ErrorKind::DeviceChanged,
+    // ErrorKind::DeviceChanged,
     OutputCallbackInfo, SampleFormat, Stream, StreamConfig,
     traits::{DeviceTrait, HostTrait, StreamTrait},
 };
@@ -22,8 +24,10 @@ pub struct AudioOutput {
     stream: Option<Stream>,
     state: Arc<Mutex<AudioState>>,
     cmd_tx: Sender<AudioCommand>,
+    current_config: AudioOutputConfig,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct AudioOutputConfig {
     pub sample_rate: u32,
     pub channels: u16,
@@ -39,30 +43,54 @@ impl AudioOutput {
             .default_output_config()
             .expect("Could not create output");
 
-        AudioOutputConfig{
+        AudioOutputConfig {
             sample_rate: output_config.sample_rate(),
-            channels: output_config.channels()
+            channels: output_config.channels(),
         }
     }
 
     pub(crate) fn new(
         cmd_tx: Sender<AudioCommand>,
         state: Arc<Mutex<AudioState>>,
+        config: AudioOutputConfig,
     ) -> AudioOutput {
         AudioOutput {
             cmd_tx,
             state,
             stream: None,
+            current_config: config,
         }
     }
 
-    pub(crate) fn build(&mut self) -> Result<(), String> {
+    pub fn current_config(&self) -> AudioOutputConfig {
+        self.current_config
+    }
+
+    pub fn dispose_old_stream(&mut self) {
+        // if let Some(stream) = self.stream.as_ref() {
+        //     let _ = stream.pause();
+        // }
+        self.stream = None;
+    }
+
+    pub(crate) fn build(&mut self) -> Result<AudioOutputConfig, String> {
         if self.stream.is_some() {
-            return Ok(());
+            let device = cpal::default_host()
+                .default_output_device()
+                .ok_or_else(|| "No output device found".to_string())?;
+            let cfg = device
+                .default_output_config()
+                .map_err(|e| AudioError::from(e).to_string())?;
+            self.current_config = AudioOutputConfig {
+                sample_rate: cfg.sample_rate(),
+                channels: cfg.channels(),
+            };
+            return Ok(self.current_config);
         }
+
         let device = cpal::default_host()
             .default_output_device()
-            .expect("No ouput device found");
+            .ok_or_else(|| "No output device found".to_string())?;
 
         let output_config = device
             .default_output_config()
@@ -82,9 +110,10 @@ impl AudioOutput {
         let out_channels = output_config.channels() as usize;
 
         let err_fn = move |e: cpal::Error| {
+            info!("Error in output stream");
             let _ = match e.kind() {
-                DeviceChanged => tx.send(RebuildOuput),
-                _ => Ok(()),
+                // DeviceChanged => tx.send(RebuildOuput), // because android AAudio backend does not strigger any device changed so skip this.
+                _ => tx.send(RebuildOuput),
             };
         };
 
@@ -115,7 +144,7 @@ impl AudioOutput {
                 .build_output_stream(
                     stream_config,
                     move |data: &mut [u16], _: &OutputCallbackInfo| {
-                        write_output_u16(data, out_channels, &state );
+                        write_output_u16(data, out_channels, &state);
                     },
                     err_fn,
                     None,
@@ -129,65 +158,38 @@ impl AudioOutput {
 
         self.stream = Some(stream);
 
-        Ok(())
-    }
+        self.current_config = AudioOutputConfig {
+            sample_rate: output_config.sample_rate(),
+            channels: output_config.channels(),
+        };
 
+        Ok(self.current_config)
+    }
 }
 
-fn write_output_f32(
-    data: &mut [f32],
-    channels: usize,
-    state: &Arc<Mutex<AudioState>>,
-) {
-    let mut g = match state.lock() {
-        Ok(g) => g,
-        Err(_) => {
-            debug!("Lock failed; filling silence");
-            data.fill(0.0);
-            return;
-        }
-    };
+fn write_output_f32(data: &mut [f32], channels: usize, state: &Arc<Mutex<AudioState>>) {
+    let mut g = state.lock();
     for frame in data.chunks_mut(channels) {
         for out in frame.iter_mut() {
-            *out = g.next_sample(channels);
+            *out = g.next_sample();
         }
     }
 }
 
-fn write_output_i16(
-    data: &mut [i16],
-    channels: usize,
-    state: &Arc<Mutex<AudioState>>,
-) {
-    let mut g = match state.lock() {
-        Ok(g) => g,
-        Err(_) => {
-            data.fill(0);
-            return;
-        }
-    };
+fn write_output_i16(data: &mut [i16], channels: usize, state: &Arc<Mutex<AudioState>>) {
+    let mut g = state.lock();
     for frame in data.chunks_mut(channels) {
         for out in frame.iter_mut() {
-            *out = (g.next_sample(channels) * i16::MAX as f32) as i16;
+            *out = (g.next_sample() * i16::MAX as f32) as i16;
         }
     }
 }
 
-fn write_output_u16(
-    data: &mut [u16],
-    channels: usize,
-    state: &Arc<Mutex<AudioState>>,
-) {
-    let mut g = match state.lock() {
-        Ok(g) => g,
-        Err(_) => {
-            data.fill(u16::MAX / 2);
-            return;
-        }
-    };
+fn write_output_u16(data: &mut [u16], channels: usize, state: &Arc<Mutex<AudioState>>) {
+    let mut g = state.lock();
     for frame in data.chunks_mut(channels) {
         for out in frame.iter_mut() {
-            *out = (((g.next_sample(channels) * 0.5) + 0.5) * u16::MAX as f32) as u16;
+            *out = (((g.next_sample() * 0.5) + 0.5) * u16::MAX as f32) as u16;
         }
     }
 }

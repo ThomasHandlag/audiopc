@@ -3,11 +3,9 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'api/filters.dart';
-import 'api/filters/delay.dart';
-import 'api/filters/distortion.dart';
-import 'api/filters/dynamics.dart';
-import 'api/filters/utilities.dart';
+import 'api/filters/biquad.dart';
+import 'api/filters/effects.dart';
+import 'api/filters/equalizer.dart';
 import 'api/player.dart';
 import 'api/renderer/output.dart';
 import 'api/renderer/state.dart';
@@ -76,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -1036501166;
+  int get rustContentHash => 1032775004;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -88,22 +86,35 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<void> crateApiPlayerAudioPlayerAddEffect({
-    required AudioPlayer that,
-    required AudioProcessor effect,
+  Future<AudioOutputConfig> crateApiRendererOutputAudioOutputCurrentConfig({
+    required AudioOutput that,
   });
 
-  Future<void> crateApiPlayerAudioPlayerClearEffects({
-    required AudioPlayer that,
+  Future<void> crateApiRendererOutputAudioOutputDisposeOldStream({
+    required AudioOutput that,
   });
+
+  void crateApiPlayerAudioPlayerClearEffects({required AudioPlayer that});
 
   int crateApiPlayerAudioPlayerDurationMillis({required AudioPlayer that});
+
+  List<BandEnergy> crateApiPlayerAudioPlayerGetBand({
+    required AudioPlayer that,
+    required List<VBandKind> kinds,
+  });
+
+  Float32List crateApiPlayerAudioPlayerGetBars({required AudioPlayer that});
 
   AudioOutputConfig crateApiPlayerAudioPlayerGetOutputConfig({
     required AudioPlayer that,
   });
 
-  Future<int> crateApiPlayerAudioPlayerGetState({required AudioPlayer that});
+  Float32List crateApiPlayerAudioPlayerGetSamples({
+    required AudioPlayer that,
+    required int buffSize,
+  });
+
+  int crateApiPlayerAudioPlayerGetState({required AudioPlayer that});
 
   bool crateApiPlayerAudioPlayerIsCompleted({required AudioPlayer that});
 
@@ -115,22 +126,61 @@ abstract class RustLibApi extends BaseApi {
 
   void crateApiPlayerAudioPlayerPlay({required AudioPlayer that});
 
-  Future<int> crateApiPlayerAudioPlayerPosition({required AudioPlayer that});
+  int crateApiPlayerAudioPlayerPosition({required AudioPlayer that});
 
   void crateApiPlayerAudioPlayerResume({required AudioPlayer that});
 
-  Future<Float32List> crateApiPlayerAudioPlayerSamplesData({
-    required AudioPlayer that,
-  });
+  double crateApiPlayerAudioPlayerSampleRate({required AudioPlayer that});
 
   void crateApiPlayerAudioPlayerSeek({
     required AudioPlayer that,
     required int position,
   });
 
-  Future<void> crateApiPlayerAudioPlayerSetRate({
+  void crateApiPlayerAudioPlayerSet10BandEq({required AudioPlayer that});
+
+  void crateApiPlayerAudioPlayerSetBandGain({
+    required AudioPlayer that,
+    required int index,
+    required double gain,
+  });
+
+  void crateApiPlayerAudioPlayerSetChorus({
     required AudioPlayer that,
     required double rate,
+    required double depth,
+    required double wet,
+  });
+
+  void crateApiPlayerAudioPlayerSetDelay({
+    required AudioPlayer that,
+    required double delaySeconds,
+    required double feedback,
+    required double wet,
+  });
+
+  void crateApiPlayerAudioPlayerSetOverride({
+    required AudioPlayer that,
+    required double drive,
+    required double output,
+  });
+
+  void crateApiPlayerAudioPlayerSetProcessor({
+    required AudioPlayer that,
+    required int barCount,
+    required int fftSize,
+  });
+
+  void crateApiPlayerAudioPlayerSetRate({
+    required AudioPlayer that,
+    required double rate,
+  });
+
+  void crateApiPlayerAudioPlayerSetReverb({
+    required AudioPlayer that,
+    required double roomSize,
+    required double damping,
+    required double wet,
   });
 
   void crateApiPlayerAudioPlayerSetSource({
@@ -138,45 +188,52 @@ abstract class RustLibApi extends BaseApi {
     required AudioSource source,
   });
 
-  Future<void> crateApiPlayerAudioPlayerSetVolumn({
+  void crateApiPlayerAudioPlayerSetThreshold({
+    required AudioPlayer that,
+    required double threshold,
+  });
+
+  void crateApiPlayerAudioPlayerSetVolumn({
     required AudioPlayer that,
     required double volumn,
   });
 
-  Future<void> crateApiPlayerAudioPlayerStop({required AudioPlayer that});
+  void crateApiPlayerAudioPlayerStop({required AudioPlayer that});
 
-  Future<AudioProcessor> crateApiFiltersAudioProcessorDefault();
-
-  Future<double> crateApiFiltersAudioProcessorGet({
-    required AudioProcessor that,
-    required Param param,
+  EffectsChain crateApiRendererStateAudioStateAutoAccessorGetEffects({
+    required AudioState that,
   });
 
-  Future<void> crateApiFiltersAudioProcessorName({
-    required AudioProcessor that,
+  Equalizer crateApiRendererStateAudioStateAutoAccessorGetEqualizer({
+    required AudioState that,
   });
 
-  Future<double> crateApiFiltersAudioProcessorProcess({
-    required AudioProcessor that,
-    required double sample,
+  void crateApiRendererStateAudioStateAutoAccessorSetEffects({
+    required AudioState that,
+    required EffectsChain effects,
   });
 
-  Future<void> crateApiFiltersAudioProcessorReset({
-    required AudioProcessor that,
-  });
-
-  Future<void> crateApiFiltersAudioProcessorSet({
-    required AudioProcessor that,
-    required Param param,
-    required double value,
-  });
-
-  Future<void> crateApiFiltersAudioProcessorValidParams({
-    required AudioProcessor that,
+  void crateApiRendererStateAudioStateAutoAccessorSetEqualizer({
+    required AudioState that,
+    required Equalizer equalizer,
   });
 
   Future<void> crateApiRendererStateAudioStateClearAudioState({
     required AudioState that,
+  });
+
+  Future<void> crateApiRendererStateAudioStateClearEffects({
+    required AudioState that,
+  });
+
+  Future<void> crateApiRendererStateAudioStateClearEq({
+    required AudioState that,
+  });
+
+  Future<Float32List>
+  crateApiRendererStateAudioStateCopyLatestVisualizerSamples({
+    required AudioState that,
+    required BigInt size,
   });
 
   Future<AudioState> crateApiRendererStateAudioStateNew({
@@ -187,7 +244,6 @@ abstract class RustLibApi extends BaseApi {
 
   Future<double> crateApiRendererStateAudioStateNextSample({
     required AudioState that,
-    required BigInt channels,
   });
 
   Future<int> crateApiRendererStateAudioStatePosition({
@@ -204,555 +260,600 @@ abstract class RustLibApi extends BaseApi {
     required double sample,
   });
 
-  Future<double> crateApiFiltersBiquadFilterFrequency({
-    required BiquadFilter that,
+  Future<void> crateApiRendererStateAudioStateSetEffect({
+    required AudioState that,
+    required EffectsChain effects,
   });
 
-  Future<double> crateApiFiltersBiquadFilterGainDb({
-    required BiquadFilter that,
+  Future<void> crateApiRendererStateAudioStateSetEqualizer({
+    required AudioState that,
+    required Equalizer equalizer,
   });
 
-  Future<BiquadFilter> crateApiFiltersBiquadFilterNew({
-    required BiquadType filterType,
-    required double sampleRate,
+  Future<void> crateApiRendererStateAudioStateUpdateDeviceConfig({
+    required AudioState that,
+    required BuffConfig config,
+    required BuffConfig vConfig,
+    required BigInt channels,
   });
 
-  Future<double> crateApiFiltersBiquadFilterProcess({
-    required BiquadFilter that,
-    required double sample,
+  Future<Float32List> crateApiRendererStateAudioStateVisualizerWindow({
+    required AudioState that,
+    required BigInt maxSamples,
   });
 
-  Future<double> crateApiFiltersBiquadFilterQ({required BiquadFilter that});
+  bool crateApiFiltersEqualizerBandConfigAutoAccessorGetEnabled({
+    required BandConfig that,
+  });
 
-  Future<void> crateApiFiltersBiquadFilterReset({required BiquadFilter that});
+  double crateApiFiltersEqualizerBandConfigAutoAccessorGetFreq({
+    required BandConfig that,
+  });
 
-  Future<void> crateApiFiltersBiquadFilterSetFrequency({
-    required BiquadFilter that,
+  double crateApiFiltersEqualizerBandConfigAutoAccessorGetGainDb({
+    required BandConfig that,
+  });
+
+  BandKind crateApiFiltersEqualizerBandConfigAutoAccessorGetKind({
+    required BandConfig that,
+  });
+
+  double crateApiFiltersEqualizerBandConfigAutoAccessorGetQ({
+    required BandConfig that,
+  });
+
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetEnabled({
+    required BandConfig that,
+    required bool enabled,
+  });
+
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetFreq({
+    required BandConfig that,
     required double freq,
   });
 
-  Future<void> crateApiFiltersBiquadFilterSetGain({
-    required BiquadFilter that,
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetGainDb({
+    required BandConfig that,
     required double gainDb,
   });
 
-  Future<void> crateApiFiltersBiquadFilterSetQ({
-    required BiquadFilter that,
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetKind({
+    required BandConfig that,
+    required BandKind kind,
+  });
+
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetQ({
+    required BandConfig that,
     required double q,
   });
 
-  Future<double> crateApiFiltersDistortionBitCrusherBitDepth({
-    required BitCrusher that,
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigHighPass({
+    required double freq,
+    required double q,
   });
 
-  Future<BitCrusher> crateApiFiltersDistortionBitCrusherNew({
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigHighShelf({
+    required double freq,
+    required double gainDb,
+    required double q,
+  });
+
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigLowPass({
+    required double freq,
+    required double q,
+  });
+
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigLowShelf({
+    required double freq,
+    required double gainDb,
+    required double q,
+  });
+
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigPeaking({
+    required double freq,
+    required double gainDb,
+    required double q,
+  });
+
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA1({
+    required BiquadCoeffs that,
+  });
+
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA2({
+    required BiquadCoeffs that,
+  });
+
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB0({
+    required BiquadCoeffs that,
+  });
+
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB1({
+    required BiquadCoeffs that,
+  });
+
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB2({
+    required BiquadCoeffs that,
+  });
+
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA1({
+    required BiquadCoeffs that,
+    required double a1,
+  });
+
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA2({
+    required BiquadCoeffs that,
+    required double a2,
+  });
+
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB0({
+    required BiquadCoeffs that,
+    required double b0,
+  });
+
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB1({
+    required BiquadCoeffs that,
+    required double b1,
+  });
+
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB2({
+    required BiquadCoeffs that,
+    required double b2,
+  });
+
+  BiquadCoeffs crateApiFiltersBiquadBiquadFilterAutoAccessorGetCoeffs({
+    required BiquadFilter that,
+  });
+
+  void crateApiFiltersBiquadBiquadFilterAutoAccessorSetCoeffs({
+    required BiquadFilter that,
+    required BiquadCoeffs coeffs,
+  });
+
+  Future<BiquadFilter> crateApiFiltersBiquadBiquadFilterNew({
+    required BiquadCoeffs coeffs,
+  });
+
+  Future<double> crateApiFiltersBiquadBiquadFilterProcess({
+    required BiquadFilter that,
+    required double x,
+  });
+
+  Future<void> crateApiFiltersBiquadBiquadFilterReset({
+    required BiquadFilter that,
+  });
+
+  Future<void> crateApiFiltersBiquadBiquadFilterUpdateCoeffs({
+    required BiquadFilter that,
+    required BiquadCoeffs coeffs,
+  });
+
+  Future<BiquadState> crateApiFiltersBiquadBiquadStateDefault();
+
+  bool crateApiFiltersEffectsChorusEffectAutoAccessorGetBypass({
+    required ChorusEffect that,
+  });
+
+  double crateApiFiltersEffectsChorusEffectAutoAccessorGetDepth({
+    required ChorusEffect that,
+  });
+
+  double crateApiFiltersEffectsChorusEffectAutoAccessorGetRate({
+    required ChorusEffect that,
+  });
+
+  double crateApiFiltersEffectsChorusEffectAutoAccessorGetWet({
+    required ChorusEffect that,
+  });
+
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetBypass({
+    required ChorusEffect that,
+    required bool bypass,
+  });
+
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetDepth({
+    required ChorusEffect that,
+    required double depth,
+  });
+
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetRate({
+    required ChorusEffect that,
+    required double rate,
+  });
+
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetWet({
+    required ChorusEffect that,
+    required double wet,
+  });
+
+  Future<ChorusEffect> crateApiFiltersEffectsChorusEffectNew({
+    required double rate,
+    required double depth,
+    required double wet,
     required double sampleRate,
   });
 
-  Future<double> crateApiFiltersDistortionBitCrusherProcess({
-    required BitCrusher that,
+  Future<double> crateApiFiltersEffectsChorusEffectProcess({
+    required ChorusEffect that,
     required double sample,
   });
 
-  Future<double> crateApiFiltersDistortionBitCrusherRateReduction({
-    required BitCrusher that,
+  Future<void> crateApiFiltersEffectsChorusEffectReset({
+    required ChorusEffect that,
   });
 
-  Future<void> crateApiFiltersDistortionBitCrusherReset({
-    required BitCrusher that,
-  });
-
-  Future<void> crateApiFiltersDistortionBitCrusherSetBitDepth({
-    required BitCrusher that,
-    required double v,
-  });
-
-  Future<void> crateApiFiltersDistortionBitCrusherSetSampleRateReduction({
-    required BitCrusher that,
-    required double v,
-  });
-
-  Future<double> crateApiFiltersDynamicsCompressorAttack({
-    required Compressor that,
-  });
-
-  Future<double> crateApiFiltersDynamicsCompressorMakeupGain({
-    required Compressor that,
-  });
-
-  Future<Compressor> crateApiFiltersDynamicsCompressorNew({
+  Future<void> crateApiFiltersEffectsChorusEffectSetSampleRate({
+    required ChorusEffect that,
     required double sampleRate,
   });
 
-  Future<double> crateApiFiltersDynamicsCompressorProcess({
-    required Compressor that,
-    required double sample,
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetAttackS({
+    required CompressorEffect that,
   });
 
-  Future<double> crateApiFiltersDynamicsCompressorRatio({
-    required Compressor that,
+  bool crateApiFiltersEffectsCompressorEffectAutoAccessorGetBypass({
+    required CompressorEffect that,
   });
 
-  Future<double> crateApiFiltersDynamicsCompressorRelease({
-    required Compressor that,
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetMakeupDb({
+    required CompressorEffect that,
   });
 
-  Future<void> crateApiFiltersDynamicsCompressorReset({
-    required Compressor that,
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetRatio({
+    required CompressorEffect that,
   });
 
-  Future<void> crateApiFiltersDynamicsCompressorSetAttack({
-    required Compressor that,
-    required double v,
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetReleaseS({
+    required CompressorEffect that,
   });
 
-  Future<void> crateApiFiltersDynamicsCompressorSetMakeupGain({
-    required Compressor that,
-    required double v,
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetThresholdDb({
+    required CompressorEffect that,
   });
 
-  Future<void> crateApiFiltersDynamicsCompressorSetRatio({
-    required Compressor that,
-    required double v,
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetAttackS({
+    required CompressorEffect that,
+    required double attackS,
   });
 
-  Future<void> crateApiFiltersDynamicsCompressorSetRelease({
-    required Compressor that,
-    required double v,
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetBypass({
+    required CompressorEffect that,
+    required bool bypass,
   });
 
-  Future<void> crateApiFiltersDynamicsCompressorSetThreshold({
-    required Compressor that,
-    required double v,
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetMakeupDb({
+    required CompressorEffect that,
+    required double makeupDb,
   });
 
-  Future<double> crateApiFiltersDynamicsCompressorThreshold({
-    required Compressor that,
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetRatio({
+    required CompressorEffect that,
+    required double ratio,
   });
 
-  Future<DcRemover> crateApiFiltersUtilitiesDcRemoverNew({
-    required double cutoffHz,
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetReleaseS({
+    required CompressorEffect that,
+    required double releaseS,
+  });
+
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetThresholdDb({
+    required CompressorEffect that,
+    required double thresholdDb,
+  });
+
+  Future<CompressorEffect> crateApiFiltersEffectsCompressorEffectNew({
+    required double thresholdDb,
+    required double ratio,
+    required double attackS,
+    required double releaseS,
+    required double makeupDb,
     required double sampleRate,
   });
 
-  Future<double> crateApiFiltersUtilitiesDcRemoverProcess({
-    required DcRemover that,
+  Future<double> crateApiFiltersEffectsCompressorEffectProcess({
+    required CompressorEffect that,
     required double sample,
   });
 
-  Future<void> crateApiFiltersUtilitiesDcRemoverReset({
-    required DcRemover that,
+  Future<void> crateApiFiltersEffectsCompressorEffectReset({
+    required CompressorEffect that,
   });
 
-  int crateApiSourceDecodeDecodePoolAutoAccessorGetDecodeStart({
-    required DecodePool that,
-  });
-
-  void crateApiSourceDecodeDecodePoolAutoAccessorSetDecodeStart({
-    required DecodePool that,
-    required int decodeStart,
+  Future<void> crateApiFiltersEffectsCompressorEffectSetSampleRate({
+    required CompressorEffect that,
+    required double sampleRate,
   });
 
   Future<bool> crateApiSourceDecodeDecodePoolIsDecoding({
     required DecodePool that,
   });
 
-  Future<double> crateApiFiltersDelayDelayLineFeedback({
-    required DelayLine that,
+  Future<void> crateApiSourceDecodeDecodePoolSeek({
+    required DecodePool that,
+    required int millis,
   });
 
-  Future<double> crateApiFiltersDelayDelayLineMix({required DelayLine that});
-
-  Future<DelayLine> crateApiFiltersDelayDelayLineNew({
-    required double maxDelayMs,
-    required double sampleRate,
+  bool crateApiFiltersEffectsDelayEffectAutoAccessorGetBypass({
+    required DelayEffect that,
   });
 
-  Future<double> crateApiFiltersDelayDelayLineProcess({
-    required DelayLine that,
-    required double sample,
+  double crateApiFiltersEffectsDelayEffectAutoAccessorGetFeedback({
+    required DelayEffect that,
   });
 
-  Future<void> crateApiFiltersDelayDelayLineReset({required DelayLine that});
-
-  Future<void> crateApiFiltersDelayDelayLineSetDelayTime({
-    required DelayLine that,
-    required double delayMs,
-    required double sampleRate,
+  double crateApiFiltersEffectsDelayEffectAutoAccessorGetWet({
+    required DelayEffect that,
   });
 
-  Future<void> crateApiFiltersDelayDelayLineSetFeedback({
-    required DelayLine that,
+  void crateApiFiltersEffectsDelayEffectAutoAccessorSetBypass({
+    required DelayEffect that,
+    required bool bypass,
+  });
+
+  void crateApiFiltersEffectsDelayEffectAutoAccessorSetFeedback({
+    required DelayEffect that,
     required double feedback,
   });
 
-  Future<void> crateApiFiltersDelayDelayLineSetMix({
-    required DelayLine that,
-    required double mix,
+  void crateApiFiltersEffectsDelayEffectAutoAccessorSetWet({
+    required DelayEffect that,
+    required double wet,
   });
 
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerAttack({
-    required EnvelopeFollower that,
-  });
-
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerGetEnvelope({
-    required EnvelopeFollower that,
-  });
-
-  Future<EnvelopeFollower> crateApiFiltersDynamicsEnvelopeFollowerNew({
-    required double sampleRate,
-  });
-
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerProcess({
-    required EnvelopeFollower that,
-    required double sample,
-  });
-
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerRelease({
-    required EnvelopeFollower that,
-  });
-
-  Future<void> crateApiFiltersDynamicsEnvelopeFollowerReset({
-    required EnvelopeFollower that,
-  });
-
-  Future<void> crateApiFiltersDynamicsEnvelopeFollowerSetAttack({
-    required EnvelopeFollower that,
-    required double v,
-  });
-
-  Future<void> crateApiFiltersDynamicsEnvelopeFollowerSetRelease({
-    required EnvelopeFollower that,
-    required double v,
-  });
-
-  Future<Foldback> crateApiFiltersDistortionFoldbackDefault();
-
-  Future<Foldback> crateApiFiltersDistortionFoldbackNew();
-
-  Future<double> crateApiFiltersDistortionFoldbackProcess({
-    required Foldback that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersDistortionFoldbackReset({required Foldback that});
-
-  Future<void> crateApiFiltersDistortionFoldbackSetThreshold({
-    required Foldback that,
-    required double v,
-  });
-
-  Future<double> crateApiFiltersDistortionFoldbackThreshold({
-    required Foldback that,
-  });
-
-  Future<double> crateApiFiltersDelayFractionalDelayFeedback({
-    required FractionalDelay that,
-  });
-
-  Future<double> crateApiFiltersDelayFractionalDelayMix({
-    required FractionalDelay that,
-  });
-
-  Future<FractionalDelay> crateApiFiltersDelayFractionalDelayNew({
-    required double maxDelayMs,
-    required double sampleRate,
-  });
-
-  Future<double> crateApiFiltersDelayFractionalDelayProcess({
-    required FractionalDelay that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersDelayFractionalDelayReset({
-    required FractionalDelay that,
-  });
-
-  Future<void> crateApiFiltersDelayFractionalDelaySetDelayTime({
-    required FractionalDelay that,
-    required double delayMs,
-    required double sampleRate,
-  });
-
-  Future<void> crateApiFiltersDelayFractionalDelaySetFeedback({
-    required FractionalDelay that,
+  Future<DelayEffect> crateApiFiltersEffectsDelayEffectNew({
+    required double delaySeconds,
     required double feedback,
-  });
-
-  Future<void> crateApiFiltersDelayFractionalDelaySetMix({
-    required FractionalDelay that,
-    required double mix,
-  });
-
-  Future<Gain> crateApiFiltersUtilitiesGainDefault();
-
-  Future<Gain> crateApiFiltersUtilitiesGainFromDb({required double db});
-
-  Future<double> crateApiFiltersUtilitiesGainGainDb({required Gain that});
-
-  Future<double> crateApiFiltersUtilitiesGainGainLinear({required Gain that});
-
-  Future<Gain> crateApiFiltersUtilitiesGainNew();
-
-  Future<double> crateApiFiltersUtilitiesGainProcess({
-    required Gain that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersUtilitiesGainReset({required Gain that});
-
-  Future<void> crateApiFiltersUtilitiesGainSetGainDb({
-    required Gain that,
-    required double db,
-  });
-
-  Future<void> crateApiFiltersUtilitiesGainSetGainLinear({
-    required Gain that,
-    required double v,
-  });
-
-  Future<HardClipper> crateApiFiltersDistortionHardClipperDefault();
-
-  Future<double> crateApiFiltersDistortionHardClipperMix({
-    required HardClipper that,
-  });
-
-  Future<HardClipper> crateApiFiltersDistortionHardClipperNew();
-
-  Future<double> crateApiFiltersDistortionHardClipperProcess({
-    required HardClipper that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersDistortionHardClipperReset({
-    required HardClipper that,
-  });
-
-  Future<void> crateApiFiltersDistortionHardClipperSetMix({
-    required HardClipper that,
-    required double v,
-  });
-
-  Future<void> crateApiFiltersDistortionHardClipperSetThreshold({
-    required HardClipper that,
-    required double v,
-  });
-
-  Future<double> crateApiFiltersDistortionHardClipperThreshold({
-    required HardClipper that,
-  });
-
-  Future<Limiter> crateApiFiltersDynamicsLimiterNew({
+    required double wet,
     required double sampleRate,
   });
 
-  Future<double> crateApiFiltersDynamicsLimiterProcess({
-    required Limiter that,
+  Future<double> crateApiFiltersEffectsDelayEffectProcess({
+    required DelayEffect that,
     required double sample,
   });
 
-  Future<double> crateApiFiltersDynamicsLimiterRelease({required Limiter that});
-
-  Future<void> crateApiFiltersDynamicsLimiterReset({required Limiter that});
-
-  Future<void> crateApiFiltersDynamicsLimiterSetRelease({
-    required Limiter that,
-    required double v,
+  Future<void> crateApiFiltersEffectsDelayEffectReset({
+    required DelayEffect that,
   });
 
-  Future<void> crateApiFiltersDynamicsLimiterSetThreshold({
-    required Limiter that,
-    required double v,
-  });
-
-  Future<double> crateApiFiltersDynamicsLimiterThreshold({
-    required Limiter that,
-  });
-
-  Future<MovingAverage> crateApiFiltersMovingAverageNew({
-    required BigInt length,
-  });
-
-  Future<double> crateApiFiltersMovingAverageProcess({
-    required MovingAverage that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersMovingAverageReset({required MovingAverage that});
-
-  Future<MuteSolo> crateApiFiltersUtilitiesMuteSoloDefault();
-
-  Future<bool> crateApiFiltersUtilitiesMuteSoloIsMuted({
-    required MuteSolo that,
-  });
-
-  Future<bool> crateApiFiltersUtilitiesMuteSoloIsSoloed({
-    required MuteSolo that,
-  });
-
-  Future<MuteSolo> crateApiFiltersUtilitiesMuteSoloNew();
-
-  Future<double> crateApiFiltersUtilitiesMuteSoloProcess({
-    required MuteSolo that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersUtilitiesMuteSoloReset({required MuteSolo that});
-
-  Future<void> crateApiFiltersUtilitiesMuteSoloSetAnySoloActive({
-    required MuteSolo that,
-    required bool v,
-  });
-
-  Future<void> crateApiFiltersUtilitiesMuteSoloSetMute({
-    required MuteSolo that,
-    required bool v,
-  });
-
-  Future<void> crateApiFiltersUtilitiesMuteSoloSetSolo({
-    required MuteSolo that,
-    required bool v,
-  });
-
-  Future<double> crateApiFiltersDynamicsNoiseGateAttack({
-    required NoiseGate that,
-  });
-
-  Future<double> crateApiFiltersDynamicsNoiseGateHold({
-    required NoiseGate that,
-  });
-
-  Future<NoiseGate> crateApiFiltersDynamicsNoiseGateNew({
+  Future<void> crateApiFiltersEffectsDelayEffectSetDelay({
+    required DelayEffect that,
+    required double delaySeconds,
     required double sampleRate,
   });
 
-  Future<double> crateApiFiltersDynamicsNoiseGateProcess({
-    required NoiseGate that,
+  ChorusEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetChorus({
+    required EffectsChain that,
+  });
+
+  CompressorEffect?
+  crateApiFiltersEffectsEffectsChainAutoAccessorGetCompressor({
+    required EffectsChain that,
+  });
+
+  DelayEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetDelay({
+    required EffectsChain that,
+  });
+
+  GainEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetGain({
+    required EffectsChain that,
+  });
+
+  HardClipEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetHardClip({
+    required EffectsChain that,
+  });
+
+  OverdriveEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetOverdrive({
+    required EffectsChain that,
+  });
+
+  ReverbEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetReverb({
+    required EffectsChain that,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetChorus({
+    required EffectsChain that,
+    ChorusEffect? chorus,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetCompressor({
+    required EffectsChain that,
+    CompressorEffect? compressor,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetDelay({
+    required EffectsChain that,
+    DelayEffect? delay,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetGain({
+    required EffectsChain that,
+    GainEffect? gain,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetHardClip({
+    required EffectsChain that,
+    HardClipEffect? hardClip,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetOverdrive({
+    required EffectsChain that,
+    OverdriveEffect? overdrive,
+  });
+
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetReverb({
+    required EffectsChain that,
+    ReverbEffect? reverb,
+  });
+
+  Future<EffectsChain> crateApiFiltersEffectsEffectsChainEmpty();
+
+  Future<double> crateApiFiltersEffectsEffectsChainProcess({
+    required EffectsChain that,
     required double sample,
   });
 
-  Future<double> crateApiFiltersDynamicsNoiseGateRelease({
-    required NoiseGate that,
+  void crateApiFiltersEqualizerEqualizerAddBand({
+    required Equalizer that,
+    required BandConfig config,
   });
 
-  Future<void> crateApiFiltersDynamicsNoiseGateReset({required NoiseGate that});
-
-  Future<void> crateApiFiltersDynamicsNoiseGateSetAttack({
-    required NoiseGate that,
-    required double v,
+  bool crateApiFiltersEqualizerEqualizerAutoAccessorGetBypass({
+    required Equalizer that,
   });
 
-  Future<void> crateApiFiltersDynamicsNoiseGateSetHold({
-    required NoiseGate that,
-    required double v,
+  void crateApiFiltersEqualizerEqualizerAutoAccessorSetBypass({
+    required Equalizer that,
+    required bool bypass,
   });
 
-  Future<void> crateApiFiltersDynamicsNoiseGateSetRelease({
-    required NoiseGate that,
-    required double v,
+  BandConfig? crateApiFiltersEqualizerEqualizerBandConfig({
+    required Equalizer that,
+    required BigInt index,
   });
 
-  Future<void> crateApiFiltersDynamicsNoiseGateSetThreshold({
-    required NoiseGate that,
-    required double v,
+  BigInt crateApiFiltersEqualizerEqualizerBandCount({required Equalizer that});
+
+  Future<void> crateApiFiltersEqualizerEqualizerClearBands({
+    required Equalizer that,
   });
 
-  Future<double> crateApiFiltersDynamicsNoiseGateThreshold({
-    required NoiseGate that,
-  });
+  Equalizer crateApiFiltersEqualizerEqualizerNew({required double sampleRate});
 
-  Future<double> crateApiFiltersOnePoleHighPassCoefficient({
-    required OnePoleHighPass that,
-  });
-
-  Future<OnePoleHighPass> crateApiFiltersOnePoleHighPassDefault();
-
-  Future<OnePoleHighPass> crateApiFiltersOnePoleHighPassFromCutoff({
-    required double cutoff,
+  Equalizer crateApiFiltersEqualizerEqualizerNewGraphic10Band({
     required double sampleRate,
   });
 
-  Future<OnePoleHighPass> crateApiFiltersOnePoleHighPassNew();
-
-  Future<double> crateApiFiltersOnePoleHighPassProcess({
-    required OnePoleHighPass that,
+  Future<double> crateApiFiltersEqualizerEqualizerProcess({
+    required Equalizer that,
     required double sample,
   });
 
-  Future<void> crateApiFiltersOnePoleHighPassReset({
-    required OnePoleHighPass that,
+  void crateApiFiltersEqualizerEqualizerRemoveBand({
+    required Equalizer that,
+    required BigInt index,
   });
 
-  Future<void> crateApiFiltersOnePoleHighPassSetCoefficient({
-    required OnePoleHighPass that,
-    required double coeff,
+  Future<void> crateApiFiltersEqualizerEqualizerReset({
+    required Equalizer that,
   });
 
-  Future<double> crateApiFiltersOnePoleLowPassCoefficient({
-    required OnePoleLowPass that,
+  bool crateApiFiltersEqualizerEqualizerSetBand({
+    required Equalizer that,
+    required BigInt index,
+    required BandConfig config,
   });
 
-  Future<OnePoleLowPass> crateApiFiltersOnePoleLowPassDefault();
+  bool crateApiFiltersEqualizerEqualizerSetBandEnabled({
+    required Equalizer that,
+    required BigInt index,
+    required bool enabled,
+  });
 
-  Future<OnePoleLowPass> crateApiFiltersOnePoleLowPassFromCutoff({
-    required double cutoff,
+  bool crateApiFiltersEqualizerEqualizerSetBandGain({
+    required Equalizer that,
+    required BigInt index,
+    required double gainDb,
+  });
+
+  Future<void> crateApiFiltersEqualizerEqualizerSetSampleRate({
+    required Equalizer that,
     required double sampleRate,
   });
 
-  Future<OnePoleLowPass> crateApiFiltersOnePoleLowPassNew();
+  bool crateApiFiltersEffectsGainEffectAutoAccessorGetBypass({
+    required GainEffect that,
+  });
 
-  Future<double> crateApiFiltersOnePoleLowPassProcess({
-    required OnePoleLowPass that,
+  double crateApiFiltersEffectsGainEffectAutoAccessorGetGainDb({
+    required GainEffect that,
+  });
+
+  void crateApiFiltersEffectsGainEffectAutoAccessorSetBypass({
+    required GainEffect that,
+    required bool bypass,
+  });
+
+  void crateApiFiltersEffectsGainEffectAutoAccessorSetGainDb({
+    required GainEffect that,
+    required double gainDb,
+  });
+
+  Future<GainEffect> crateApiFiltersEffectsGainEffectNew({
+    required double gainDb,
+  });
+
+  Future<double> crateApiFiltersEffectsGainEffectProcess({
+    required GainEffect that,
     required double sample,
   });
 
-  Future<void> crateApiFiltersOnePoleLowPassReset({
-    required OnePoleLowPass that,
+  Future<void> crateApiFiltersEffectsGainEffectSetGainDb({
+    required GainEffect that,
+    required double gainDb,
   });
 
-  Future<void> crateApiFiltersOnePoleLowPassSetCoefficient({
-    required OnePoleLowPass that,
-    required double coeff,
+  bool crateApiFiltersEffectsHardClipEffectAutoAccessorGetBypass({
+    required HardClipEffect that,
   });
 
-  Future<Panner> crateApiFiltersUtilitiesPannerDefault();
+  double crateApiFiltersEffectsHardClipEffectAutoAccessorGetThreshold({
+    required HardClipEffect that,
+  });
 
-  Future<Panner> crateApiFiltersUtilitiesPannerNew();
+  void crateApiFiltersEffectsHardClipEffectAutoAccessorSetBypass({
+    required HardClipEffect that,
+    required bool bypass,
+  });
 
-  Future<double> crateApiFiltersUtilitiesPannerPan({required Panner that});
+  void crateApiFiltersEffectsHardClipEffectAutoAccessorSetThreshold({
+    required HardClipEffect that,
+    required double threshold,
+  });
 
-  Future<(double, double)> crateApiFiltersUtilitiesPannerProcess({
-    required Panner that,
+  Future<HardClipEffect> crateApiFiltersEffectsHardClipEffectNew({
+    required double threshold,
+  });
+
+  Future<double> crateApiFiltersEffectsHardClipEffectProcess({
+    required HardClipEffect that,
     required double sample,
   });
 
-  Future<void> crateApiFiltersUtilitiesPannerReset({required Panner that});
-
-  Future<void> crateApiFiltersUtilitiesPannerSetPan({
-    required Panner that,
-    required double v,
+  bool crateApiFiltersEffectsOverdriveEffectAutoAccessorGetBypass({
+    required OverdriveEffect that,
   });
 
-  Future<PhaseInverter> crateApiFiltersUtilitiesPhaseInverterDefault();
-
-  Future<bool> crateApiFiltersUtilitiesPhaseInverterIsInverted({
-    required PhaseInverter that,
+  double crateApiFiltersEffectsOverdriveEffectAutoAccessorGetDrive({
+    required OverdriveEffect that,
   });
 
-  Future<PhaseInverter> crateApiFiltersUtilitiesPhaseInverterNew();
+  double crateApiFiltersEffectsOverdriveEffectAutoAccessorGetOutput({
+    required OverdriveEffect that,
+  });
 
-  Future<double> crateApiFiltersUtilitiesPhaseInverterProcess({
-    required PhaseInverter that,
+  void crateApiFiltersEffectsOverdriveEffectAutoAccessorSetBypass({
+    required OverdriveEffect that,
+    required bool bypass,
+  });
+
+  void crateApiFiltersEffectsOverdriveEffectAutoAccessorSetDrive({
+    required OverdriveEffect that,
+    required double drive,
+  });
+
+  void crateApiFiltersEffectsOverdriveEffectAutoAccessorSetOutput({
+    required OverdriveEffect that,
+    required double output,
+  });
+
+  Future<OverdriveEffect> crateApiFiltersEffectsOverdriveEffectNew({
+    required double drive,
+    required double output,
+  });
+
+  Future<double> crateApiFiltersEffectsOverdriveEffectProcess({
+    required OverdriveEffect that,
     required double sample,
-  });
-
-  Future<void> crateApiFiltersUtilitiesPhaseInverterReset({
-    required PhaseInverter that,
-  });
-
-  Future<void> crateApiFiltersUtilitiesPhaseInverterSetInverted({
-    required PhaseInverter that,
-    required bool v,
   });
 
   Future<ResampleState> crateApiRendererStateResampleStateDefault();
@@ -763,177 +864,60 @@ abstract class RustLibApi extends BaseApi {
     required ResampleState that,
   });
 
-  Future<bool> crateApiFiltersDelayRevertBufferIsPlaying({
-    required RevertBuffer that,
+  bool crateApiFiltersEffectsReverbEffectAutoAccessorGetBypass({
+    required ReverbEffect that,
   });
 
-  Future<bool> crateApiFiltersDelayRevertBufferIsRecording({
-    required RevertBuffer that,
+  double crateApiFiltersEffectsReverbEffectAutoAccessorGetDamping({
+    required ReverbEffect that,
   });
 
-  Future<double> crateApiFiltersDelayRevertBufferMix({
-    required RevertBuffer that,
+  double crateApiFiltersEffectsReverbEffectAutoAccessorGetRoomSize({
+    required ReverbEffect that,
   });
 
-  Future<RevertBuffer> crateApiFiltersDelayRevertBufferNew({
-    required double lengthMs,
+  double crateApiFiltersEffectsReverbEffectAutoAccessorGetWet({
+    required ReverbEffect that,
+  });
+
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetBypass({
+    required ReverbEffect that,
+    required bool bypass,
+  });
+
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetDamping({
+    required ReverbEffect that,
+    required double damping,
+  });
+
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetRoomSize({
+    required ReverbEffect that,
+    required double roomSize,
+  });
+
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetWet({
+    required ReverbEffect that,
+    required double wet,
+  });
+
+  Future<ReverbEffect> crateApiFiltersEffectsReverbEffectNew({
+    required double roomSize,
+    required double damping,
+    required double wet,
     required double sampleRate,
   });
 
-  Future<double> crateApiFiltersDelayRevertBufferProcess({
-    required RevertBuffer that,
+  Future<double> crateApiFiltersEffectsReverbEffectProcess({
+    required ReverbEffect that,
     required double sample,
   });
 
-  Future<void> crateApiFiltersDelayRevertBufferReset({
-    required RevertBuffer that,
+  Future<void> crateApiFiltersEffectsReverbEffectReset({
+    required ReverbEffect that,
   });
 
-  Future<void> crateApiFiltersDelayRevertBufferSetLoop({
-    required RevertBuffer that,
-    required bool loopPlayback,
-  });
-
-  Future<void> crateApiFiltersDelayRevertBufferSetMix({
-    required RevertBuffer that,
-    required double mix,
-  });
-
-  Future<void> crateApiFiltersDelayRevertBufferStartPlayback({
-    required RevertBuffer that,
-  });
-
-  Future<void> crateApiFiltersDelayRevertBufferStartRecording({
-    required RevertBuffer that,
-  });
-
-  Future<void> crateApiFiltersDelayRevertBufferStop({
-    required RevertBuffer that,
-  });
-
-  Future<SampleAndHold> crateApiFiltersUtilitiesSampleAndHoldDefault();
-
-  Future<SampleAndHold> crateApiFiltersUtilitiesSampleAndHoldNew();
-
-  Future<double> crateApiFiltersUtilitiesSampleAndHoldProcess({
-    required SampleAndHold that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersUtilitiesSampleAndHoldReset({
-    required SampleAndHold that,
-  });
-
-  Future<void> crateApiFiltersUtilitiesSampleAndHoldSetTriggerThreshold({
-    required SampleAndHold that,
-    required double v,
-  });
-
-  Future<double> crateApiFiltersUtilitiesSampleAndHoldTriggerThreshold({
-    required SampleAndHold that,
-  });
-
-  Future<SoftClipper> crateApiFiltersDistortionSoftClipperDefault();
-
-  Future<double> crateApiFiltersDistortionSoftClipperDrive({
-    required SoftClipper that,
-  });
-
-  Future<double> crateApiFiltersDistortionSoftClipperMix({
-    required SoftClipper that,
-  });
-
-  Future<SoftClipper> crateApiFiltersDistortionSoftClipperNew();
-
-  Future<double> crateApiFiltersDistortionSoftClipperProcess({
-    required SoftClipper that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersDistortionSoftClipperReset({
-    required SoftClipper that,
-  });
-
-  Future<void> crateApiFiltersDistortionSoftClipperSetDrive({
-    required SoftClipper that,
-    required double v,
-  });
-
-  Future<void> crateApiFiltersDistortionSoftClipperSetMix({
-    required SoftClipper that,
-    required double v,
-  });
-
-  Future<double> crateApiFiltersStateVariableFilterFrequency({
-    required StateVariableFilter that,
-  });
-
-  Future<StateVariableFilter> crateApiFiltersStateVariableFilterNew({
-    required double sampleRate,
-  });
-
-  Future<double> crateApiFiltersStateVariableFilterProcess({
-    required StateVariableFilter that,
-    required double sample,
-  });
-
-  Future<SvfOutputs> crateApiFiltersStateVariableFilterProcessAll({
-    required StateVariableFilter that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersStateVariableFilterReset({
-    required StateVariableFilter that,
-  });
-
-  Future<double> crateApiFiltersStateVariableFilterResonance({
-    required StateVariableFilter that,
-  });
-
-  Future<void> crateApiFiltersStateVariableFilterSetFrequency({
-    required StateVariableFilter that,
-    required double freq,
-  });
-
-  Future<void> crateApiFiltersStateVariableFilterSetResonance({
-    required StateVariableFilter that,
-    required double res,
-  });
-
-  double crateApiFiltersSvfOutputsAutoAccessorGetBand({
-    required SvfOutputs that,
-  });
-
-  double crateApiFiltersSvfOutputsAutoAccessorGetHigh({
-    required SvfOutputs that,
-  });
-
-  double crateApiFiltersSvfOutputsAutoAccessorGetLow({
-    required SvfOutputs that,
-  });
-
-  double crateApiFiltersSvfOutputsAutoAccessorGetNotch({
-    required SvfOutputs that,
-  });
-
-  void crateApiFiltersSvfOutputsAutoAccessorSetBand({
-    required SvfOutputs that,
-    required double band,
-  });
-
-  void crateApiFiltersSvfOutputsAutoAccessorSetHigh({
-    required SvfOutputs that,
-    required double high,
-  });
-
-  void crateApiFiltersSvfOutputsAutoAccessorSetLow({
-    required SvfOutputs that,
-    required double low,
-  });
-
-  void crateApiFiltersSvfOutputsAutoAccessorSetNotch({
-    required SvfOutputs that,
-    required double notch,
+  Future<void> crateApiFiltersEffectsReverbEffectUpdateParams({
+    required ReverbEffect that,
   });
 
   Future<List<BandEnergy>> crateApiVisualizerVisualizerProcessorAnalyzeBands({
@@ -941,17 +925,17 @@ abstract class RustLibApi extends BaseApi {
     required List<double> samples,
     required BigInt channels,
     required int sampleRate,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
     required bool playing,
   });
 
-  Future<double> crateApiVisualizerVisualizerProcessorBassBeat({
+  double crateApiVisualizerVisualizerProcessorBassBeat({
     required List<BandEnergy> bands,
   });
 
   Future<double> crateApiVisualizerVisualizerProcessorBeatForKinds({
     required List<BandEnergy> bands,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
   });
 
   Future<Float32List> crateApiVisualizerVisualizerProcessorCompute({
@@ -964,14 +948,14 @@ abstract class RustLibApi extends BaseApi {
 
   Future<List<BandEnergy>> crateApiVisualizerVisualizerProcessorComputeBands({
     required VisualizerProcessor that,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
   });
 
   Future<Float32List> crateApiVisualizerVisualizerProcessorDecayOnly({
     required VisualizerProcessor that,
   });
 
-  Future<double> crateApiVisualizerVisualizerProcessorDrumBeat({
+  double crateApiVisualizerVisualizerProcessorDrumBeat({
     required List<BandEnergy> bands,
   });
 
@@ -980,11 +964,11 @@ abstract class RustLibApi extends BaseApi {
     required BigInt count,
   });
 
-  Future<double> crateApiVisualizerVisualizerProcessorHighFrequencyEnergy({
+  double crateApiVisualizerVisualizerProcessorHighFrequencyEnergy({
     required List<BandEnergy> bands,
   });
 
-  Future<double> crateApiVisualizerVisualizerProcessorLowFrequencyEnergy({
+  double crateApiVisualizerVisualizerProcessorLowFrequencyEnergy({
     required List<BandEnergy> bands,
   });
 
@@ -997,39 +981,8 @@ abstract class RustLibApi extends BaseApi {
     required VisualizerProcessor that,
   });
 
-  Future<double> crateApiVisualizerVisualizerProcessorVocalPresence({
+  double crateApiVisualizerVisualizerProcessorVocalPresence({
     required List<BandEnergy> bands,
-  });
-
-  Future<double> crateApiFiltersDistortionWaveShaperAmount({
-    required WaveShaper that,
-  });
-
-  Future<WaveShapeCurve> crateApiFiltersDistortionWaveShaperCurve({
-    required WaveShaper that,
-  });
-
-  Future<WaveShaper> crateApiFiltersDistortionWaveShaperNew({
-    required WaveShapeCurve curve,
-  });
-
-  Future<double> crateApiFiltersDistortionWaveShaperProcess({
-    required WaveShaper that,
-    required double sample,
-  });
-
-  Future<void> crateApiFiltersDistortionWaveShaperReset({
-    required WaveShaper that,
-  });
-
-  Future<void> crateApiFiltersDistortionWaveShaperSetAmount({
-    required WaveShaper that,
-    required double v,
-  });
-
-  Future<void> crateApiFiltersDistortionWaveShaperSetCurve({
-    required WaveShaper that,
-    required WaveShapeCurve v,
   });
 
   Future<String> crateApiSourceAudioSourceDescription({
@@ -1037,16 +990,6 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<bool> crateApiSourceAudioSourceIsRemote({required AudioSource that});
-
-  Future<List<BandKind>> crateApiVisualizerBandKindDetailed();
-
-  Future<(double, double)> crateApiVisualizerBandKindFreqRange({
-    required BandKind that,
-  });
-
-  Future<List<BandKind>> crateApiVisualizerBandKindInstrument();
-
-  Future<List<BandKind>> crateApiVisualizerBandKindStandard();
 
   Future<BandState> crateApiVisualizerBandStateDefault();
 
@@ -1056,11 +999,66 @@ abstract class RustLibApi extends BaseApi {
     required int sampleRate,
   });
 
+  Future<double> crateApiFiltersEffectsDbToLinear({required double db});
+
+  Future<BiquadCoeffs> crateApiFiltersBiquadHighPass({
+    required double fc,
+    required double q,
+    required double fs,
+  });
+
+  Future<BiquadCoeffs> crateApiFiltersBiquadHighShelf({
+    required double fc,
+    required double gainDb,
+    required double q,
+    required double fs,
+  });
+
   Future<void> crateApiInitApp();
+
+  Future<double> crateApiFiltersEffectsLinearToDb({required double lin});
+
+  Future<BiquadCoeffs> crateApiFiltersBiquadLowPass({
+    required double fc,
+    required double q,
+    required double fs,
+  });
+
+  Future<BiquadCoeffs> crateApiFiltersBiquadLowShelf({
+    required double fc,
+    required double gainDb,
+    required double q,
+    required double fs,
+  });
+
+  Future<BiquadCoeffs> crateApiFiltersBiquadPeakingEq({
+    required double fc,
+    required double gainDb,
+    required double q,
+    required double fs,
+  });
 
   Future<int> crateApiRendererStatePlaybackStateId({
     required PlaybackState that,
   });
+
+  Future<List<VBandKind>> crateApiVisualizerVBandKindDetailed();
+
+  Future<(double, double)> crateApiVisualizerVBandKindFreqRange({
+    required VBandKind that,
+  });
+
+  Future<List<VBandKind>> crateApiVisualizerVBandKindInstrument();
+
+  Future<List<VBandKind>> crateApiVisualizerVBandKindStandard();
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_AudioOutput;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_AudioOutput;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AudioOutputPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_AudioPlayer;
@@ -1071,21 +1069,36 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AudioPlayerPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_AudioProcessor;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_AudioProcessor;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_AudioProcessorPtr;
-
-  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_AudioState;
 
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_AudioState;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_AudioStatePtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_BandConfig;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_BandConfig;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BandConfigPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_BandKind;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_BandKind;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BandKindPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_BiquadCoeffs;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_BiquadCoeffs;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BiquadCoeffsPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_BiquadFilter;
@@ -1096,28 +1109,29 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BiquadFilterPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_BitCrusher;
+  get rust_arc_increment_strong_count_BiquadState;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_BitCrusher;
+  get rust_arc_decrement_strong_count_BiquadState;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BitCrusherPtr;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_BiquadStatePtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Compressor;
+  get rust_arc_increment_strong_count_ChorusEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Compressor;
+  get rust_arc_decrement_strong_count_ChorusEffect;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_CompressorPtr;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ChorusEffectPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DcRemover;
+  get rust_arc_increment_strong_count_CompressorEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DcRemover;
+  get rust_arc_decrement_strong_count_CompressorEffect;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DcRemoverPtr;
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_CompressorEffectPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DecodePool;
@@ -1128,116 +1142,54 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DecodePoolPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DelayLine;
+  get rust_arc_increment_strong_count_DelayEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DelayLine;
+  get rust_arc_decrement_strong_count_DelayEffect;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DelayLinePtr;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_DelayEffectPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_EnvelopeFollower;
+  get rust_arc_increment_strong_count_EffectsChain;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_EnvelopeFollower;
+  get rust_arc_decrement_strong_count_EffectsChain;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_EffectsChainPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_Equalizer;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_Equalizer;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_EqualizerPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_GainEffect;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_GainEffect;
+
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_GainEffectPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_HardClipEffect;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_HardClipEffect;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_EnvelopeFollowerPtr;
+  get rust_arc_decrement_strong_count_HardClipEffectPtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Foldback;
+  get rust_arc_increment_strong_count_OverdriveEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Foldback;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_FoldbackPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_FractionalDelay;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_FractionalDelay;
+  get rust_arc_decrement_strong_count_OverdriveEffect;
 
   CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_FractionalDelayPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Gain;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Gain;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_GainPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_HardClipper;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_HardClipper;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_HardClipperPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Limiter;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Limiter;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_LimiterPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_MovingAverage;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_MovingAverage;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_MovingAveragePtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_MuteSolo;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_MuteSolo;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_MuteSoloPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_NoiseGate;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_NoiseGate;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_NoiseGatePtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_OnePoleHighPass;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_OnePoleHighPass;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_OnePoleHighPassPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_OnePoleLowPass;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_OnePoleLowPass;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_OnePoleLowPassPtr;
-
-  RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_Panner;
-
-  RustArcDecrementStrongCountFnType get rust_arc_decrement_strong_count_Panner;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PannerPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_PhaseInverter;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_PhaseInverter;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_PhaseInverterPtr;
+  get rust_arc_decrement_strong_count_OverdriveEffectPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ResampleState;
@@ -1249,46 +1201,12 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_ResampleStatePtr;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_RevertBuffer;
+  get rust_arc_increment_strong_count_ReverbEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_RevertBuffer;
+  get rust_arc_decrement_strong_count_ReverbEffect;
 
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_RevertBufferPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_SvfOutputs;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_SvfOutputs;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_SvfOutputsPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_SampleAndHold;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_SampleAndHold;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_SampleAndHoldPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_SoftClipper;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_SoftClipper;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_SoftClipperPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_StateVariableFilter;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_StateVariableFilter;
-
-  CrossPlatformFinalizerArg
-  get rust_arc_decrement_strong_count_StateVariableFilterPtr;
+  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ReverbEffectPtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_VisualizerProcessor;
@@ -1298,14 +1216,6 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_VisualizerProcessorPtr;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_WaveShaper;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_WaveShaper;
-
-  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_WaveShaperPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -1317,20 +1227,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<void> crateApiPlayerAudioPlayerAddEffect({
-    required AudioPlayer that,
-    required AudioProcessor effect,
+  Future<AudioOutputConfig> crateApiRendererOutputAudioOutputCurrentConfig({
+    required AudioOutput that,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
             that,
-            serializer,
-          );
-          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-            effect,
             serializer,
           );
           pdeCallFfi(
@@ -1341,31 +1246,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_audio_output_config,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiPlayerAudioPlayerAddEffectConstMeta,
-        argValues: [that, effect],
+        constMeta: kCrateApiRendererOutputAudioOutputCurrentConfigConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiPlayerAudioPlayerAddEffectConstMeta =>
+  TaskConstMeta get kCrateApiRendererOutputAudioOutputCurrentConfigConstMeta =>
       const TaskConstMeta(
-        debugName: "AudioPlayer_add_effect",
-        argNames: ["that", "effect"],
+        debugName: "AudioOutput_current_config",
+        argNames: ["that"],
       );
 
   @override
-  Future<void> crateApiPlayerAudioPlayerClearEffects({
-    required AudioPlayer that,
+  Future<void> crateApiRendererOutputAudioOutputDisposeOldStream({
+    required AudioOutput that,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
             that,
             serializer,
           );
@@ -1375,6 +1280,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             funcId: 2,
             port: port_,
           );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiRendererOutputAudioOutputDisposeOldStreamConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiRendererOutputAudioOutputDisposeOldStreamConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioOutput_dispose_old_stream",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerClearEffects({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1403,7 +1338,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 3)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_i_32,
@@ -1423,6 +1358,68 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  List<BandEnergy> crateApiPlayerAudioPlayerGetBand({
+    required AudioPlayer that,
+    required List<VBandKind> kinds,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_list_v_band_kind(kinds, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 5)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_band_energy,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerGetBandConstMeta,
+        argValues: [that, kinds],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerGetBandConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_get_band",
+        argNames: ["that", "kinds"],
+      );
+
+  @override
+  Float32List crateApiPlayerAudioPlayerGetBars({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_f_32_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerGetBarsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerGetBarsConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_get_bars",
+        argNames: ["that"],
+      );
+
+  @override
   AudioOutputConfig crateApiPlayerAudioPlayerGetOutputConfig({
     required AudioPlayer that,
   }) {
@@ -1434,7 +1431,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_audio_output_config,
@@ -1454,21 +1451,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<int> crateApiPlayerAudioPlayerGetState({required AudioPlayer that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  Float32List crateApiPlayerAudioPlayerGetSamples({
+    required AudioPlayer that,
+    required int buffSize,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
+          sse_encode_i_32(buffSize, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_f_32_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerGetSamplesConstMeta,
+        argValues: [that, buffSize],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerGetSamplesConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_get_samples",
+        argNames: ["that", "buffSize"],
+      );
+
+  @override
+  int crateApiPlayerAudioPlayerGetState({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
             serializer,
-            funcId: 5,
-            port: port_,
           );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_i_32,
@@ -1497,7 +1522,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 6)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_bool,
@@ -1526,7 +1551,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 7)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 11)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_bool,
@@ -1551,7 +1576,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 8)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
         },
         codec: SseCodec(
           decodeSuccessData:
@@ -1578,7 +1603,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 9)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 13)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1604,7 +1629,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 10)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1621,21 +1646,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "AudioPlayer_play", argNames: ["that"]);
 
   @override
-  Future<int> crateApiPlayerAudioPlayerPosition({required AudioPlayer that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  int crateApiPlayerAudioPlayerPosition({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 11,
-            port: port_,
-          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 15)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_i_32,
@@ -1664,7 +1684,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 12)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1681,38 +1701,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "AudioPlayer_resume", argNames: ["that"]);
 
   @override
-  Future<Float32List> crateApiPlayerAudioPlayerSamplesData({
-    required AudioPlayer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  double crateApiPlayerAudioPlayerSampleRate({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 13,
-            port: port_,
-          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 17)!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_prim_f_32_strict,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiPlayerAudioPlayerSamplesDataConstMeta,
+        constMeta: kCrateApiPlayerAudioPlayerSampleRateConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiPlayerAudioPlayerSamplesDataConstMeta =>
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSampleRateConstMeta =>
       const TaskConstMeta(
-        debugName: "AudioPlayer_samples_data",
+        debugName: "AudioPlayer_sample_rate",
         argNames: ["that"],
       );
 
@@ -1730,7 +1743,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_i_32(position, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 14)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 18)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1750,25 +1763,228 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiPlayerAudioPlayerSetRate({
+  void crateApiPlayerAudioPlayerSet10BandEq({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 19)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSet10BandEqConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSet10BandEqConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_10band_eq",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetBandGain({
+    required AudioPlayer that,
+    required int index,
+    required double gain,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_i_32(index, serializer);
+          sse_encode_f_32(gain, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 20)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetBandGainConstMeta,
+        argValues: [that, index, gain],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetBandGainConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_band_gain",
+        argNames: ["that", "index", "gain"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetChorus({
     required AudioPlayer that,
     required double rate,
+    required double depth,
+    required double wet,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
             that,
             serializer,
           );
           sse_encode_f_32(rate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
+          sse_encode_f_32(depth, serializer);
+          sse_encode_f_32(wet, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 21)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetChorusConstMeta,
+        argValues: [that, rate, depth, wet],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetChorusConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_chorus",
+        argNames: ["that", "rate", "depth", "wet"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetDelay({
+    required AudioPlayer that,
+    required double delaySeconds,
+    required double feedback,
+    required double wet,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
             serializer,
-            funcId: 15,
-            port: port_,
           );
+          sse_encode_f_32(delaySeconds, serializer);
+          sse_encode_f_32(feedback, serializer);
+          sse_encode_f_32(wet, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 22)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetDelayConstMeta,
+        argValues: [that, delaySeconds, feedback, wet],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetDelayConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_delay",
+        argNames: ["that", "delaySeconds", "feedback", "wet"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetOverride({
+    required AudioPlayer that,
+    required double drive,
+    required double output,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(drive, serializer);
+          sse_encode_f_32(output, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 23)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetOverrideConstMeta,
+        argValues: [that, drive, output],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetOverrideConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_override",
+        argNames: ["that", "drive", "output"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetProcessor({
+    required AudioPlayer that,
+    required int barCount,
+    required int fftSize,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_i_32(barCount, serializer);
+          sse_encode_i_32(fftSize, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 24)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetProcessorConstMeta,
+        argValues: [that, barCount, fftSize],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetProcessorConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_processor",
+        argNames: ["that", "barCount", "fftSize"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetRate({
+    required AudioPlayer that,
+    required double rate,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(rate, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 25)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1788,6 +2004,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  void crateApiPlayerAudioPlayerSetReverb({
+    required AudioPlayer that,
+    required double roomSize,
+    required double damping,
+    required double wet,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(roomSize, serializer);
+          sse_encode_f_32(damping, serializer);
+          sse_encode_f_32(wet, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 26)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetReverbConstMeta,
+        argValues: [that, roomSize, damping, wet],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetReverbConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_reverb",
+        argNames: ["that", "roomSize", "damping", "wet"],
+      );
+
+  @override
   void crateApiPlayerAudioPlayerSetSource({
     required AudioPlayer that,
     required AudioSource source,
@@ -1801,7 +2054,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             serializer,
           );
           sse_encode_box_autoadd_audio_source(source, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 16)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 27)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1821,25 +2074,53 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiPlayerAudioPlayerSetVolumn({
+  void crateApiPlayerAudioPlayerSetThreshold({
+    required AudioPlayer that,
+    required double threshold,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(threshold, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 28)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiPlayerAudioPlayerSetThresholdConstMeta,
+        argValues: [that, threshold],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetThresholdConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioPlayer_set_threshold",
+        argNames: ["that", "threshold"],
+      );
+
+  @override
+  void crateApiPlayerAudioPlayerSetVolumn({
     required AudioPlayer that,
     required double volumn,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
             that,
             serializer,
           );
           sse_encode_f_32(volumn, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 17,
-            port: port_,
-          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 29)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1859,21 +2140,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<void> crateApiPlayerAudioPlayerStop({required AudioPlayer that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  void crateApiPlayerAudioPlayerStop({required AudioPlayer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 18,
-            port: port_,
-          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 30)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
@@ -1890,252 +2166,147 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "AudioPlayer_stop", argNames: ["that"]);
 
   @override
-  Future<AudioProcessor> crateApiFiltersAudioProcessorDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  EffectsChain crateApiRendererStateAudioStateAutoAccessorGetEffects({
+    required AudioState that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
+            that,
             serializer,
-            funcId: 19,
-            port: port_,
           );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 31)!;
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersAudioProcessorDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersAudioProcessorDefaultConstMeta =>
-      const TaskConstMeta(debugName: "AudioProcessor_default", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersAudioProcessorGet({
-    required AudioProcessor that,
-    required Param param,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-            that,
-            serializer,
-          );
-          sse_encode_param(param, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 20,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: sse_decode_param_error,
-        ),
-        constMeta: kCrateApiFiltersAudioProcessorGetConstMeta,
-        argValues: [that, param],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersAudioProcessorGetConstMeta =>
-      const TaskConstMeta(
-        debugName: "AudioProcessor_get",
-        argNames: ["that", "param"],
-      );
-
-  @override
-  Future<void> crateApiFiltersAudioProcessorName({
-    required AudioProcessor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 21,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersAudioProcessorNameConstMeta,
+        constMeta:
+            kCrateApiRendererStateAudioStateAutoAccessorGetEffectsConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersAudioProcessorNameConstMeta =>
-      const TaskConstMeta(debugName: "AudioProcessor_name", argNames: ["that"]);
-
-  @override
-  Future<double> crateApiFiltersAudioProcessorProcess({
-    required AudioProcessor that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 22,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersAudioProcessorProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersAudioProcessorProcessConstMeta =>
+  TaskConstMeta
+  get kCrateApiRendererStateAudioStateAutoAccessorGetEffectsConstMeta =>
       const TaskConstMeta(
-        debugName: "AudioProcessor_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersAudioProcessorReset({
-    required AudioProcessor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 23,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersAudioProcessorResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersAudioProcessorResetConstMeta =>
-      const TaskConstMeta(
-        debugName: "AudioProcessor_reset",
+        debugName: "AudioState_auto_accessor_get_effects",
         argNames: ["that"],
       );
 
   @override
-  Future<void> crateApiFiltersAudioProcessorSet({
-    required AudioProcessor that,
-    required Param param,
-    required double value,
+  Equalizer crateApiRendererStateAudioStateAutoAccessorGetEqualizer({
+    required AudioState that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
             that,
             serializer,
           );
-          sse_encode_param(param, serializer);
-          sse_encode_f_32(value, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 24,
-            port: port_,
-          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 32)!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: sse_decode_param_error,
-        ),
-        constMeta: kCrateApiFiltersAudioProcessorSetConstMeta,
-        argValues: [that, param, value],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersAudioProcessorSetConstMeta =>
-      const TaskConstMeta(
-        debugName: "AudioProcessor_set",
-        argNames: ["that", "param", "value"],
-      );
-
-  @override
-  Future<void> crateApiFiltersAudioProcessorValidParams({
-    required AudioProcessor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 25,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersAudioProcessorValidParamsConstMeta,
+        constMeta:
+            kCrateApiRendererStateAudioStateAutoAccessorGetEqualizerConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersAudioProcessorValidParamsConstMeta =>
+  TaskConstMeta
+  get kCrateApiRendererStateAudioStateAutoAccessorGetEqualizerConstMeta =>
       const TaskConstMeta(
-        debugName: "AudioProcessor_valid_params",
+        debugName: "AudioState_auto_accessor_get_equalizer",
         argNames: ["that"],
+      );
+
+  @override
+  void crateApiRendererStateAudioStateAutoAccessorSetEffects({
+    required AudioState that,
+    required EffectsChain effects,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
+            that,
+            serializer,
+          );
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            effects,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 33)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiRendererStateAudioStateAutoAccessorSetEffectsConstMeta,
+        argValues: [that, effects],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiRendererStateAudioStateAutoAccessorSetEffectsConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioState_auto_accessor_set_effects",
+        argNames: ["that", "effects"],
+      );
+
+  @override
+  void crateApiRendererStateAudioStateAutoAccessorSetEqualizer({
+    required AudioState that,
+    required Equalizer equalizer,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
+            that,
+            serializer,
+          );
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            equalizer,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 34)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiRendererStateAudioStateAutoAccessorSetEqualizerConstMeta,
+        argValues: [that, equalizer],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiRendererStateAudioStateAutoAccessorSetEqualizerConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioState_auto_accessor_set_equalizer",
+        argNames: ["that", "equalizer"],
       );
 
   @override
@@ -2153,7 +2324,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 35,
             port: port_,
           );
         },
@@ -2175,6 +2346,116 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateApiRendererStateAudioStateClearEffects({
+    required AudioState that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiRendererStateAudioStateClearEffectsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiRendererStateAudioStateClearEffectsConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioState_clear_effects",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> crateApiRendererStateAudioStateClearEq({
+    required AudioState that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 37,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiRendererStateAudioStateClearEqConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiRendererStateAudioStateClearEqConstMeta =>
+      const TaskConstMeta(debugName: "AudioState_clear_eq", argNames: ["that"]);
+
+  @override
+  Future<Float32List>
+  crateApiRendererStateAudioStateCopyLatestVisualizerSamples({
+    required AudioState that,
+    required BigInt size,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
+            that,
+            serializer,
+          );
+          sse_encode_usize(size, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 38,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_f_32_strict,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiRendererStateAudioStateCopyLatestVisualizerSamplesConstMeta,
+        argValues: [that, size],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiRendererStateAudioStateCopyLatestVisualizerSamplesConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioState_copy_latest_visualizer_samples",
+        argNames: ["that", "size"],
+      );
+
+  @override
   Future<AudioState> crateApiRendererStateAudioStateNew({
     required BuffConfig config,
     required BuffConfig vConfig,
@@ -2190,7 +2471,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 39,
             port: port_,
           );
         },
@@ -2215,7 +2496,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<double> crateApiRendererStateAudioStateNextSample({
     required AudioState that,
-    required BigInt channels,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -2225,11 +2505,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_usize(channels, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 40,
             port: port_,
           );
         },
@@ -2238,7 +2517,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: null,
         ),
         constMeta: kCrateApiRendererStateAudioStateNextSampleConstMeta,
-        argValues: [that, channels],
+        argValues: [that],
         apiImpl: this,
       ),
     );
@@ -2247,7 +2526,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiRendererStateAudioStateNextSampleConstMeta =>
       const TaskConstMeta(
         debugName: "AudioState_next_sample",
-        argNames: ["that", "channels"],
+        argNames: ["that"],
       );
 
   @override
@@ -2265,7 +2544,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 29,
+            funcId: 41,
             port: port_,
           );
         },
@@ -2300,7 +2579,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 30,
+            funcId: 42,
             port: port_,
           );
         },
@@ -2339,7 +2618,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 31,
+            funcId: 43,
             port: port_,
           );
         },
@@ -2363,445 +2642,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiFiltersBiquadFilterFrequency({
-    required BiquadFilter that,
+  Future<void> crateApiRendererStateAudioStateSetEffect({
+    required AudioState that,
+    required EffectsChain effects,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 32,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterFrequencyConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterFrequencyConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_frequency",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<double> crateApiFiltersBiquadFilterGainDb({
-    required BiquadFilter that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 33,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterGainDbConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterGainDbConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_gain_db",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<BiquadFilter> crateApiFiltersBiquadFilterNew({
-    required BiquadType filterType,
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_biquad_type(filterType, serializer);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 34,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterNewConstMeta,
-        argValues: [filterType, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_new",
-        argNames: ["filterType", "sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersBiquadFilterProcess({
-    required BiquadFilter that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 35,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<double> crateApiFiltersBiquadFilterQ({required BiquadFilter that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 36,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterQConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterQConstMeta =>
-      const TaskConstMeta(debugName: "BiquadFilter_q", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersBiquadFilterReset({required BiquadFilter that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 37,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterResetConstMeta =>
-      const TaskConstMeta(debugName: "BiquadFilter_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersBiquadFilterSetFrequency({
-    required BiquadFilter that,
-    required double freq,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(freq, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 38,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterSetFrequencyConstMeta,
-        argValues: [that, freq],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterSetFrequencyConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_set_frequency",
-        argNames: ["that", "freq"],
-      );
-
-  @override
-  Future<void> crateApiFiltersBiquadFilterSetGain({
-    required BiquadFilter that,
-    required double gainDb,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(gainDb, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 39,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterSetGainConstMeta,
-        argValues: [that, gainDb],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterSetGainConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_set_gain",
-        argNames: ["that", "gainDb"],
-      );
-
-  @override
-  Future<void> crateApiFiltersBiquadFilterSetQ({
-    required BiquadFilter that,
-    required double q,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(q, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 40,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersBiquadFilterSetQConstMeta,
-        argValues: [that, q],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersBiquadFilterSetQConstMeta =>
-      const TaskConstMeta(
-        debugName: "BiquadFilter_set_q",
-        argNames: ["that", "q"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDistortionBitCrusherBitDepth({
-    required BitCrusher that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 41,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionBitCrusherBitDepthConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionBitCrusherBitDepthConstMeta =>
-      const TaskConstMeta(
-        debugName: "BitCrusher_bit_depth",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<BitCrusher> crateApiFiltersDistortionBitCrusherNew({
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 42,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionBitCrusherNewConstMeta,
-        argValues: [sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionBitCrusherNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "BitCrusher_new",
-        argNames: ["sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDistortionBitCrusherProcess({
-    required BitCrusher that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 43,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionBitCrusherProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionBitCrusherProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "BitCrusher_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDistortionBitCrusherRateReduction({
-    required BitCrusher that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-            that,
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            effects,
             serializer,
           );
           pdeCallFfi(
@@ -2812,33 +2666,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDistortionBitCrusherRateReductionConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiRendererStateAudioStateSetEffectConstMeta,
+        argValues: [that, effects],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta
-  get kCrateApiFiltersDistortionBitCrusherRateReductionConstMeta =>
+  TaskConstMeta get kCrateApiRendererStateAudioStateSetEffectConstMeta =>
       const TaskConstMeta(
-        debugName: "BitCrusher_rate_reduction",
-        argNames: ["that"],
+        debugName: "AudioState_set_effect",
+        argNames: ["that", "effects"],
       );
 
   @override
-  Future<void> crateApiFiltersDistortionBitCrusherReset({
-    required BitCrusher that,
+  Future<void> crateApiRendererStateAudioStateSetEqualizer({
+    required AudioState that,
+    required Equalizer equalizer,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
             that,
+            serializer,
+          );
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            equalizer,
             serializer,
           );
           pdeCallFfi(
@@ -2852,30 +2710,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDistortionBitCrusherResetConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiRendererStateAudioStateSetEqualizerConstMeta,
+        argValues: [that, equalizer],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDistortionBitCrusherResetConstMeta =>
-      const TaskConstMeta(debugName: "BitCrusher_reset", argNames: ["that"]);
+  TaskConstMeta get kCrateApiRendererStateAudioStateSetEqualizerConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioState_set_equalizer",
+        argNames: ["that", "equalizer"],
+      );
 
   @override
-  Future<void> crateApiFiltersDistortionBitCrusherSetBitDepth({
-    required BitCrusher that,
-    required double v,
+  Future<void> crateApiRendererStateAudioStateUpdateDeviceConfig({
+    required AudioState that,
+    required BuffConfig config,
+    required BuffConfig vConfig,
+    required BigInt channels,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
+          sse_encode_box_autoadd_buff_config(config, serializer);
+          sse_encode_box_autoadd_buff_config(vConfig, serializer);
+          sse_encode_usize(channels, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -2887,33 +2752,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDistortionBitCrusherSetBitDepthConstMeta,
-        argValues: [that, v],
+        constMeta: kCrateApiRendererStateAudioStateUpdateDeviceConfigConstMeta,
+        argValues: [that, config, vConfig, channels],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDistortionBitCrusherSetBitDepthConstMeta =>
+  TaskConstMeta
+  get kCrateApiRendererStateAudioStateUpdateDeviceConfigConstMeta =>
       const TaskConstMeta(
-        debugName: "BitCrusher_set_bit_depth",
-        argNames: ["that", "v"],
+        debugName: "AudioState_update_device_config",
+        argNames: ["that", "config", "vConfig", "channels"],
       );
 
   @override
-  Future<void> crateApiFiltersDistortionBitCrusherSetSampleRateReduction({
-    required BitCrusher that,
-    required double v,
+  Future<Float32List> crateApiRendererStateAudioStateVisualizerWindow({
+    required AudioState that,
+    required BigInt maxSamples,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
+          sse_encode_usize(maxSamples, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -2922,392 +2788,375 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_list_prim_f_32_strict,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiRendererStateAudioStateVisualizerWindowConstMeta,
+        argValues: [that, maxSamples],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiRendererStateAudioStateVisualizerWindowConstMeta =>
+      const TaskConstMeta(
+        debugName: "AudioState_visualizer_window",
+        argNames: ["that", "maxSamples"],
+      );
+
+  @override
+  bool crateApiFiltersEqualizerBandConfigAutoAccessorGetEnabled({
+    required BandConfig that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 48)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
         constMeta:
-            kCrateApiFiltersDistortionBitCrusherSetSampleRateReductionConstMeta,
-        argValues: [that, v],
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorGetEnabledConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta
-  get kCrateApiFiltersDistortionBitCrusherSetSampleRateReductionConstMeta =>
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorGetEnabledConstMeta =>
       const TaskConstMeta(
-        debugName: "BitCrusher_set_sample_rate_reduction",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsCompressorAttack({
-    required Compressor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 48,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsCompressorAttackConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorAttackConstMeta =>
-      const TaskConstMeta(debugName: "Compressor_attack", argNames: ["that"]);
-
-  @override
-  Future<double> crateApiFiltersDynamicsCompressorMakeupGain({
-    required Compressor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 49,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsCompressorMakeupGainConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorMakeupGainConstMeta =>
-      const TaskConstMeta(
-        debugName: "Compressor_makeup_gain",
+        debugName: "BandConfig_auto_accessor_get_enabled",
         argNames: ["that"],
       );
 
   @override
-  Future<Compressor> crateApiFiltersDynamicsCompressorNew({
-    required double sampleRate,
+  double crateApiFiltersEqualizerBandConfigAutoAccessorGetFreq({
+    required BandConfig that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
             serializer,
-            funcId: 50,
-            port: port_,
           );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 49)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorGetFreqConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorGetFreqConstMeta =>
+      const TaskConstMeta(
+        debugName: "BandConfig_auto_accessor_get_freq",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEqualizerBandConfigAutoAccessorGetGainDb({
+    required BandConfig that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 50)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorGetGainDbConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorGetGainDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "BandConfig_auto_accessor_get_gain_db",
+        argNames: ["that"],
+      );
+
+  @override
+  BandKind crateApiFiltersEqualizerBandConfigAutoAccessorGetKind({
+    required BandConfig that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 51)!;
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorNewConstMeta,
-        argValues: [sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "Compressor_new",
-        argNames: ["sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsCompressorProcess({
-    required Compressor that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 51,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsCompressorProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "Compressor_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsCompressorRatio({
-    required Compressor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 52,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsCompressorRatioConstMeta,
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorGetKindConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorRatioConstMeta =>
-      const TaskConstMeta(debugName: "Compressor_ratio", argNames: ["that"]);
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorGetKindConstMeta =>
+      const TaskConstMeta(
+        debugName: "BandConfig_auto_accessor_get_kind",
+        argNames: ["that"],
+      );
 
   @override
-  Future<double> crateApiFiltersDynamicsCompressorRelease({
-    required Compressor that,
+  double crateApiFiltersEqualizerBandConfigAutoAccessorGetQ({
+    required BandConfig that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 53,
-            port: port_,
-          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 52)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorReleaseConstMeta,
+        constMeta: kCrateApiFiltersEqualizerBandConfigAutoAccessorGetQConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorReleaseConstMeta =>
-      const TaskConstMeta(debugName: "Compressor_release", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDynamicsCompressorReset({
-    required Compressor that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 54,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsCompressorResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorResetConstMeta =>
-      const TaskConstMeta(debugName: "Compressor_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDynamicsCompressorSetAttack({
-    required Compressor that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 55,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsCompressorSetAttackConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorSetAttackConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorGetQConstMeta =>
       const TaskConstMeta(
-        debugName: "Compressor_set_attack",
-        argNames: ["that", "v"],
+        debugName: "BandConfig_auto_accessor_get_q",
+        argNames: ["that"],
       );
 
   @override
-  Future<void> crateApiFiltersDynamicsCompressorSetMakeupGain({
-    required Compressor that,
-    required double v,
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetEnabled({
+    required BandConfig that,
+    required bool enabled,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 56,
-            port: port_,
-          );
+          sse_encode_bool(enabled, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 53)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorSetMakeupGainConstMeta,
-        argValues: [that, v],
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorSetEnabledConstMeta,
+        argValues: [that, enabled],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorSetMakeupGainConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorSetEnabledConstMeta =>
       const TaskConstMeta(
-        debugName: "Compressor_set_makeup_gain",
-        argNames: ["that", "v"],
+        debugName: "BandConfig_auto_accessor_set_enabled",
+        argNames: ["that", "enabled"],
       );
 
   @override
-  Future<void> crateApiFiltersDynamicsCompressorSetRatio({
-    required Compressor that,
-    required double v,
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetFreq({
+    required BandConfig that,
+    required double freq,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 57,
-            port: port_,
-          );
+          sse_encode_f_32(freq, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 54)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorSetRatioConstMeta,
-        argValues: [that, v],
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorSetFreqConstMeta,
+        argValues: [that, freq],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorSetRatioConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorSetFreqConstMeta =>
       const TaskConstMeta(
-        debugName: "Compressor_set_ratio",
-        argNames: ["that", "v"],
+        debugName: "BandConfig_auto_accessor_set_freq",
+        argNames: ["that", "freq"],
       );
 
   @override
-  Future<void> crateApiFiltersDynamicsCompressorSetRelease({
-    required Compressor that,
-    required double v,
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetGainDb({
+    required BandConfig that,
+    required double gainDb,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(gainDb, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 55)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorSetGainDbConstMeta,
+        argValues: [that, gainDb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorSetGainDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "BandConfig_auto_accessor_set_gain_db",
+        argNames: ["that", "gainDb"],
+      );
+
+  @override
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetKind({
+    required BandConfig that,
+    required BandKind kind,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
+            serializer,
+          );
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+            kind,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 56)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEqualizerBandConfigAutoAccessorSetKindConstMeta,
+        argValues: [that, kind],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorSetKindConstMeta =>
+      const TaskConstMeta(
+        debugName: "BandConfig_auto_accessor_set_kind",
+        argNames: ["that", "kind"],
+      );
+
+  @override
+  void crateApiFiltersEqualizerBandConfigAutoAccessorSetQ({
+    required BandConfig that,
+    required double q,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(q, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 57)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerBandConfigAutoAccessorSetQConstMeta,
+        argValues: [that, q],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerBandConfigAutoAccessorSetQConstMeta =>
+      const TaskConstMeta(
+        debugName: "BandConfig_auto_accessor_set_q",
+        argNames: ["that", "q"],
+      );
+
+  @override
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigHighPass({
+    required double freq,
+    required double q,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
+          sse_encode_f_32(freq, serializer);
+          sse_encode_f_32(q, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -3316,36 +3165,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorSetReleaseConstMeta,
-        argValues: [that, v],
+        constMeta: kCrateApiFiltersEqualizerBandConfigHighPassConstMeta,
+        argValues: [freq, q],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorSetReleaseConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerBandConfigHighPassConstMeta =>
       const TaskConstMeta(
-        debugName: "Compressor_set_release",
-        argNames: ["that", "v"],
+        debugName: "BandConfig_high_pass",
+        argNames: ["freq", "q"],
       );
 
   @override
-  Future<void> crateApiFiltersDynamicsCompressorSetThreshold({
-    required Compressor that,
-    required double v,
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigHighShelf({
+    required double freq,
+    required double gainDb,
+    required double q,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
+          sse_encode_f_32(freq, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          sse_encode_f_32(q, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -3354,34 +3203,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorSetThresholdConstMeta,
-        argValues: [that, v],
+        constMeta: kCrateApiFiltersEqualizerBandConfigHighShelfConstMeta,
+        argValues: [freq, gainDb, q],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorSetThresholdConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerBandConfigHighShelfConstMeta =>
       const TaskConstMeta(
-        debugName: "Compressor_set_threshold",
-        argNames: ["that", "v"],
+        debugName: "BandConfig_high_shelf",
+        argNames: ["freq", "gainDb", "q"],
       );
 
   @override
-  Future<double> crateApiFiltersDynamicsCompressorThreshold({
-    required Compressor that,
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigLowPass({
+    required double freq,
+    required double q,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-            that,
-            serializer,
-          );
+          sse_encode_f_32(freq, serializer);
+          sse_encode_f_32(q, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -3390,33 +3239,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsCompressorThresholdConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEqualizerBandConfigLowPassConstMeta,
+        argValues: [freq, q],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsCompressorThresholdConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerBandConfigLowPassConstMeta =>
       const TaskConstMeta(
-        debugName: "Compressor_threshold",
-        argNames: ["that"],
+        debugName: "BandConfig_low_pass",
+        argNames: ["freq", "q"],
       );
 
   @override
-  Future<DcRemover> crateApiFiltersUtilitiesDcRemoverNew({
-    required double cutoffHz,
-    required double sampleRate,
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigLowShelf({
+    required double freq,
+    required double gainDb,
+    required double q,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(cutoffHz, serializer);
-          sse_encode_f_32(sampleRate, serializer);
+          sse_encode_f_32(freq, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          sse_encode_f_32(q, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -3426,36 +3278,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover,
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesDcRemoverNewConstMeta,
-        argValues: [cutoffHz, sampleRate],
+        constMeta: kCrateApiFiltersEqualizerBandConfigLowShelfConstMeta,
+        argValues: [freq, gainDb, q],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesDcRemoverNewConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerBandConfigLowShelfConstMeta =>
       const TaskConstMeta(
-        debugName: "DcRemover_new",
-        argNames: ["cutoffHz", "sampleRate"],
+        debugName: "BandConfig_low_shelf",
+        argNames: ["freq", "gainDb", "q"],
       );
 
   @override
-  Future<double> crateApiFiltersUtilitiesDcRemoverProcess({
-    required DcRemover that,
-    required double sample,
+  Future<BandConfig> crateApiFiltersEqualizerBandConfigPeaking({
+    required double freq,
+    required double gainDb,
+    required double q,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
+          sse_encode_f_32(freq, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          sse_encode_f_32(q, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -3464,38 +3315,513 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesDcRemoverProcessConstMeta,
-        argValues: [that, sample],
+        constMeta: kCrateApiFiltersEqualizerBandConfigPeakingConstMeta,
+        argValues: [freq, gainDb, q],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesDcRemoverProcessConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerBandConfigPeakingConstMeta =>
       const TaskConstMeta(
-        debugName: "DcRemover_process",
-        argNames: ["that", "sample"],
+        debugName: "BandConfig_peaking",
+        argNames: ["freq", "gainDb", "q"],
       );
 
   @override
-  Future<void> crateApiFiltersUtilitiesDcRemoverReset({
-    required DcRemover that,
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA1({
+    required BiquadCoeffs that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 63)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA1ConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA1ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_get_a1",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA2({
+    required BiquadCoeffs that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA2ConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA2ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_get_a2",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB0({
+    required BiquadCoeffs that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB0ConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB0ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_get_b0",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB1({
+    required BiquadCoeffs that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 66)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB1ConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB1ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_get_b1",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB2({
+    required BiquadCoeffs that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 67)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB2ConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB2ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_get_b2",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA1({
+    required BiquadCoeffs that,
+    required double a1,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(a1, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 68)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA1ConstMeta,
+        argValues: [that, a1],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA1ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_set_a1",
+        argNames: ["that", "a1"],
+      );
+
+  @override
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA2({
+    required BiquadCoeffs that,
+    required double a2,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(a2, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 69)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA2ConstMeta,
+        argValues: [that, a2],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA2ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_set_a2",
+        argNames: ["that", "a2"],
+      );
+
+  @override
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB0({
+    required BiquadCoeffs that,
+    required double b0,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(b0, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 70)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB0ConstMeta,
+        argValues: [that, b0],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB0ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_set_b0",
+        argNames: ["that", "b0"],
+      );
+
+  @override
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB1({
+    required BiquadCoeffs that,
+    required double b1,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(b1, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 71)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB1ConstMeta,
+        argValues: [that, b1],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB1ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_set_b1",
+        argNames: ["that", "b1"],
+      );
+
+  @override
+  void crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB2({
+    required BiquadCoeffs that,
+    required double b2,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(b2, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 72)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB2ConstMeta,
+        argValues: [that, b2],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB2ConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadCoeffs_auto_accessor_set_b2",
+        argNames: ["that", "b2"],
+      );
+
+  @override
+  BiquadCoeffs crateApiFiltersBiquadBiquadFilterAutoAccessorGetCoeffs({
+    required BiquadFilter that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 73)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersBiquadBiquadFilterAutoAccessorGetCoeffsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadFilterAutoAccessorGetCoeffsConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadFilter_auto_accessor_get_coeffs",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersBiquadBiquadFilterAutoAccessorSetCoeffs({
+    required BiquadFilter that,
+    required BiquadCoeffs coeffs,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
+            that,
+            serializer,
+          );
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            coeffs,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 74)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersBiquadBiquadFilterAutoAccessorSetCoeffsConstMeta,
+        argValues: [that, coeffs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersBiquadBiquadFilterAutoAccessorSetCoeffsConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadFilter_auto_accessor_set_coeffs",
+        argNames: ["that", "coeffs"],
+      );
+
+  @override
+  Future<BiquadFilter> crateApiFiltersBiquadBiquadFilterNew({
+    required BiquadCoeffs coeffs,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            coeffs,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 75,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadFilterNewConstMeta,
+        argValues: [coeffs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadBiquadFilterNewConstMeta =>
+      const TaskConstMeta(debugName: "BiquadFilter_new", argNames: ["coeffs"]);
+
+  @override
+  Future<double> crateApiFiltersBiquadBiquadFilterProcess({
+    required BiquadFilter that,
+    required double x,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(x, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 76,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadFilterProcessConstMeta,
+        argValues: [that, x],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadBiquadFilterProcessConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadFilter_process",
+        argNames: ["that", "x"],
+      );
+
+  @override
+  Future<void> crateApiFiltersBiquadBiquadFilterReset({
+    required BiquadFilter that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
             that,
             serializer,
           );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 63,
+            funcId: 77,
             port: port_,
           );
         },
@@ -3503,36 +3829,105 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesDcRemoverResetConstMeta,
+        constMeta: kCrateApiFiltersBiquadBiquadFilterResetConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesDcRemoverResetConstMeta =>
-      const TaskConstMeta(debugName: "DcRemover_reset", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersBiquadBiquadFilterResetConstMeta =>
+      const TaskConstMeta(debugName: "BiquadFilter_reset", argNames: ["that"]);
 
   @override
-  int crateApiSourceDecodeDecodePoolAutoAccessorGetDecodeStart({
-    required DecodePool that,
+  Future<void> crateApiFiltersBiquadBiquadFilterUpdateCoeffs({
+    required BiquadFilter that,
+    required BiquadCoeffs coeffs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
+            that,
+            serializer,
+          );
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+            coeffs,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 78,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadFilterUpdateCoeffsConstMeta,
+        argValues: [that, coeffs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadBiquadFilterUpdateCoeffsConstMeta =>
+      const TaskConstMeta(
+        debugName: "BiquadFilter_update_coeffs",
+        argNames: ["that", "coeffs"],
+      );
+
+  @override
+  Future<BiquadState> crateApiFiltersBiquadBiquadStateDefault() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 79,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadBiquadStateDefaultConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadBiquadStateDefaultConstMeta =>
+      const TaskConstMeta(debugName: "BiquadState_default", argNames: []);
+
+  @override
+  bool crateApiFiltersEffectsChorusEffectAutoAccessorGetBypass({
+    required ChorusEffect that,
   }) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
             that,
             serializer,
           );
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 64)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 80)!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_i_32,
+          decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
         constMeta:
-            kCrateApiSourceDecodeDecodePoolAutoAccessorGetDecodeStartConstMeta,
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorGetBypassConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
@@ -3540,45 +3935,994 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   TaskConstMeta
-  get kCrateApiSourceDecodeDecodePoolAutoAccessorGetDecodeStartConstMeta =>
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorGetBypassConstMeta =>
       const TaskConstMeta(
-        debugName: "DecodePool_auto_accessor_get_decode_start",
+        debugName: "ChorusEffect_auto_accessor_get_bypass",
         argNames: ["that"],
       );
 
   @override
-  void crateApiSourceDecodeDecodePoolAutoAccessorSetDecodeStart({
-    required DecodePool that,
-    required int decodeStart,
+  double crateApiFiltersEffectsChorusEffectAutoAccessorGetDepth({
+    required ChorusEffect that,
   }) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
             that,
             serializer,
           );
-          sse_encode_i_32(decodeStart, serializer);
-          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 65)!;
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 81)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorGetDepthConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorGetDepthConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_auto_accessor_get_depth",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsChorusEffectAutoAccessorGetRate({
+    required ChorusEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 82)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorGetRateConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorGetRateConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_auto_accessor_get_rate",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsChorusEffectAutoAccessorGetWet({
+    required ChorusEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 83)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorGetWetConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorGetWetConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_auto_accessor_get_wet",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetBypass({
+    required ChorusEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 84)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
         constMeta:
-            kCrateApiSourceDecodeDecodePoolAutoAccessorSetDecodeStartConstMeta,
-        argValues: [that, decodeStart],
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta
-  get kCrateApiSourceDecodeDecodePoolAutoAccessorSetDecodeStartConstMeta =>
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorSetBypassConstMeta =>
       const TaskConstMeta(
-        debugName: "DecodePool_auto_accessor_set_decode_start",
-        argNames: ["that", "decodeStart"],
+        debugName: "ChorusEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetDepth({
+    required ChorusEffect that,
+    required double depth,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(depth, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 85)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorSetDepthConstMeta,
+        argValues: [that, depth],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorSetDepthConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_auto_accessor_set_depth",
+        argNames: ["that", "depth"],
+      );
+
+  @override
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetRate({
+    required ChorusEffect that,
+    required double rate,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(rate, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 86)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorSetRateConstMeta,
+        argValues: [that, rate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorSetRateConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_auto_accessor_set_rate",
+        argNames: ["that", "rate"],
+      );
+
+  @override
+  void crateApiFiltersEffectsChorusEffectAutoAccessorSetWet({
+    required ChorusEffect that,
+    required double wet,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(wet, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 87)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsChorusEffectAutoAccessorSetWetConstMeta,
+        argValues: [that, wet],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsChorusEffectAutoAccessorSetWetConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_auto_accessor_set_wet",
+        argNames: ["that", "wet"],
+      );
+
+  @override
+  Future<ChorusEffect> crateApiFiltersEffectsChorusEffectNew({
+    required double rate,
+    required double depth,
+    required double wet,
+    required double sampleRate,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(rate, serializer);
+          sse_encode_f_32(depth, serializer);
+          sse_encode_f_32(wet, serializer);
+          sse_encode_f_32(sampleRate, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 88,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsChorusEffectNewConstMeta,
+        argValues: [rate, depth, wet, sampleRate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsChorusEffectNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_new",
+        argNames: ["rate", "depth", "wet", "sampleRate"],
+      );
+
+  @override
+  Future<double> crateApiFiltersEffectsChorusEffectProcess({
+    required ChorusEffect that,
+    required double sample,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(sample, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 89,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsChorusEffectProcessConstMeta,
+        argValues: [that, sample],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsChorusEffectProcessConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_process",
+        argNames: ["that", "sample"],
+      );
+
+  @override
+  Future<void> crateApiFiltersEffectsChorusEffectReset({
+    required ChorusEffect that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 90,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsChorusEffectResetConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsChorusEffectResetConstMeta =>
+      const TaskConstMeta(debugName: "ChorusEffect_reset", argNames: ["that"]);
+
+  @override
+  Future<void> crateApiFiltersEffectsChorusEffectSetSampleRate({
+    required ChorusEffect that,
+    required double sampleRate,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(sampleRate, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 91,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsChorusEffectSetSampleRateConstMeta,
+        argValues: [that, sampleRate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsChorusEffectSetSampleRateConstMeta =>
+      const TaskConstMeta(
+        debugName: "ChorusEffect_set_sample_rate",
+        argNames: ["that", "sampleRate"],
+      );
+
+  @override
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetAttackS({
+    required CompressorEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 92)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetAttackSConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetAttackSConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_get_attack_s",
+        argNames: ["that"],
+      );
+
+  @override
+  bool crateApiFiltersEffectsCompressorEffectAutoAccessorGetBypass({
+    required CompressorEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 93)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetBypassConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_get_bypass",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetMakeupDb({
+    required CompressorEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 94)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetMakeupDbConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetMakeupDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_get_makeup_db",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetRatio({
+    required CompressorEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 95)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetRatioConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetRatioConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_get_ratio",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetReleaseS({
+    required CompressorEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 96)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetReleaseSConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetReleaseSConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_get_release_s",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsCompressorEffectAutoAccessorGetThresholdDb({
+    required CompressorEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 97)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetThresholdDbConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorGetThresholdDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_get_threshold_db",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetAttackS({
+    required CompressorEffect that,
+    required double attackS,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(attackS, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 98)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetAttackSConstMeta,
+        argValues: [that, attackS],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetAttackSConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_set_attack_s",
+        argNames: ["that", "attackS"],
+      );
+
+  @override
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetBypass({
+    required CompressorEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 99)!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetMakeupDb({
+    required CompressorEffect that,
+    required double makeupDb,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(makeupDb, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 100,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetMakeupDbConstMeta,
+        argValues: [that, makeupDb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetMakeupDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_set_makeup_db",
+        argNames: ["that", "makeupDb"],
+      );
+
+  @override
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetRatio({
+    required CompressorEffect that,
+    required double ratio,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(ratio, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 101,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetRatioConstMeta,
+        argValues: [that, ratio],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetRatioConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_set_ratio",
+        argNames: ["that", "ratio"],
+      );
+
+  @override
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetReleaseS({
+    required CompressorEffect that,
+    required double releaseS,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(releaseS, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 102,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetReleaseSConstMeta,
+        argValues: [that, releaseS],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetReleaseSConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_set_release_s",
+        argNames: ["that", "releaseS"],
+      );
+
+  @override
+  void crateApiFiltersEffectsCompressorEffectAutoAccessorSetThresholdDb({
+    required CompressorEffect that,
+    required double thresholdDb,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(thresholdDb, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 103,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetThresholdDbConstMeta,
+        argValues: [that, thresholdDb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectAutoAccessorSetThresholdDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_auto_accessor_set_threshold_db",
+        argNames: ["that", "thresholdDb"],
+      );
+
+  @override
+  Future<CompressorEffect> crateApiFiltersEffectsCompressorEffectNew({
+    required double thresholdDb,
+    required double ratio,
+    required double attackS,
+    required double releaseS,
+    required double makeupDb,
+    required double sampleRate,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(thresholdDb, serializer);
+          sse_encode_f_32(ratio, serializer);
+          sse_encode_f_32(attackS, serializer);
+          sse_encode_f_32(releaseS, serializer);
+          sse_encode_f_32(makeupDb, serializer);
+          sse_encode_f_32(sampleRate, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 104,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsCompressorEffectNewConstMeta,
+        argValues: [
+          thresholdDb,
+          ratio,
+          attackS,
+          releaseS,
+          makeupDb,
+          sampleRate,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsCompressorEffectNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_new",
+        argNames: [
+          "thresholdDb",
+          "ratio",
+          "attackS",
+          "releaseS",
+          "makeupDb",
+          "sampleRate",
+        ],
+      );
+
+  @override
+  Future<double> crateApiFiltersEffectsCompressorEffectProcess({
+    required CompressorEffect that,
+    required double sample,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(sample, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 105,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsCompressorEffectProcessConstMeta,
+        argValues: [that, sample],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsCompressorEffectProcessConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_process",
+        argNames: ["that", "sample"],
+      );
+
+  @override
+  Future<void> crateApiFiltersEffectsCompressorEffectReset({
+    required CompressorEffect that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 106,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsCompressorEffectResetConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsCompressorEffectResetConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_reset",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<void> crateApiFiltersEffectsCompressorEffectSetSampleRate({
+    required CompressorEffect that,
+    required double sampleRate,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(sampleRate, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 107,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsCompressorEffectSetSampleRateConstMeta,
+        argValues: [that, sampleRate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsCompressorEffectSetSampleRateConstMeta =>
+      const TaskConstMeta(
+        debugName: "CompressorEffect_set_sample_rate",
+        argNames: ["that", "sampleRate"],
       );
 
   @override
@@ -3596,7 +4940,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 66,
+            funcId: 108,
             port: port_,
           );
         },
@@ -3618,1473 +4962,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiFiltersDelayDelayLineFeedback({
-    required DelayLine that,
+  Future<void> crateApiSourceDecodeDecodePoolSeek({
+    required DecodePool that,
+    required int millis,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 67,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineFeedbackConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineFeedbackConstMeta =>
-      const TaskConstMeta(debugName: "DelayLine_feedback", argNames: ["that"]);
-
-  @override
-  Future<double> crateApiFiltersDelayDelayLineMix({required DelayLine that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 68,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineMixConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineMixConstMeta =>
-      const TaskConstMeta(debugName: "DelayLine_mix", argNames: ["that"]);
-
-  @override
-  Future<DelayLine> crateApiFiltersDelayDelayLineNew({
-    required double maxDelayMs,
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(maxDelayMs, serializer);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 69,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineNewConstMeta,
-        argValues: [maxDelayMs, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "DelayLine_new",
-        argNames: ["maxDelayMs", "sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDelayDelayLineProcess({
-    required DelayLine that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 70,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "DelayLine_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayDelayLineReset({required DelayLine that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 71,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineResetConstMeta =>
-      const TaskConstMeta(debugName: "DelayLine_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDelayDelayLineSetDelayTime({
-    required DelayLine that,
-    required double delayMs,
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(delayMs, serializer);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 72,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineSetDelayTimeConstMeta,
-        argValues: [that, delayMs, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineSetDelayTimeConstMeta =>
-      const TaskConstMeta(
-        debugName: "DelayLine_set_delay_time",
-        argNames: ["that", "delayMs", "sampleRate"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayDelayLineSetFeedback({
-    required DelayLine that,
-    required double feedback,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(feedback, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 73,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineSetFeedbackConstMeta,
-        argValues: [that, feedback],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineSetFeedbackConstMeta =>
-      const TaskConstMeta(
-        debugName: "DelayLine_set_feedback",
-        argNames: ["that", "feedback"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayDelayLineSetMix({
-    required DelayLine that,
-    required double mix,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(mix, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 74,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayDelayLineSetMixConstMeta,
-        argValues: [that, mix],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayDelayLineSetMixConstMeta =>
-      const TaskConstMeta(
-        debugName: "DelayLine_set_mix",
-        argNames: ["that", "mix"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerAttack({
-    required EnvelopeFollower that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 75,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerAttackConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsEnvelopeFollowerAttackConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_attack",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerGetEnvelope({
-    required EnvelopeFollower that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 76,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerGetEnvelopeConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiFiltersDynamicsEnvelopeFollowerGetEnvelopeConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_get_envelope",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<EnvelopeFollower> crateApiFiltersDynamicsEnvelopeFollowerNew({
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 77,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerNewConstMeta,
-        argValues: [sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsEnvelopeFollowerNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_new",
-        argNames: ["sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerProcess({
-    required EnvelopeFollower that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 78,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsEnvelopeFollowerProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsEnvelopeFollowerRelease({
-    required EnvelopeFollower that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 79,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerReleaseConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsEnvelopeFollowerReleaseConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_release",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDynamicsEnvelopeFollowerReset({
-    required EnvelopeFollower that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 80,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsEnvelopeFollowerResetConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_reset",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDynamicsEnvelopeFollowerSetAttack({
-    required EnvelopeFollower that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 81,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerSetAttackConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiFiltersDynamicsEnvelopeFollowerSetAttackConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_set_attack",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDynamicsEnvelopeFollowerSetRelease({
-    required EnvelopeFollower that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 82,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsEnvelopeFollowerSetReleaseConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiFiltersDynamicsEnvelopeFollowerSetReleaseConstMeta =>
-      const TaskConstMeta(
-        debugName: "EnvelopeFollower_set_release",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<Foldback> crateApiFiltersDistortionFoldbackDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 83,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionFoldbackDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionFoldbackDefaultConstMeta =>
-      const TaskConstMeta(debugName: "Foldback_default", argNames: []);
-
-  @override
-  Future<Foldback> crateApiFiltersDistortionFoldbackNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 84,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionFoldbackNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionFoldbackNewConstMeta =>
-      const TaskConstMeta(debugName: "Foldback_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersDistortionFoldbackProcess({
-    required Foldback that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 85,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionFoldbackProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionFoldbackProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "Foldback_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDistortionFoldbackReset({
-    required Foldback that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 86,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionFoldbackResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionFoldbackResetConstMeta =>
-      const TaskConstMeta(debugName: "Foldback_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDistortionFoldbackSetThreshold({
-    required Foldback that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 87,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionFoldbackSetThresholdConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionFoldbackSetThresholdConstMeta =>
-      const TaskConstMeta(
-        debugName: "Foldback_set_threshold",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDistortionFoldbackThreshold({
-    required Foldback that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 88,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionFoldbackThresholdConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionFoldbackThresholdConstMeta =>
-      const TaskConstMeta(debugName: "Foldback_threshold", argNames: ["that"]);
-
-  @override
-  Future<double> crateApiFiltersDelayFractionalDelayFeedback({
-    required FractionalDelay that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 89,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelayFeedbackConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelayFeedbackConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_feedback",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDelayFractionalDelayMix({
-    required FractionalDelay that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 90,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelayMixConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelayMixConstMeta =>
-      const TaskConstMeta(debugName: "FractionalDelay_mix", argNames: ["that"]);
-
-  @override
-  Future<FractionalDelay> crateApiFiltersDelayFractionalDelayNew({
-    required double maxDelayMs,
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(maxDelayMs, serializer);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 91,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelayNewConstMeta,
-        argValues: [maxDelayMs, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelayNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_new",
-        argNames: ["maxDelayMs", "sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDelayFractionalDelayProcess({
-    required FractionalDelay that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 92,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelayProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelayProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayFractionalDelayReset({
-    required FractionalDelay that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 93,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelayResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelayResetConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_reset",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayFractionalDelaySetDelayTime({
-    required FractionalDelay that,
-    required double delayMs,
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(delayMs, serializer);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 94,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelaySetDelayTimeConstMeta,
-        argValues: [that, delayMs, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelaySetDelayTimeConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_set_delay_time",
-        argNames: ["that", "delayMs", "sampleRate"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayFractionalDelaySetFeedback({
-    required FractionalDelay that,
-    required double feedback,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(feedback, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 95,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelaySetFeedbackConstMeta,
-        argValues: [that, feedback],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelaySetFeedbackConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_set_feedback",
-        argNames: ["that", "feedback"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayFractionalDelaySetMix({
-    required FractionalDelay that,
-    required double mix,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(mix, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 96,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayFractionalDelaySetMixConstMeta,
-        argValues: [that, mix],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayFractionalDelaySetMixConstMeta =>
-      const TaskConstMeta(
-        debugName: "FractionalDelay_set_mix",
-        argNames: ["that", "mix"],
-      );
-
-  @override
-  Future<Gain> crateApiFiltersUtilitiesGainDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 97,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainDefaultConstMeta =>
-      const TaskConstMeta(debugName: "Gain_default", argNames: []);
-
-  @override
-  Future<Gain> crateApiFiltersUtilitiesGainFromDb({required double db}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(db, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 98,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainFromDbConstMeta,
-        argValues: [db],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainFromDbConstMeta =>
-      const TaskConstMeta(debugName: "Gain_from_db", argNames: ["db"]);
-
-  @override
-  Future<double> crateApiFiltersUtilitiesGainGainDb({required Gain that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 99,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainGainDbConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainGainDbConstMeta =>
-      const TaskConstMeta(debugName: "Gain_gain_db", argNames: ["that"]);
-
-  @override
-  Future<double> crateApiFiltersUtilitiesGainGainLinear({required Gain that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 100,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainGainLinearConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainGainLinearConstMeta =>
-      const TaskConstMeta(debugName: "Gain_gain_linear", argNames: ["that"]);
-
-  @override
-  Future<Gain> crateApiFiltersUtilitiesGainNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 101,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainNewConstMeta =>
-      const TaskConstMeta(debugName: "Gain_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersUtilitiesGainProcess({
-    required Gain that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 102,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "Gain_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersUtilitiesGainReset({required Gain that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 103,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainResetConstMeta =>
-      const TaskConstMeta(debugName: "Gain_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersUtilitiesGainSetGainDb({
-    required Gain that,
-    required double db,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(db, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 104,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainSetGainDbConstMeta,
-        argValues: [that, db],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainSetGainDbConstMeta =>
-      const TaskConstMeta(
-        debugName: "Gain_set_gain_db",
-        argNames: ["that", "db"],
-      );
-
-  @override
-  Future<void> crateApiFiltersUtilitiesGainSetGainLinear({
-    required Gain that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 105,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesGainSetGainLinearConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesGainSetGainLinearConstMeta =>
-      const TaskConstMeta(
-        debugName: "Gain_set_gain_linear",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<HardClipper> crateApiFiltersDistortionHardClipperDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 106,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionHardClipperDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperDefaultConstMeta =>
-      const TaskConstMeta(debugName: "HardClipper_default", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersDistortionHardClipperMix({
-    required HardClipper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 107,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionHardClipperMixConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperMixConstMeta =>
-      const TaskConstMeta(debugName: "HardClipper_mix", argNames: ["that"]);
-
-  @override
-  Future<HardClipper> crateApiFiltersDistortionHardClipperNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 108,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionHardClipperNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperNewConstMeta =>
-      const TaskConstMeta(debugName: "HardClipper_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersDistortionHardClipperProcess({
-    required HardClipper that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
+          sse_encode_i_32(millis, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5093,249 +4983,265 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDistortionHardClipperProcessConstMeta,
-        argValues: [that, sample],
+        constMeta: kCrateApiSourceDecodeDecodePoolSeekConstMeta,
+        argValues: [that, millis],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperProcessConstMeta =>
+  TaskConstMeta get kCrateApiSourceDecodeDecodePoolSeekConstMeta =>
       const TaskConstMeta(
-        debugName: "HardClipper_process",
-        argNames: ["that", "sample"],
+        debugName: "DecodePool_seek",
+        argNames: ["that", "millis"],
       );
 
   @override
-  Future<void> crateApiFiltersDistortionHardClipperReset({
-    required HardClipper that,
+  bool crateApiFiltersEffectsDelayEffectAutoAccessorGetBypass({
+    required DelayEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
             that,
             serializer,
           );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 110,
-            port: port_,
-          );
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDistortionHardClipperResetConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsDelayEffectAutoAccessorGetBypassConstMeta,
         argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperResetConstMeta =>
-      const TaskConstMeta(debugName: "HardClipper_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDistortionHardClipperSetMix({
-    required HardClipper that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 111,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionHardClipperSetMixConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperSetMixConstMeta =>
-      const TaskConstMeta(
-        debugName: "HardClipper_set_mix",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDistortionHardClipperSetThreshold({
-    required HardClipper that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 112,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionHardClipperSetThresholdConstMeta,
-        argValues: [that, v],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta
-  get kCrateApiFiltersDistortionHardClipperSetThresholdConstMeta =>
+  get kCrateApiFiltersEffectsDelayEffectAutoAccessorGetBypassConstMeta =>
       const TaskConstMeta(
-        debugName: "HardClipper_set_threshold",
-        argNames: ["that", "v"],
+        debugName: "DelayEffect_auto_accessor_get_bypass",
+        argNames: ["that"],
       );
 
   @override
-  Future<double> crateApiFiltersDistortionHardClipperThreshold({
-    required HardClipper that,
+  double crateApiFiltersEffectsDelayEffectAutoAccessorGetFeedback({
+    required DelayEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
             that,
             serializer,
           );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 113,
-            port: port_,
-          );
+            funcId: 111,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDistortionHardClipperThresholdConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsDelayEffectAutoAccessorGetFeedbackConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDistortionHardClipperThresholdConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEffectsDelayEffectAutoAccessorGetFeedbackConstMeta =>
       const TaskConstMeta(
-        debugName: "HardClipper_threshold",
+        debugName: "DelayEffect_auto_accessor_get_feedback",
         argNames: ["that"],
       );
 
   @override
-  Future<Limiter> crateApiFiltersDynamicsLimiterNew({
+  double crateApiFiltersEffectsDelayEffectAutoAccessorGetWet({
+    required DelayEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 112,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsDelayEffectAutoAccessorGetWetConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsDelayEffectAutoAccessorGetWetConstMeta =>
+      const TaskConstMeta(
+        debugName: "DelayEffect_auto_accessor_get_wet",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsDelayEffectAutoAccessorSetBypass({
+    required DelayEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 113,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsDelayEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsDelayEffectAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "DelayEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsDelayEffectAutoAccessorSetFeedback({
+    required DelayEffect that,
+    required double feedback,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(feedback, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 114,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsDelayEffectAutoAccessorSetFeedbackConstMeta,
+        argValues: [that, feedback],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsDelayEffectAutoAccessorSetFeedbackConstMeta =>
+      const TaskConstMeta(
+        debugName: "DelayEffect_auto_accessor_set_feedback",
+        argNames: ["that", "feedback"],
+      );
+
+  @override
+  void crateApiFiltersEffectsDelayEffectAutoAccessorSetWet({
+    required DelayEffect that,
+    required double wet,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(wet, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 115,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsDelayEffectAutoAccessorSetWetConstMeta,
+        argValues: [that, wet],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsDelayEffectAutoAccessorSetWetConstMeta =>
+      const TaskConstMeta(
+        debugName: "DelayEffect_auto_accessor_set_wet",
+        argNames: ["that", "wet"],
+      );
+
+  @override
+  Future<DelayEffect> crateApiFiltersEffectsDelayEffectNew({
+    required double delaySeconds,
+    required double feedback,
+    required double wet,
     required double sampleRate,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(delaySeconds, serializer);
+          sse_encode_f_32(feedback, serializer);
+          sse_encode_f_32(wet, serializer);
           sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 114,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsLimiterNewConstMeta,
-        argValues: [sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterNewConstMeta =>
-      const TaskConstMeta(debugName: "Limiter_new", argNames: ["sampleRate"]);
-
-  @override
-  Future<double> crateApiFiltersDynamicsLimiterProcess({
-    required Limiter that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 115,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsLimiterProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "Limiter_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsLimiterRelease({
-    required Limiter that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-            that,
-            serializer,
-          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5344,29 +5250,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsLimiterReleaseConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEffectsDelayEffectNewConstMeta,
+        argValues: [delaySeconds, feedback, wet, sampleRate],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterReleaseConstMeta =>
-      const TaskConstMeta(debugName: "Limiter_release", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersEffectsDelayEffectNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "DelayEffect_new",
+        argNames: ["delaySeconds", "feedback", "wet", "sampleRate"],
+      );
 
   @override
-  Future<void> crateApiFiltersDynamicsLimiterReset({required Limiter that}) {
+  Future<double> crateApiFiltersEffectsDelayEffectProcess({
+    required DelayEffect that,
+    required double sample,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
             that,
             serializer,
           );
+          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5375,33 +5289,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsLimiterResetConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEffectsDelayEffectProcessConstMeta,
+        argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterResetConstMeta =>
-      const TaskConstMeta(debugName: "Limiter_reset", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersEffectsDelayEffectProcessConstMeta =>
+      const TaskConstMeta(
+        debugName: "DelayEffect_process",
+        argNames: ["that", "sample"],
+      );
 
   @override
-  Future<void> crateApiFiltersDynamicsLimiterSetRelease({
-    required Limiter that,
-    required double v,
+  Future<void> crateApiFiltersEffectsDelayEffectReset({
+    required DelayEffect that,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5413,33 +5328,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsLimiterSetReleaseConstMeta,
-        argValues: [that, v],
+        constMeta: kCrateApiFiltersEffectsDelayEffectResetConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterSetReleaseConstMeta =>
-      const TaskConstMeta(
-        debugName: "Limiter_set_release",
-        argNames: ["that", "v"],
-      );
+  TaskConstMeta get kCrateApiFiltersEffectsDelayEffectResetConstMeta =>
+      const TaskConstMeta(debugName: "DelayEffect_reset", argNames: ["that"]);
 
   @override
-  Future<void> crateApiFiltersDynamicsLimiterSetThreshold({
-    required Limiter that,
-    required double v,
+  Future<void> crateApiFiltersEffectsDelayEffectSetDelay({
+    required DelayEffect that,
+    required double delaySeconds,
+    required double sampleRate,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
+          sse_encode_f_32(delaySeconds, serializer);
+          sse_encode_f_32(sampleRate, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5451,505 +5365,586 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsLimiterSetThresholdConstMeta,
-        argValues: [that, v],
+        constMeta: kCrateApiFiltersEffectsDelayEffectSetDelayConstMeta,
+        argValues: [that, delaySeconds, sampleRate],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterSetThresholdConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEffectsDelayEffectSetDelayConstMeta =>
       const TaskConstMeta(
-        debugName: "Limiter_set_threshold",
-        argNames: ["that", "v"],
+        debugName: "DelayEffect_set_delay",
+        argNames: ["that", "delaySeconds", "sampleRate"],
       );
 
   @override
-  Future<double> crateApiFiltersDynamicsLimiterThreshold({
-    required Limiter that,
+  ChorusEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetChorus({
+    required EffectsChain that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
             that,
             serializer,
           );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 120,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsLimiterThresholdConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsLimiterThresholdConstMeta =>
-      const TaskConstMeta(debugName: "Limiter_threshold", argNames: ["that"]);
-
-  @override
-  Future<MovingAverage> crateApiFiltersMovingAverageNew({
-    required BigInt length,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_usize(length, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 121,
-            port: port_,
-          );
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage,
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersMovingAverageNewConstMeta,
-        argValues: [length],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersMovingAverageNewConstMeta =>
-      const TaskConstMeta(debugName: "MovingAverage_new", argNames: ["length"]);
-
-  @override
-  Future<double> crateApiFiltersMovingAverageProcess({
-    required MovingAverage that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 122,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersMovingAverageProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersMovingAverageProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "MovingAverage_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersMovingAverageReset({
-    required MovingAverage that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 123,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersMovingAverageResetConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetChorusConstMeta,
         argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersMovingAverageResetConstMeta =>
-      const TaskConstMeta(debugName: "MovingAverage_reset", argNames: ["that"]);
-
-  @override
-  Future<MuteSolo> crateApiFiltersUtilitiesMuteSoloDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 124,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloDefaultConstMeta =>
-      const TaskConstMeta(debugName: "MuteSolo_default", argNames: []);
-
-  @override
-  Future<bool> crateApiFiltersUtilitiesMuteSoloIsMuted({
-    required MuteSolo that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 125,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloIsMutedConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloIsMutedConstMeta =>
-      const TaskConstMeta(debugName: "MuteSolo_is_muted", argNames: ["that"]);
-
-  @override
-  Future<bool> crateApiFiltersUtilitiesMuteSoloIsSoloed({
-    required MuteSolo that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 126,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloIsSoloedConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloIsSoloedConstMeta =>
-      const TaskConstMeta(debugName: "MuteSolo_is_soloed", argNames: ["that"]);
-
-  @override
-  Future<MuteSolo> crateApiFiltersUtilitiesMuteSoloNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 127,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloNewConstMeta =>
-      const TaskConstMeta(debugName: "MuteSolo_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersUtilitiesMuteSoloProcess({
-    required MuteSolo that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 128,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "MuteSolo_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersUtilitiesMuteSoloReset({required MuteSolo that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 129,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloResetConstMeta =>
-      const TaskConstMeta(debugName: "MuteSolo_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersUtilitiesMuteSoloSetAnySoloActive({
-    required MuteSolo that,
-    required bool v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-            that,
-            serializer,
-          );
-          sse_encode_bool(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 130,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloSetAnySoloActiveConstMeta,
-        argValues: [that, v],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta
-  get kCrateApiFiltersUtilitiesMuteSoloSetAnySoloActiveConstMeta =>
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetChorusConstMeta =>
       const TaskConstMeta(
-        debugName: "MuteSolo_set_any_solo_active",
-        argNames: ["that", "v"],
+        debugName: "EffectsChain_auto_accessor_get_chorus",
+        argNames: ["that"],
       );
 
   @override
-  Future<void> crateApiFiltersUtilitiesMuteSoloSetMute({
-    required MuteSolo that,
-    required bool v,
+  CompressorEffect?
+  crateApiFiltersEffectsEffectsChainAutoAccessorGetCompressor({
+    required EffectsChain that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
             that,
             serializer,
           );
-          sse_encode_bool(v, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 131,
-            port: port_,
-          );
+            funcId: 121,
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloSetMuteConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloSetMuteConstMeta =>
-      const TaskConstMeta(
-        debugName: "MuteSolo_set_mute",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersUtilitiesMuteSoloSetSolo({
-    required MuteSolo that,
-    required bool v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-            that,
-            serializer,
-          );
-          sse_encode_bool(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 132,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesMuteSoloSetSoloConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesMuteSoloSetSoloConstMeta =>
-      const TaskConstMeta(
-        debugName: "MuteSolo_set_solo",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsNoiseGateAttack({
-    required NoiseGate that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 133,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateAttackConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetCompressorConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateAttackConstMeta =>
-      const TaskConstMeta(debugName: "NoiseGate_attack", argNames: ["that"]);
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetCompressorConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_get_compressor",
+        argNames: ["that"],
+      );
 
   @override
-  Future<double> crateApiFiltersDynamicsNoiseGateHold({
-    required NoiseGate that,
+  DelayEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetDelay({
+    required EffectsChain that,
   }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 122,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetDelayConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetDelayConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_get_delay",
+        argNames: ["that"],
+      );
+
+  @override
+  GainEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetGain({
+    required EffectsChain that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 123,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetGainConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetGainConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_get_gain",
+        argNames: ["that"],
+      );
+
+  @override
+  HardClipEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetHardClip({
+    required EffectsChain that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 124,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetHardClipConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetHardClipConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_get_hard_clip",
+        argNames: ["that"],
+      );
+
+  @override
+  OverdriveEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetOverdrive({
+    required EffectsChain that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 125,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetOverdriveConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetOverdriveConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_get_overdrive",
+        argNames: ["that"],
+      );
+
+  @override
+  ReverbEffect? crateApiFiltersEffectsEffectsChainAutoAccessorGetReverb({
+    required EffectsChain that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 126,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorGetReverbConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorGetReverbConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_get_reverb",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetChorus({
+    required EffectsChain that,
+    ChorusEffect? chorus,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            chorus,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 127,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetChorusConstMeta,
+        argValues: [that, chorus],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetChorusConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_chorus",
+        argNames: ["that", "chorus"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetCompressor({
+    required EffectsChain that,
+    CompressorEffect? compressor,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            compressor,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 128,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetCompressorConstMeta,
+        argValues: [that, compressor],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetCompressorConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_compressor",
+        argNames: ["that", "compressor"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetDelay({
+    required EffectsChain that,
+    DelayEffect? delay,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+            delay,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 129,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetDelayConstMeta,
+        argValues: [that, delay],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetDelayConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_delay",
+        argNames: ["that", "delay"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetGain({
+    required EffectsChain that,
+    GainEffect? gain,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+            gain,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 130,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetGainConstMeta,
+        argValues: [that, gain],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetGainConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_gain",
+        argNames: ["that", "gain"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetHardClip({
+    required EffectsChain that,
+    HardClipEffect? hardClip,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+            hardClip,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 131,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetHardClipConstMeta,
+        argValues: [that, hardClip],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetHardClipConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_hard_clip",
+        argNames: ["that", "hardClip"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetOverdrive({
+    required EffectsChain that,
+    OverdriveEffect? overdrive,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            overdrive,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 132,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetOverdriveConstMeta,
+        argValues: [that, overdrive],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetOverdriveConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_overdrive",
+        argNames: ["that", "overdrive"],
+      );
+
+  @override
+  void crateApiFiltersEffectsEffectsChainAutoAccessorSetReverb({
+    required EffectsChain that,
+    ReverbEffect? reverb,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            reverb,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 133,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsEffectsChainAutoAccessorSetReverbConstMeta,
+        argValues: [that, reverb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsEffectsChainAutoAccessorSetReverbConstMeta =>
+      const TaskConstMeta(
+        debugName: "EffectsChain_auto_accessor_set_reverb",
+        argNames: ["that", "reverb"],
+      );
+
+  @override
+  Future<EffectsChain> crateApiFiltersEffectsEffectsChainEmpty() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5958,28 +5953,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateHoldConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEffectsEffectsChainEmptyConstMeta,
+        argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateHoldConstMeta =>
-      const TaskConstMeta(debugName: "NoiseGate_hold", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersEffectsEffectsChainEmptyConstMeta =>
+      const TaskConstMeta(debugName: "EffectsChain_empty", argNames: []);
 
   @override
-  Future<NoiseGate> crateApiFiltersDynamicsNoiseGateNew({
-    required double sampleRate,
+  Future<double> crateApiFiltersEffectsEffectsChainProcess({
+    required EffectsChain that,
+    required double sample,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(sampleRate, serializer);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -5988,214 +5989,221 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateNewConstMeta,
-        argValues: [sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateNewConstMeta =>
-      const TaskConstMeta(debugName: "NoiseGate_new", argNames: ["sampleRate"]);
-
-  @override
-  Future<double> crateApiFiltersDynamicsNoiseGateProcess({
-    required NoiseGate that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 136,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateProcessConstMeta,
+        constMeta: kCrateApiFiltersEffectsEffectsChainProcessConstMeta,
         argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateProcessConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEffectsEffectsChainProcessConstMeta =>
       const TaskConstMeta(
-        debugName: "NoiseGate_process",
+        debugName: "EffectsChain_process",
         argNames: ["that", "sample"],
       );
 
   @override
-  Future<double> crateApiFiltersDynamicsNoiseGateRelease({
-    required NoiseGate that,
+  void crateApiFiltersEqualizerEqualizerAddBand({
+    required Equalizer that,
+    required BandConfig config,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
             that,
             serializer,
           );
-          pdeCallFfi(
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            config,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 136,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerAddBandConstMeta,
+        argValues: [that, config],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerAddBandConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_add_band",
+        argNames: ["that", "config"],
+      );
+
+  @override
+  bool crateApiFiltersEqualizerEqualizerAutoAccessorGetBypass({
+    required Equalizer that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 137,
-            port: port_,
-          );
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateReleaseConstMeta,
+        constMeta:
+            kCrateApiFiltersEqualizerEqualizerAutoAccessorGetBypassConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateReleaseConstMeta =>
-      const TaskConstMeta(debugName: "NoiseGate_release", argNames: ["that"]);
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerEqualizerAutoAccessorGetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_auto_accessor_get_bypass",
+        argNames: ["that"],
+      );
 
   @override
-  Future<void> crateApiFiltersDynamicsNoiseGateReset({
-    required NoiseGate that,
+  void crateApiFiltersEqualizerEqualizerAutoAccessorSetBypass({
+    required Equalizer that,
+    required bool bypass,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
             that,
             serializer,
           );
-          pdeCallFfi(
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 138,
-            port: port_,
-          );
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateResetConstMeta,
+        constMeta:
+            kCrateApiFiltersEqualizerEqualizerAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerEqualizerAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  BandConfig? crateApiFiltersEqualizerEqualizerBandConfig({
+    required Equalizer that,
+    required BigInt index,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          sse_encode_usize(index, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 139,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerBandConfigConstMeta,
+        argValues: [that, index],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerBandConfigConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_band_config",
+        argNames: ["that", "index"],
+      );
+
+  @override
+  BigInt crateApiFiltersEqualizerEqualizerBandCount({required Equalizer that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 140,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_usize,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerBandCountConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateResetConstMeta =>
-      const TaskConstMeta(debugName: "NoiseGate_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDynamicsNoiseGateSetAttack({
-    required NoiseGate that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 139,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateSetAttackConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateSetAttackConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerBandCountConstMeta =>
       const TaskConstMeta(
-        debugName: "NoiseGate_set_attack",
-        argNames: ["that", "v"],
+        debugName: "Equalizer_band_count",
+        argNames: ["that"],
       );
 
   @override
-  Future<void> crateApiFiltersDynamicsNoiseGateSetHold({
-    required NoiseGate that,
-    required double v,
+  Future<void> crateApiFiltersEqualizerEqualizerClearBands({
+    required Equalizer that,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 140,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateSetHoldConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateSetHoldConstMeta =>
-      const TaskConstMeta(
-        debugName: "NoiseGate_set_hold",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDynamicsNoiseGateSetRelease({
-    required NoiseGate that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6207,102 +6215,95 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateSetReleaseConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateSetReleaseConstMeta =>
-      const TaskConstMeta(
-        debugName: "NoiseGate_set_release",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDynamicsNoiseGateSetThreshold({
-    required NoiseGate that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 142,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateSetThresholdConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateSetThresholdConstMeta =>
-      const TaskConstMeta(
-        debugName: "NoiseGate_set_threshold",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDynamicsNoiseGateThreshold({
-    required NoiseGate that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 143,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDynamicsNoiseGateThresholdConstMeta,
+        constMeta: kCrateApiFiltersEqualizerEqualizerClearBandsConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDynamicsNoiseGateThresholdConstMeta =>
-      const TaskConstMeta(debugName: "NoiseGate_threshold", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerClearBandsConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_clear_bands",
+        argNames: ["that"],
+      );
 
   @override
-  Future<double> crateApiFiltersOnePoleHighPassCoefficient({
-    required OnePoleHighPass that,
+  Equalizer crateApiFiltersEqualizerEqualizerNew({required double sampleRate}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(sampleRate, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 142,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerNewConstMeta,
+        argValues: [sampleRate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerNewConstMeta =>
+      const TaskConstMeta(debugName: "Equalizer_new", argNames: ["sampleRate"]);
+
+  @override
+  Equalizer crateApiFiltersEqualizerEqualizerNewGraphic10Band({
+    required double sampleRate,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(sampleRate, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 143,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerNewGraphic10BandConstMeta,
+        argValues: [sampleRate],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEqualizerEqualizerNewGraphic10BandConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_new_graphic_10band",
+        argNames: ["sampleRate"],
+      );
+
+  @override
+  Future<double> crateApiFiltersEqualizerEqualizerProcess({
+    required Equalizer that,
+    required double sample,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
             that,
             serializer,
           );
+          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6314,58 +6315,68 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleHighPassCoefficientConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEqualizerEqualizerProcessConstMeta,
+        argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassCoefficientConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerProcessConstMeta =>
       const TaskConstMeta(
-        debugName: "OnePoleHighPass_coefficient",
-        argNames: ["that"],
+        debugName: "Equalizer_process",
+        argNames: ["that", "sample"],
       );
 
   @override
-  Future<OnePoleHighPass> crateApiFiltersOnePoleHighPassDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  void crateApiFiltersEqualizerEqualizerRemoveBand({
+    required Equalizer that,
+    required BigInt index,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          sse_encode_usize(index, serializer);
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 145,
-            port: port_,
-          );
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass,
+          decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleHighPassDefaultConstMeta,
-        argValues: [],
+        constMeta: kCrateApiFiltersEqualizerEqualizerRemoveBandConstMeta,
+        argValues: [that, index],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassDefaultConstMeta =>
-      const TaskConstMeta(debugName: "OnePoleHighPass_default", argNames: []);
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerRemoveBandConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_remove_band",
+        argNames: ["that", "index"],
+      );
 
   @override
-  Future<OnePoleHighPass> crateApiFiltersOnePoleHighPassFromCutoff({
-    required double cutoff,
-    required double sampleRate,
+  Future<void> crateApiFiltersEqualizerEqualizerReset({
+    required Equalizer that,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(cutoff, serializer);
-          sse_encode_f_32(sampleRate, serializer);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6374,139 +6385,153 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersOnePoleHighPassFromCutoffConstMeta,
-        argValues: [cutoff, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassFromCutoffConstMeta =>
-      const TaskConstMeta(
-        debugName: "OnePoleHighPass_from_cutoff",
-        argNames: ["cutoff", "sampleRate"],
-      );
-
-  @override
-  Future<OnePoleHighPass> crateApiFiltersOnePoleHighPassNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 147,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersOnePoleHighPassNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassNewConstMeta =>
-      const TaskConstMeta(debugName: "OnePoleHighPass_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersOnePoleHighPassProcess({
-    required OnePoleHighPass that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 148,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersOnePoleHighPassProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "OnePoleHighPass_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersOnePoleHighPassReset({
-    required OnePoleHighPass that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 149,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleHighPassResetConstMeta,
+        constMeta: kCrateApiFiltersEqualizerEqualizerResetConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassResetConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerResetConstMeta =>
+      const TaskConstMeta(debugName: "Equalizer_reset", argNames: ["that"]);
+
+  @override
+  bool crateApiFiltersEqualizerEqualizerSetBand({
+    required Equalizer that,
+    required BigInt index,
+    required BandConfig config,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          sse_encode_usize(index, serializer);
+          sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            config,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 147,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerSetBandConstMeta,
+        argValues: [that, index, config],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerSetBandConstMeta =>
       const TaskConstMeta(
-        debugName: "OnePoleHighPass_reset",
-        argNames: ["that"],
+        debugName: "Equalizer_set_band",
+        argNames: ["that", "index", "config"],
       );
 
   @override
-  Future<void> crateApiFiltersOnePoleHighPassSetCoefficient({
-    required OnePoleHighPass that,
-    required double coeff,
+  bool crateApiFiltersEqualizerEqualizerSetBandEnabled({
+    required Equalizer that,
+    required BigInt index,
+    required bool enabled,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          sse_encode_usize(index, serializer);
+          sse_encode_bool(enabled, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 148,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerSetBandEnabledConstMeta,
+        argValues: [that, index, enabled],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerSetBandEnabledConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_set_band_enabled",
+        argNames: ["that", "index", "enabled"],
+      );
+
+  @override
+  bool crateApiFiltersEqualizerEqualizerSetBandGain({
+    required Equalizer that,
+    required BigInt index,
+    required double gainDb,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+            that,
+            serializer,
+          );
+          sse_encode_usize(index, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 149,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEqualizerEqualizerSetBandGainConstMeta,
+        argValues: [that, index, gainDb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerSetBandGainConstMeta =>
+      const TaskConstMeta(
+        debugName: "Equalizer_set_band_gain",
+        argNames: ["that", "index", "gainDb"],
+      );
+
+  @override
+  Future<void> crateApiFiltersEqualizerEqualizerSetSampleRate({
+    required Equalizer that,
+    required double sampleRate,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
             that,
             serializer,
           );
-          sse_encode_f_32(coeff, serializer);
+          sse_encode_f_32(sampleRate, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6518,161 +6543,180 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleHighPassSetCoefficientConstMeta,
-        argValues: [that, coeff],
+        constMeta: kCrateApiFiltersEqualizerEqualizerSetSampleRateConstMeta,
+        argValues: [that, sampleRate],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleHighPassSetCoefficientConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEqualizerEqualizerSetSampleRateConstMeta =>
       const TaskConstMeta(
-        debugName: "OnePoleHighPass_set_coefficient",
-        argNames: ["that", "coeff"],
+        debugName: "Equalizer_set_sample_rate",
+        argNames: ["that", "sampleRate"],
       );
 
   @override
-  Future<double> crateApiFiltersOnePoleLowPassCoefficient({
-    required OnePoleLowPass that,
+  bool crateApiFiltersEffectsGainEffectAutoAccessorGetBypass({
+    required GainEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
             that,
             serializer,
           );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 151,
-            port: port_,
-          );
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleLowPassCoefficientConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsGainEffectAutoAccessorGetBypassConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassCoefficientConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEffectsGainEffectAutoAccessorGetBypassConstMeta =>
       const TaskConstMeta(
-        debugName: "OnePoleLowPass_coefficient",
+        debugName: "GainEffect_auto_accessor_get_bypass",
         argNames: ["that"],
       );
 
   @override
-  Future<OnePoleLowPass> crateApiFiltersOnePoleLowPassDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 152,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersOnePoleLowPassDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassDefaultConstMeta =>
-      const TaskConstMeta(debugName: "OnePoleLowPass_default", argNames: []);
-
-  @override
-  Future<OnePoleLowPass> crateApiFiltersOnePoleLowPassFromCutoff({
-    required double cutoff,
-    required double sampleRate,
+  double crateApiFiltersEffectsGainEffectAutoAccessorGetGainDb({
+    required GainEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(cutoff, serializer);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 153,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersOnePoleLowPassFromCutoffConstMeta,
-        argValues: [cutoff, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassFromCutoffConstMeta =>
-      const TaskConstMeta(
-        debugName: "OnePoleLowPass_from_cutoff",
-        argNames: ["cutoff", "sampleRate"],
-      );
-
-  @override
-  Future<OnePoleLowPass> crateApiFiltersOnePoleLowPassNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 154,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersOnePoleLowPassNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassNewConstMeta =>
-      const TaskConstMeta(debugName: "OnePoleLowPass_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersOnePoleLowPassProcess({
-    required OnePoleLowPass that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(sample, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 152,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsGainEffectAutoAccessorGetGainDbConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsGainEffectAutoAccessorGetGainDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "GainEffect_auto_accessor_get_gain_db",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsGainEffectAutoAccessorSetBypass({
+    required GainEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 153,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsGainEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsGainEffectAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "GainEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsGainEffectAutoAccessorSetGainDb({
+    required GainEffect that,
+    required double gainDb,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(gainDb, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 154,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsGainEffectAutoAccessorSetGainDbConstMeta,
+        argValues: [that, gainDb],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsGainEffectAutoAccessorSetGainDbConstMeta =>
+      const TaskConstMeta(
+        debugName: "GainEffect_auto_accessor_set_gain_db",
+        argNames: ["that", "gainDb"],
+      );
+
+  @override
+  Future<GainEffect> crateApiFiltersEffectsGainEffectNew({
+    required double gainDb,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(gainDb, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6681,34 +6725,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleLowPassProcessConstMeta,
-        argValues: [that, sample],
+        constMeta: kCrateApiFiltersEffectsGainEffectNewConstMeta,
+        argValues: [gainDb],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "OnePoleLowPass_process",
-        argNames: ["that", "sample"],
-      );
+  TaskConstMeta get kCrateApiFiltersEffectsGainEffectNewConstMeta =>
+      const TaskConstMeta(debugName: "GainEffect_new", argNames: ["gainDb"]);
 
   @override
-  Future<void> crateApiFiltersOnePoleLowPassReset({
-    required OnePoleLowPass that,
+  Future<double> crateApiFiltersEffectsGainEffectProcess({
+    required GainEffect that,
+    required double sample,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
             that,
             serializer,
           );
+          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6717,36 +6761,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleLowPassResetConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEffectsGainEffectProcessConstMeta,
+        argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassResetConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEffectsGainEffectProcessConstMeta =>
       const TaskConstMeta(
-        debugName: "OnePoleLowPass_reset",
-        argNames: ["that"],
+        debugName: "GainEffect_process",
+        argNames: ["that", "sample"],
       );
 
   @override
-  Future<void> crateApiFiltersOnePoleLowPassSetCoefficient({
-    required OnePoleLowPass that,
-    required double coeff,
+  Future<void> crateApiFiltersEffectsGainEffectSetGainDb({
+    required GainEffect that,
+    required double gainDb,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(coeff, serializer);
+          sse_encode_f_32(gainDb, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6758,154 +6802,180 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersOnePoleLowPassSetCoefficientConstMeta,
-        argValues: [that, coeff],
+        constMeta: kCrateApiFiltersEffectsGainEffectSetGainDbConstMeta,
+        argValues: [that, gainDb],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersOnePoleLowPassSetCoefficientConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEffectsGainEffectSetGainDbConstMeta =>
       const TaskConstMeta(
-        debugName: "OnePoleLowPass_set_coefficient",
-        argNames: ["that", "coeff"],
+        debugName: "GainEffect_set_gain_db",
+        argNames: ["that", "gainDb"],
       );
 
   @override
-  Future<Panner> crateApiFiltersUtilitiesPannerDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  bool crateApiFiltersEffectsHardClipEffectAutoAccessorGetBypass({
+    required HardClipEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 158,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesPannerDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesPannerDefaultConstMeta =>
-      const TaskConstMeta(debugName: "Panner_default", argNames: []);
-
-  @override
-  Future<Panner> crateApiFiltersUtilitiesPannerNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 159,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesPannerNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesPannerNewConstMeta =>
-      const TaskConstMeta(debugName: "Panner_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersUtilitiesPannerPan({required Panner that}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
             that,
             serializer,
           );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 160,
-            port: port_,
-          );
+            funcId: 158,
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
+          decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPannerPanConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsHardClipEffectAutoAccessorGetBypassConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPannerPanConstMeta =>
-      const TaskConstMeta(debugName: "Panner_pan", argNames: ["that"]);
+  TaskConstMeta
+  get kCrateApiFiltersEffectsHardClipEffectAutoAccessorGetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "HardClipEffect_auto_accessor_get_bypass",
+        argNames: ["that"],
+      );
 
   @override
-  Future<(double, double)> crateApiFiltersUtilitiesPannerProcess({
-    required Panner that,
-    required double sample,
+  double crateApiFiltersEffectsHardClipEffectAutoAccessorGetThreshold({
+    required HardClipEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 161,
-            port: port_,
-          );
+            funcId: 159,
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_record_f_32_f_32,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPannerProcessConstMeta,
-        argValues: [that, sample],
+        constMeta:
+            kCrateApiFiltersEffectsHardClipEffectAutoAccessorGetThresholdConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPannerProcessConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEffectsHardClipEffectAutoAccessorGetThresholdConstMeta =>
       const TaskConstMeta(
-        debugName: "Panner_process",
-        argNames: ["that", "sample"],
+        debugName: "HardClipEffect_auto_accessor_get_threshold",
+        argNames: ["that"],
       );
 
   @override
-  Future<void> crateApiFiltersUtilitiesPannerReset({required Panner that}) {
+  void crateApiFiltersEffectsHardClipEffectAutoAccessorSetBypass({
+    required HardClipEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 160,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsHardClipEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsHardClipEffectAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "HardClipEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsHardClipEffectAutoAccessorSetThreshold({
+    required HardClipEffect that,
+    required double threshold,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(threshold, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 161,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsHardClipEffectAutoAccessorSetThresholdConstMeta,
+        argValues: [that, threshold],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsHardClipEffectAutoAccessorSetThresholdConstMeta =>
+      const TaskConstMeta(
+        debugName: "HardClipEffect_auto_accessor_set_threshold",
+        argNames: ["that", "threshold"],
+      );
+
+  @override
+  Future<HardClipEffect> crateApiFiltersEffectsHardClipEffectNew({
+    required double threshold,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-            that,
-            serializer,
-          );
+          sse_encode_f_32(threshold, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6914,33 +6984,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPannerResetConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEffectsHardClipEffectNewConstMeta,
+        argValues: [threshold],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPannerResetConstMeta =>
-      const TaskConstMeta(debugName: "Panner_reset", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersEffectsHardClipEffectNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "HardClipEffect_new",
+        argNames: ["threshold"],
+      );
 
   @override
-  Future<void> crateApiFiltersUtilitiesPannerSetPan({
-    required Panner that,
-    required double v,
+  Future<double> crateApiFiltersEffectsHardClipEffectProcess({
+    required HardClipEffect that,
+    required double sample,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(v, serializer);
+          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -6949,121 +7023,296 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPannerSetPanConstMeta,
-        argValues: [that, v],
+        constMeta: kCrateApiFiltersEffectsHardClipEffectProcessConstMeta,
+        argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPannerSetPanConstMeta =>
-      const TaskConstMeta(debugName: "Panner_set_pan", argNames: ["that", "v"]);
+  TaskConstMeta get kCrateApiFiltersEffectsHardClipEffectProcessConstMeta =>
+      const TaskConstMeta(
+        debugName: "HardClipEffect_process",
+        argNames: ["that", "sample"],
+      );
 
   @override
-  Future<PhaseInverter> crateApiFiltersUtilitiesPhaseInverterDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 164,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesPhaseInverterDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesPhaseInverterDefaultConstMeta =>
-      const TaskConstMeta(debugName: "PhaseInverter_default", argNames: []);
-
-  @override
-  Future<bool> crateApiFiltersUtilitiesPhaseInverterIsInverted({
-    required PhaseInverter that,
+  bool crateApiFiltersEffectsOverdriveEffectAutoAccessorGetBypass({
+    required OverdriveEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
             that,
             serializer,
           );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 165,
-            port: port_,
-          );
+            funcId: 164,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_bool,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPhaseInverterIsInvertedConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsOverdriveEffectAutoAccessorGetBypassConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPhaseInverterIsInvertedConstMeta =>
+  TaskConstMeta
+  get kCrateApiFiltersEffectsOverdriveEffectAutoAccessorGetBypassConstMeta =>
       const TaskConstMeta(
-        debugName: "PhaseInverter_is_inverted",
+        debugName: "OverdriveEffect_auto_accessor_get_bypass",
         argNames: ["that"],
       );
 
   @override
-  Future<PhaseInverter> crateApiFiltersUtilitiesPhaseInverterNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+  double crateApiFiltersEffectsOverdriveEffectAutoAccessorGetDrive({
+    required OverdriveEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 166,
-            port: port_,
-          );
+            funcId: 165,
+          )!;
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPhaseInverterNewConstMeta,
-        argValues: [],
+        constMeta:
+            kCrateApiFiltersEffectsOverdriveEffectAutoAccessorGetDriveConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPhaseInverterNewConstMeta =>
-      const TaskConstMeta(debugName: "PhaseInverter_new", argNames: []);
+  TaskConstMeta
+  get kCrateApiFiltersEffectsOverdriveEffectAutoAccessorGetDriveConstMeta =>
+      const TaskConstMeta(
+        debugName: "OverdriveEffect_auto_accessor_get_drive",
+        argNames: ["that"],
+      );
 
   @override
-  Future<double> crateApiFiltersUtilitiesPhaseInverterProcess({
-    required PhaseInverter that,
+  double crateApiFiltersEffectsOverdriveEffectAutoAccessorGetOutput({
+    required OverdriveEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 166,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsOverdriveEffectAutoAccessorGetOutputConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsOverdriveEffectAutoAccessorGetOutputConstMeta =>
+      const TaskConstMeta(
+        debugName: "OverdriveEffect_auto_accessor_get_output",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsOverdriveEffectAutoAccessorSetBypass({
+    required OverdriveEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 167,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsOverdriveEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsOverdriveEffectAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "OverdriveEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsOverdriveEffectAutoAccessorSetDrive({
+    required OverdriveEffect that,
+    required double drive,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(drive, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 168,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsOverdriveEffectAutoAccessorSetDriveConstMeta,
+        argValues: [that, drive],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsOverdriveEffectAutoAccessorSetDriveConstMeta =>
+      const TaskConstMeta(
+        debugName: "OverdriveEffect_auto_accessor_set_drive",
+        argNames: ["that", "drive"],
+      );
+
+  @override
+  void crateApiFiltersEffectsOverdriveEffectAutoAccessorSetOutput({
+    required OverdriveEffect that,
+    required double output,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(output, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 169,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsOverdriveEffectAutoAccessorSetOutputConstMeta,
+        argValues: [that, output],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsOverdriveEffectAutoAccessorSetOutputConstMeta =>
+      const TaskConstMeta(
+        debugName: "OverdriveEffect_auto_accessor_set_output",
+        argNames: ["that", "output"],
+      );
+
+  @override
+  Future<OverdriveEffect> crateApiFiltersEffectsOverdriveEffectNew({
+    required double drive,
+    required double output,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(drive, serializer);
+          sse_encode_f_32(output, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 170,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsOverdriveEffectNewConstMeta,
+        argValues: [drive, output],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsOverdriveEffectNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "OverdriveEffect_new",
+        argNames: ["drive", "output"],
+      );
+
+  @override
+  Future<double> crateApiFiltersEffectsOverdriveEffectProcess({
+    required OverdriveEffect that,
     required double sample,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
             that,
             serializer,
           );
@@ -7071,7 +7320,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 167,
+            funcId: 171,
             port: port_,
           );
         },
@@ -7079,89 +7328,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesPhaseInverterProcessConstMeta,
+        constMeta: kCrateApiFiltersEffectsOverdriveEffectProcessConstMeta,
         argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesPhaseInverterProcessConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEffectsOverdriveEffectProcessConstMeta =>
       const TaskConstMeta(
-        debugName: "PhaseInverter_process",
+        debugName: "OverdriveEffect_process",
         argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersUtilitiesPhaseInverterReset({
-    required PhaseInverter that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 168,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesPhaseInverterResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesPhaseInverterResetConstMeta =>
-      const TaskConstMeta(debugName: "PhaseInverter_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersUtilitiesPhaseInverterSetInverted({
-    required PhaseInverter that,
-    required bool v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-            that,
-            serializer,
-          );
-          sse_encode_bool(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 169,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesPhaseInverterSetInvertedConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiFiltersUtilitiesPhaseInverterSetInvertedConstMeta =>
-      const TaskConstMeta(
-        debugName: "PhaseInverter_set_inverted",
-        argNames: ["that", "v"],
       );
 
   @override
@@ -7173,7 +7350,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 170,
+            funcId: 172,
             port: port_,
           );
         },
@@ -7201,7 +7378,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 171,
+            funcId: 173,
             port: port_,
           );
         },
@@ -7235,7 +7412,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 172,
+            funcId: 174,
             port: port_,
           );
         },
@@ -7254,377 +7431,324 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "ResampleState_reset", argNames: ["that"]);
 
   @override
-  Future<bool> crateApiFiltersDelayRevertBufferIsPlaying({
-    required RevertBuffer that,
+  bool crateApiFiltersEffectsReverbEffectAutoAccessorGetBypass({
+    required ReverbEffect that,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
             that,
             serializer,
           );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 173,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferIsPlayingConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferIsPlayingConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_is_playing",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<bool> crateApiFiltersDelayRevertBufferIsRecording({
-    required RevertBuffer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 174,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_bool,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferIsRecordingConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferIsRecordingConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_is_recording",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDelayRevertBufferMix({
-    required RevertBuffer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
             funcId: 175,
-            port: port_,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorGetBypassConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorGetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_get_bypass",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsReverbEffectAutoAccessorGetDamping({
+    required ReverbEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
           );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 176,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDelayRevertBufferMixConstMeta,
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorGetDampingConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferMixConstMeta =>
-      const TaskConstMeta(debugName: "RevertBuffer_mix", argNames: ["that"]);
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorGetDampingConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_get_damping",
+        argNames: ["that"],
+      );
 
   @override
-  Future<RevertBuffer> crateApiFiltersDelayRevertBufferNew({
-    required double lengthMs,
+  double crateApiFiltersEffectsReverbEffectAutoAccessorGetRoomSize({
+    required ReverbEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 177,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorGetRoomSizeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorGetRoomSizeConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_get_room_size",
+        argNames: ["that"],
+      );
+
+  @override
+  double crateApiFiltersEffectsReverbEffectAutoAccessorGetWet({
+    required ReverbEffect that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 178,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorGetWetConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorGetWetConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_get_wet",
+        argNames: ["that"],
+      );
+
+  @override
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetBypass({
+    required ReverbEffect that,
+    required bool bypass,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          sse_encode_bool(bypass, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 179,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorSetBypassConstMeta,
+        argValues: [that, bypass],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorSetBypassConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_set_bypass",
+        argNames: ["that", "bypass"],
+      );
+
+  @override
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetDamping({
+    required ReverbEffect that,
+    required double damping,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(damping, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 180,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorSetDampingConstMeta,
+        argValues: [that, damping],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorSetDampingConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_set_damping",
+        argNames: ["that", "damping"],
+      );
+
+  @override
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetRoomSize({
+    required ReverbEffect that,
+    required double roomSize,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(roomSize, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 181,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorSetRoomSizeConstMeta,
+        argValues: [that, roomSize],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorSetRoomSizeConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_set_room_size",
+        argNames: ["that", "roomSize"],
+      );
+
+  @override
+  void crateApiFiltersEffectsReverbEffectAutoAccessorSetWet({
+    required ReverbEffect that,
+    required double wet,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(wet, serializer);
+          return pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 182,
+          )!;
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta:
+            kCrateApiFiltersEffectsReverbEffectAutoAccessorSetWetConstMeta,
+        argValues: [that, wet],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiFiltersEffectsReverbEffectAutoAccessorSetWetConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_auto_accessor_set_wet",
+        argNames: ["that", "wet"],
+      );
+
+  @override
+  Future<ReverbEffect> crateApiFiltersEffectsReverbEffectNew({
+    required double roomSize,
+    required double damping,
+    required double wet,
     required double sampleRate,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(lengthMs, serializer);
+          sse_encode_f_32(roomSize, serializer);
+          sse_encode_f_32(damping, serializer);
+          sse_encode_f_32(wet, serializer);
           sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 176,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferNewConstMeta,
-        argValues: [lengthMs, sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_new",
-        argNames: ["lengthMs", "sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersDelayRevertBufferProcess({
-    required RevertBuffer that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 177,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayRevertBufferReset({
-    required RevertBuffer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 178,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferResetConstMeta =>
-      const TaskConstMeta(debugName: "RevertBuffer_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDelayRevertBufferSetLoop({
-    required RevertBuffer that,
-    required bool loopPlayback,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          sse_encode_bool(loopPlayback, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 179,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferSetLoopConstMeta,
-        argValues: [that, loopPlayback],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferSetLoopConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_set_loop",
-        argNames: ["that", "loopPlayback"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayRevertBufferSetMix({
-    required RevertBuffer that,
-    required double mix,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(mix, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 180,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferSetMixConstMeta,
-        argValues: [that, mix],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferSetMixConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_set_mix",
-        argNames: ["that", "mix"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayRevertBufferStartPlayback({
-    required RevertBuffer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 181,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferStartPlaybackConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferStartPlaybackConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_start_playback",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayRevertBufferStartRecording({
-    required RevertBuffer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 182,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDelayRevertBufferStartRecordingConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferStartRecordingConstMeta =>
-      const TaskConstMeta(
-        debugName: "RevertBuffer_start_recording",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDelayRevertBufferStop({
-    required RevertBuffer that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-            that,
-            serializer,
-          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -7633,25 +7757,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersDelayRevertBufferStopConstMeta,
-        argValues: [that],
+        constMeta: kCrateApiFiltersEffectsReverbEffectNewConstMeta,
+        argValues: [roomSize, damping, wet, sampleRate],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersDelayRevertBufferStopConstMeta =>
-      const TaskConstMeta(debugName: "RevertBuffer_stop", argNames: ["that"]);
+  TaskConstMeta get kCrateApiFiltersEffectsReverbEffectNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_new",
+        argNames: ["roomSize", "damping", "wet", "sampleRate"],
+      );
 
   @override
-  Future<SampleAndHold> crateApiFiltersUtilitiesSampleAndHoldDefault() {
+  Future<double> crateApiFiltersEffectsReverbEffectProcess({
+    required ReverbEffect that,
+    required double sample,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
+          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -7660,26 +7796,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold,
+          decodeSuccessData: sse_decode_f_32,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesSampleAndHoldDefaultConstMeta,
-        argValues: [],
+        constMeta: kCrateApiFiltersEffectsReverbEffectProcessConstMeta,
+        argValues: [that, sample],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesSampleAndHoldDefaultConstMeta =>
-      const TaskConstMeta(debugName: "SampleAndHold_default", argNames: []);
+  TaskConstMeta get kCrateApiFiltersEffectsReverbEffectProcessConstMeta =>
+      const TaskConstMeta(
+        debugName: "ReverbEffect_process",
+        argNames: ["that", "sample"],
+      );
 
   @override
-  Future<SampleAndHold> crateApiFiltersUtilitiesSampleAndHoldNew() {
+  Future<void> crateApiFiltersEffectsReverbEffectReset({
+    required ReverbEffect that,
+  }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            that,
+            serializer,
+          );
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -7688,34 +7832,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold,
+          decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesSampleAndHoldNewConstMeta,
-        argValues: [],
+        constMeta: kCrateApiFiltersEffectsReverbEffectResetConstMeta,
+        argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesSampleAndHoldNewConstMeta =>
-      const TaskConstMeta(debugName: "SampleAndHold_new", argNames: []);
+  TaskConstMeta get kCrateApiFiltersEffectsReverbEffectResetConstMeta =>
+      const TaskConstMeta(debugName: "ReverbEffect_reset", argNames: ["that"]);
 
   @override
-  Future<double> crateApiFiltersUtilitiesSampleAndHoldProcess({
-    required SampleAndHold that,
-    required double sample,
+  Future<void> crateApiFiltersEffectsReverbEffectUpdateParams({
+    required ReverbEffect that,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
+          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
             that,
             serializer,
           );
-          sse_encode_f_32(sample, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -7724,983 +7865,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersUtilitiesSampleAndHoldProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersUtilitiesSampleAndHoldProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "SampleAndHold_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersUtilitiesSampleAndHoldReset({
-    required SampleAndHold that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 187,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiFiltersUtilitiesSampleAndHoldResetConstMeta,
+        constMeta: kCrateApiFiltersEffectsReverbEffectUpdateParamsConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiFiltersUtilitiesSampleAndHoldResetConstMeta =>
-      const TaskConstMeta(debugName: "SampleAndHold_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersUtilitiesSampleAndHoldSetTriggerThreshold({
-    required SampleAndHold that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 188,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta:
-            kCrateApiFiltersUtilitiesSampleAndHoldSetTriggerThresholdConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiFiltersUtilitiesSampleAndHoldSetTriggerThresholdConstMeta =>
+  TaskConstMeta get kCrateApiFiltersEffectsReverbEffectUpdateParamsConstMeta =>
       const TaskConstMeta(
-        debugName: "SampleAndHold_set_trigger_threshold",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<double> crateApiFiltersUtilitiesSampleAndHoldTriggerThreshold({
-    required SampleAndHold that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 189,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta:
-            kCrateApiFiltersUtilitiesSampleAndHoldTriggerThresholdConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiFiltersUtilitiesSampleAndHoldTriggerThresholdConstMeta =>
-      const TaskConstMeta(
-        debugName: "SampleAndHold_trigger_threshold",
+        debugName: "ReverbEffect_update_params",
         argNames: ["that"],
-      );
-
-  @override
-  Future<SoftClipper> crateApiFiltersDistortionSoftClipperDefault() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 190,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperDefaultConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperDefaultConstMeta =>
-      const TaskConstMeta(debugName: "SoftClipper_default", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersDistortionSoftClipperDrive({
-    required SoftClipper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 191,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperDriveConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperDriveConstMeta =>
-      const TaskConstMeta(debugName: "SoftClipper_drive", argNames: ["that"]);
-
-  @override
-  Future<double> crateApiFiltersDistortionSoftClipperMix({
-    required SoftClipper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 192,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperMixConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperMixConstMeta =>
-      const TaskConstMeta(debugName: "SoftClipper_mix", argNames: ["that"]);
-
-  @override
-  Future<SoftClipper> crateApiFiltersDistortionSoftClipperNew() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 193,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperNewConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperNewConstMeta =>
-      const TaskConstMeta(debugName: "SoftClipper_new", argNames: []);
-
-  @override
-  Future<double> crateApiFiltersDistortionSoftClipperProcess({
-    required SoftClipper that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 194,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "SoftClipper_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDistortionSoftClipperReset({
-    required SoftClipper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 195,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperResetConstMeta =>
-      const TaskConstMeta(debugName: "SoftClipper_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDistortionSoftClipperSetDrive({
-    required SoftClipper that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 196,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperSetDriveConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperSetDriveConstMeta =>
-      const TaskConstMeta(
-        debugName: "SoftClipper_set_drive",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDistortionSoftClipperSetMix({
-    required SoftClipper that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 197,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionSoftClipperSetMixConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionSoftClipperSetMixConstMeta =>
-      const TaskConstMeta(
-        debugName: "SoftClipper_set_mix",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<double> crateApiFiltersStateVariableFilterFrequency({
-    required StateVariableFilter that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 198,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterFrequencyConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterFrequencyConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_frequency",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<StateVariableFilter> crateApiFiltersStateVariableFilterNew({
-    required double sampleRate,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_f_32(sampleRate, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 199,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterNewConstMeta,
-        argValues: [sampleRate],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterNewConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_new",
-        argNames: ["sampleRate"],
-      );
-
-  @override
-  Future<double> crateApiFiltersStateVariableFilterProcess({
-    required StateVariableFilter that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 200,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<SvfOutputs> crateApiFiltersStateVariableFilterProcessAll({
-    required StateVariableFilter that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 201,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterProcessAllConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterProcessAllConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_process_all",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersStateVariableFilterReset({
-    required StateVariableFilter that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 202,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterResetConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_reset",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<double> crateApiFiltersStateVariableFilterResonance({
-    required StateVariableFilter that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 203,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterResonanceConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterResonanceConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_resonance",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<void> crateApiFiltersStateVariableFilterSetFrequency({
-    required StateVariableFilter that,
-    required double freq,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(freq, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 204,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterSetFrequencyConstMeta,
-        argValues: [that, freq],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterSetFrequencyConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_set_frequency",
-        argNames: ["that", "freq"],
-      );
-
-  @override
-  Future<void> crateApiFiltersStateVariableFilterSetResonance({
-    required StateVariableFilter that,
-    required double res,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(res, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 205,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersStateVariableFilterSetResonanceConstMeta,
-        argValues: [that, res],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersStateVariableFilterSetResonanceConstMeta =>
-      const TaskConstMeta(
-        debugName: "StateVariableFilter_set_resonance",
-        argNames: ["that", "res"],
-      );
-
-  @override
-  double crateApiFiltersSvfOutputsAutoAccessorGetBand({
-    required SvfOutputs that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 206,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorGetBandConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorGetBandConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_get_band",
-        argNames: ["that"],
-      );
-
-  @override
-  double crateApiFiltersSvfOutputsAutoAccessorGetHigh({
-    required SvfOutputs that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 207,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorGetHighConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorGetHighConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_get_high",
-        argNames: ["that"],
-      );
-
-  @override
-  double crateApiFiltersSvfOutputsAutoAccessorGetLow({
-    required SvfOutputs that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 208,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorGetLowConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorGetLowConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_get_low",
-        argNames: ["that"],
-      );
-
-  @override
-  double crateApiFiltersSvfOutputsAutoAccessorGetNotch({
-    required SvfOutputs that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 209,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorGetNotchConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorGetNotchConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_get_notch",
-        argNames: ["that"],
-      );
-
-  @override
-  void crateApiFiltersSvfOutputsAutoAccessorSetBand({
-    required SvfOutputs that,
-    required double band,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(band, serializer);
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 210,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorSetBandConstMeta,
-        argValues: [that, band],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorSetBandConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_set_band",
-        argNames: ["that", "band"],
-      );
-
-  @override
-  void crateApiFiltersSvfOutputsAutoAccessorSetHigh({
-    required SvfOutputs that,
-    required double high,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(high, serializer);
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 211,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorSetHighConstMeta,
-        argValues: [that, high],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorSetHighConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_set_high",
-        argNames: ["that", "high"],
-      );
-
-  @override
-  void crateApiFiltersSvfOutputsAutoAccessorSetLow({
-    required SvfOutputs that,
-    required double low,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(low, serializer);
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 212,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorSetLowConstMeta,
-        argValues: [that, low],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorSetLowConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_set_low",
-        argNames: ["that", "low"],
-      );
-
-  @override
-  void crateApiFiltersSvfOutputsAutoAccessorSetNotch({
-    required SvfOutputs that,
-    required double notch,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(notch, serializer);
-          return pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 213,
-          )!;
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersSvfOutputsAutoAccessorSetNotchConstMeta,
-        argValues: [that, notch],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersSvfOutputsAutoAccessorSetNotchConstMeta =>
-      const TaskConstMeta(
-        debugName: "SvfOutputs_auto_accessor_set_notch",
-        argNames: ["that", "notch"],
       );
 
   @override
@@ -8709,7 +7887,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required List<double> samples,
     required BigInt channels,
     required int sampleRate,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
     required bool playing,
   }) {
     return handler.executeNormal(
@@ -8723,12 +7901,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           sse_encode_list_prim_f_32_loose(samples, serializer);
           sse_encode_usize(channels, serializer);
           sse_encode_u_32(sampleRate, serializer);
-          sse_encode_list_band_kind(kinds, serializer);
+          sse_encode_list_v_band_kind(kinds, serializer);
           sse_encode_bool(playing, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 214,
+            funcId: 187,
             port: port_,
           );
         },
@@ -8758,20 +7936,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiVisualizerVisualizerProcessorBassBeat({
+  double crateApiVisualizerVisualizerProcessorBassBeat({
     required List<BandEnergy> bands,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_band_energy(bands, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 215,
-            port: port_,
-          );
+            funcId: 188,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
@@ -8793,18 +7970,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<double> crateApiVisualizerVisualizerProcessorBeatForKinds({
     required List<BandEnergy> bands,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_band_energy(bands, serializer);
-          sse_encode_list_band_kind(kinds, serializer);
+          sse_encode_list_v_band_kind(kinds, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 216,
+            funcId: 189,
             port: port_,
           );
         },
@@ -8849,7 +8026,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 217,
+            funcId: 190,
             port: port_,
           );
         },
@@ -8873,7 +8050,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   Future<List<BandEnergy>> crateApiVisualizerVisualizerProcessorComputeBands({
     required VisualizerProcessor that,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -8883,11 +8060,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             that,
             serializer,
           );
-          sse_encode_list_band_kind(kinds, serializer);
+          sse_encode_list_v_band_kind(kinds, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 218,
+            funcId: 191,
             port: port_,
           );
         },
@@ -8924,7 +8101,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 219,
+            funcId: 192,
             port: port_,
           );
         },
@@ -8946,20 +8123,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiVisualizerVisualizerProcessorDrumBeat({
+  double crateApiVisualizerVisualizerProcessorDrumBeat({
     required List<BandEnergy> bands,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_band_energy(bands, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 220,
-            port: port_,
-          );
+            funcId: 193,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
@@ -8995,7 +8171,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 221,
+            funcId: 194,
             port: port_,
           );
         },
@@ -9019,20 +8195,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiVisualizerVisualizerProcessorHighFrequencyEnergy({
+  double crateApiVisualizerVisualizerProcessorHighFrequencyEnergy({
     required List<BandEnergy> bands,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_band_energy(bands, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 222,
-            port: port_,
-          );
+            funcId: 195,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
@@ -9054,20 +8229,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiVisualizerVisualizerProcessorLowFrequencyEnergy({
+  double crateApiVisualizerVisualizerProcessorLowFrequencyEnergy({
     required List<BandEnergy> bands,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_band_energy(bands, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 223,
-            port: port_,
-          );
+            funcId: 196,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
@@ -9102,7 +8276,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 224,
+            funcId: 197,
           )!;
         },
         codec: SseCodec(
@@ -9138,7 +8312,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 225,
+            funcId: 198,
             port: port_,
           );
         },
@@ -9160,20 +8334,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiVisualizerVisualizerProcessorVocalPresence({
+  double crateApiVisualizerVisualizerProcessorVocalPresence({
     required List<BandEnergy> bands,
   }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
           sse_encode_list_band_energy(bands, serializer);
-          pdeCallFfi(
+          return pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 226,
-            port: port_,
-          );
+            funcId: 199,
+          )!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_f_32,
@@ -9194,250 +8367,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<double> crateApiFiltersDistortionWaveShaperAmount({
-    required WaveShaper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 227,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperAmountConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperAmountConstMeta =>
-      const TaskConstMeta(debugName: "WaveShaper_amount", argNames: ["that"]);
-
-  @override
-  Future<WaveShapeCurve> crateApiFiltersDistortionWaveShaperCurve({
-    required WaveShaper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 228,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_wave_shape_curve,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperCurveConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperCurveConstMeta =>
-      const TaskConstMeta(debugName: "WaveShaper_curve", argNames: ["that"]);
-
-  @override
-  Future<WaveShaper> crateApiFiltersDistortionWaveShaperNew({
-    required WaveShapeCurve curve,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_wave_shape_curve(curve, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 229,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData:
-              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperNewConstMeta,
-        argValues: [curve],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperNewConstMeta =>
-      const TaskConstMeta(debugName: "WaveShaper_new", argNames: ["curve"]);
-
-  @override
-  Future<double> crateApiFiltersDistortionWaveShaperProcess({
-    required WaveShaper that,
-    required double sample,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(sample, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 230,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperProcessConstMeta,
-        argValues: [that, sample],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperProcessConstMeta =>
-      const TaskConstMeta(
-        debugName: "WaveShaper_process",
-        argNames: ["that", "sample"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDistortionWaveShaperReset({
-    required WaveShaper that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-            that,
-            serializer,
-          );
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 231,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperResetConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperResetConstMeta =>
-      const TaskConstMeta(debugName: "WaveShaper_reset", argNames: ["that"]);
-
-  @override
-  Future<void> crateApiFiltersDistortionWaveShaperSetAmount({
-    required WaveShaper that,
-    required double v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-            that,
-            serializer,
-          );
-          sse_encode_f_32(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 232,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperSetAmountConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperSetAmountConstMeta =>
-      const TaskConstMeta(
-        debugName: "WaveShaper_set_amount",
-        argNames: ["that", "v"],
-      );
-
-  @override
-  Future<void> crateApiFiltersDistortionWaveShaperSetCurve({
-    required WaveShaper that,
-    required WaveShapeCurve v,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-            that,
-            serializer,
-          );
-          sse_encode_wave_shape_curve(v, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 233,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_unit,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiFiltersDistortionWaveShaperSetCurveConstMeta,
-        argValues: [that, v],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiFiltersDistortionWaveShaperSetCurveConstMeta =>
-      const TaskConstMeta(
-        debugName: "WaveShaper_set_curve",
-        argNames: ["that", "v"],
-      );
-
-  @override
   Future<String> crateApiSourceAudioSourceDescription({
     required AudioSource that,
   }) {
@@ -9449,7 +8378,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 234,
+            funcId: 200,
             port: port_,
           );
         },
@@ -9480,7 +8409,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 235,
+            funcId: 201,
             port: port_,
           );
         },
@@ -9502,120 +8431,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<BandKind>> crateApiVisualizerBandKindDetailed() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 236,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_list_band_kind,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVisualizerBandKindDetailedConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVisualizerBandKindDetailedConstMeta =>
-      const TaskConstMeta(debugName: "band_kind_detailed", argNames: []);
-
-  @override
-  Future<(double, double)> crateApiVisualizerBandKindFreqRange({
-    required BandKind that,
-  }) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_band_kind(that, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 237,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_record_f_32_f_32,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVisualizerBandKindFreqRangeConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVisualizerBandKindFreqRangeConstMeta =>
-      const TaskConstMeta(
-        debugName: "band_kind_freq_range",
-        argNames: ["that"],
-      );
-
-  @override
-  Future<List<BandKind>> crateApiVisualizerBandKindInstrument() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 238,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_list_band_kind,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVisualizerBandKindInstrumentConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVisualizerBandKindInstrumentConstMeta =>
-      const TaskConstMeta(debugName: "band_kind_instrument", argNames: []);
-
-  @override
-  Future<List<BandKind>> crateApiVisualizerBandKindStandard() {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 239,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_list_band_kind,
-          decodeErrorData: null,
-        ),
-        constMeta: kCrateApiVisualizerBandKindStandardConstMeta,
-        argValues: [],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiVisualizerBandKindStandardConstMeta =>
-      const TaskConstMeta(debugName: "band_kind_standard", argNames: []);
-
-  @override
   Future<BandState> crateApiVisualizerBandStateDefault() {
     return handler.executeNormal(
       NormalTask(
@@ -9624,7 +8439,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 240,
+            funcId: 202,
             port: port_,
           );
         },
@@ -9658,7 +8473,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 241,
+            funcId: 203,
             port: port_,
           );
         },
@@ -9680,6 +8495,109 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<double> crateApiFiltersEffectsDbToLinear({required double db}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(db, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 204,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsDbToLinearConstMeta,
+        argValues: [db],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsDbToLinearConstMeta =>
+      const TaskConstMeta(debugName: "db_to_linear", argNames: ["db"]);
+
+  @override
+  Future<BiquadCoeffs> crateApiFiltersBiquadHighPass({
+    required double fc,
+    required double q,
+    required double fs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(fc, serializer);
+          sse_encode_f_32(q, serializer);
+          sse_encode_f_32(fs, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 205,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadHighPassConstMeta,
+        argValues: [fc, q, fs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadHighPassConstMeta =>
+      const TaskConstMeta(debugName: "high_pass", argNames: ["fc", "q", "fs"]);
+
+  @override
+  Future<BiquadCoeffs> crateApiFiltersBiquadHighShelf({
+    required double fc,
+    required double gainDb,
+    required double q,
+    required double fs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(fc, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          sse_encode_f_32(q, serializer);
+          sse_encode_f_32(fs, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 206,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadHighShelfConstMeta,
+        argValues: [fc, gainDb, q, fs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadHighShelfConstMeta =>
+      const TaskConstMeta(
+        debugName: "high_shelf",
+        argNames: ["fc", "gainDb", "q", "fs"],
+      );
+
+  @override
   Future<void> crateApiInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -9688,7 +8606,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 242,
+            funcId: 207,
             port: port_,
           );
         },
@@ -9707,6 +8625,149 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
+  Future<double> crateApiFiltersEffectsLinearToDb({required double lin}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(lin, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 208,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersEffectsLinearToDbConstMeta,
+        argValues: [lin],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersEffectsLinearToDbConstMeta =>
+      const TaskConstMeta(debugName: "linear_to_db", argNames: ["lin"]);
+
+  @override
+  Future<BiquadCoeffs> crateApiFiltersBiquadLowPass({
+    required double fc,
+    required double q,
+    required double fs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(fc, serializer);
+          sse_encode_f_32(q, serializer);
+          sse_encode_f_32(fs, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 209,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadLowPassConstMeta,
+        argValues: [fc, q, fs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadLowPassConstMeta =>
+      const TaskConstMeta(debugName: "low_pass", argNames: ["fc", "q", "fs"]);
+
+  @override
+  Future<BiquadCoeffs> crateApiFiltersBiquadLowShelf({
+    required double fc,
+    required double gainDb,
+    required double q,
+    required double fs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(fc, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          sse_encode_f_32(q, serializer);
+          sse_encode_f_32(fs, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 210,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadLowShelfConstMeta,
+        argValues: [fc, gainDb, q, fs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadLowShelfConstMeta =>
+      const TaskConstMeta(
+        debugName: "low_shelf",
+        argNames: ["fc", "gainDb", "q", "fs"],
+      );
+
+  @override
+  Future<BiquadCoeffs> crateApiFiltersBiquadPeakingEq({
+    required double fc,
+    required double gainDb,
+    required double q,
+    required double fs,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_f_32(fc, serializer);
+          sse_encode_f_32(gainDb, serializer);
+          sse_encode_f_32(q, serializer);
+          sse_encode_f_32(fs, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 211,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiFiltersBiquadPeakingEqConstMeta,
+        argValues: [fc, gainDb, q, fs],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiFiltersBiquadPeakingEqConstMeta =>
+      const TaskConstMeta(
+        debugName: "peaking_eq",
+        argNames: ["fc", "gainDb", "q", "fs"],
+      );
+
+  @override
   Future<int> crateApiRendererStatePlaybackStateId({
     required PlaybackState that,
   }) {
@@ -9718,7 +8779,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 243,
+            funcId: 212,
             port: port_,
           );
         },
@@ -9736,6 +8797,128 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiRendererStatePlaybackStateIdConstMeta =>
       const TaskConstMeta(debugName: "playback_state_id", argNames: ["that"]);
 
+  @override
+  Future<List<VBandKind>> crateApiVisualizerVBandKindDetailed() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 213,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_v_band_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiVisualizerVBandKindDetailedConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiVisualizerVBandKindDetailedConstMeta =>
+      const TaskConstMeta(debugName: "v_band_kind_detailed", argNames: []);
+
+  @override
+  Future<(double, double)> crateApiVisualizerVBandKindFreqRange({
+    required VBandKind that,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_v_band_kind(that, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 214,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_record_f_32_f_32,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiVisualizerVBandKindFreqRangeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiVisualizerVBandKindFreqRangeConstMeta =>
+      const TaskConstMeta(
+        debugName: "v_band_kind_freq_range",
+        argNames: ["that"],
+      );
+
+  @override
+  Future<List<VBandKind>> crateApiVisualizerVBandKindInstrument() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 215,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_v_band_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiVisualizerVBandKindInstrumentConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiVisualizerVBandKindInstrumentConstMeta =>
+      const TaskConstMeta(debugName: "v_band_kind_instrument", argNames: []);
+
+  @override
+  Future<List<VBandKind>> crateApiVisualizerVBandKindStandard() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 216,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_v_band_kind,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiVisualizerVBandKindStandardConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiVisualizerVBandKindStandardConstMeta =>
+      const TaskConstMeta(debugName: "v_band_kind_standard", argNames: []);
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_AudioOutput => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_AudioOutput => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput;
+
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_AudioPlayer => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer;
@@ -9743,14 +8926,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_AudioPlayer => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioPlayer;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_AudioProcessor => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_AudioProcessor => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_AudioState => wire
@@ -9761,6 +8936,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_BandConfig => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_BandConfig => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_BandKind => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_BandKind => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_BiquadCoeffs => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_BiquadCoeffs => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_BiquadFilter => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter;
 
@@ -9769,28 +8968,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_BitCrusher => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher;
+  get rust_arc_increment_strong_count_BiquadState => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_BitCrusher => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher;
+  get rust_arc_decrement_strong_count_BiquadState => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Compressor => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor;
+  get rust_arc_increment_strong_count_ChorusEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Compressor => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor;
+  get rust_arc_decrement_strong_count_ChorusEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DcRemover => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover;
+  get rust_arc_increment_strong_count_CompressorEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DcRemover => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover;
+  get rust_arc_decrement_strong_count_CompressorEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DecodePool => wire
@@ -9801,116 +9000,52 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_DelayLine => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine;
+  get rust_arc_increment_strong_count_DelayEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_DelayLine => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine;
+  get rust_arc_decrement_strong_count_DelayEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_EnvelopeFollower => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower;
+  get rust_arc_increment_strong_count_EffectsChain => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_EnvelopeFollower => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower;
+  get rust_arc_decrement_strong_count_EffectsChain => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Foldback => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback;
+  get rust_arc_increment_strong_count_Equalizer => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Foldback => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback;
+  get rust_arc_decrement_strong_count_Equalizer => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_FractionalDelay => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay;
+  get rust_arc_increment_strong_count_GainEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_FractionalDelay => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay;
+  get rust_arc_decrement_strong_count_GainEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Gain => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain;
+  get rust_arc_increment_strong_count_HardClipEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Gain => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain;
+  get rust_arc_decrement_strong_count_HardClipEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_HardClipper => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper;
+  get rust_arc_increment_strong_count_OverdriveEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_HardClipper => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Limiter => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Limiter => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_MovingAverage => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_MovingAverage => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_MuteSolo => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_MuteSolo => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_NoiseGate => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_NoiseGate => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_OnePoleHighPass => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_OnePoleHighPass => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_OnePoleLowPass => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_OnePoleLowPass => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_Panner => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_Panner => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_PhaseInverter => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_PhaseInverter => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter;
+  get rust_arc_decrement_strong_count_OverdriveEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_ResampleState => wire
@@ -9921,44 +9056,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerResampleState;
 
   RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_RevertBuffer => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer;
+  get rust_arc_increment_strong_count_ReverbEffect => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect;
 
   RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_RevertBuffer => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_SvfOutputs => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_SvfOutputs => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_SampleAndHold => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_SampleAndHold => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_SoftClipper => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_SoftClipper => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper;
-
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_StateVariableFilter => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_StateVariableFilter => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter;
+  get rust_arc_decrement_strong_count_ReverbEffect => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_VisualizerProcessor => wire
@@ -9968,13 +9071,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   get rust_arc_decrement_strong_count_VisualizerProcessor => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerVisualizerProcessor;
 
-  RustArcIncrementStrongCountFnType
-  get rust_arc_increment_strong_count_WaveShaper => wire
-      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper;
-
-  RustArcDecrementStrongCountFnType
-  get rust_arc_decrement_strong_count_WaveShaper => wire
-      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper;
+  @protected
+  AudioOutput
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return AudioOutputImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
 
   @protected
   AudioPlayer
@@ -9983,15 +9087,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return AudioPlayerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  AudioProcessor
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10004,6 +9099,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BandConfig
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BandConfigImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BandKind
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BandKindImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BiquadCoeffs
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   BiquadFilter
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
     dynamic raw,
@@ -10013,30 +9135,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  BiquadState
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return BiquadStateImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Compressor
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  ChorusEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ChorusEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  DcRemover
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+  CompressorEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DcRemoverImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return CompressorEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10049,129 +9171,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DelayLine
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  DelayEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DelayLineImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return DelayEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  EnvelopeFollower
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  EffectsChain
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EffectsChainImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Foldback
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  Equalizer
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FoldbackImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EqualizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  FractionalDelay
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  GainEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return GainEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Gain
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
+  HardClipEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return GainImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return HardClipEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  HardClipper
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+  OverdriveEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HardClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Limiter
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return LimiterImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  MovingAverage
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MovingAverageImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  MuteSolo
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  NoiseGate
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleHighPass
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleLowPass
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Panner
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PannerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  PhaseInverter
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return OverdriveEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10184,48 +9234,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RevertBuffer
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+  ReverbEffect
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SvfOutputs
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SampleAndHold
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SoftClipper
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  StateVariableFilter
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ReverbEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10238,12 +9252,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WaveShaper
-  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
+  AudioOutput
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return AudioOutputImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10256,21 +9270,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AudioProcessor
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   AudioState
   dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return AudioStateImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BandConfig
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BandConfigImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BiquadCoeffs
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10283,165 +9306,75 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  ChorusEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ChorusEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Compressor
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  CompressorEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return CompressorEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  DcRemover
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+  DelayEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DcRemoverImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return DelayEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  DecodePool
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool(
+  EffectsChain
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DecodePoolImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EffectsChainImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  DelayLine
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  Equalizer
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DelayLineImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EqualizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  EnvelopeFollower
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  GainEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return GainEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Foldback
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  HardClipEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FoldbackImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return HardClipEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  FractionalDelay
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  OverdriveEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Gain
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return GainImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  HardClipper
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HardClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Limiter
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return LimiterImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  MovingAverage
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MovingAverageImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  MuteSolo
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  NoiseGate
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleHighPass
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleLowPass
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Panner
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PannerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  PhaseInverter
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return OverdriveEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10454,48 +9387,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RevertBuffer
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+  ReverbEffect
+  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SvfOutputs
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SampleAndHold
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SoftClipper
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  StateVariableFilter
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ReverbEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10508,12 +9405,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WaveShaper
-  dco_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
+  AudioOutput
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return AudioOutputImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10526,21 +9423,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AudioProcessor
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   AudioState
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return AudioStateImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BandConfig
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BandConfigImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BiquadCoeffs
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10553,21 +9459,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  ChorusEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ChorusEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Compressor
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  CompressorEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return CompressorEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10580,174 +9486,75 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DelayLine
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  DelayEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DelayLineImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return DelayEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  EnvelopeFollower
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  EffectsChain
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EffectsChainImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Foldback
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  Equalizer
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FoldbackImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EqualizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  FractionalDelay
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  GainEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return GainEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Gain
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
+  HardClipEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return GainImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return HardClipEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  HardClipper
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+  OverdriveEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HardClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return OverdriveEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Limiter
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
+  ReverbEffect
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return LimiterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ReverbEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  MuteSolo
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
+  AudioOutput
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  NoiseGate
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleHighPass
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleLowPass
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Panner
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PannerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  PhaseInverter
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  RevertBuffer
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SvfOutputs
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SampleAndHold
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SoftClipper
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  StateVariableFilter
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  WaveShaper
-  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return AudioOutputImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10760,21 +9567,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AudioProcessor
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
   AudioState
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return AudioStateImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BandConfig
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BandConfigImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BandKind
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BandKindImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  BiquadCoeffs
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10787,30 +9612,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  BiquadState
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return BiquadStateImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Compressor
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  ChorusEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return CompressorImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ChorusEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  DcRemover
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+  CompressorEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DcRemoverImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return CompressorEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10823,129 +9648,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DelayLine
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  DelayEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return DelayLineImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return DelayEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  EnvelopeFollower
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  EffectsChain
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EffectsChainImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Foldback
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  Equalizer
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FoldbackImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return EqualizerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  FractionalDelay
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  GainEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return GainEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  Gain
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
+  HardClipEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return GainImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return HardClipEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
-  HardClipper
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+  OverdriveEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return HardClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Limiter
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return LimiterImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  MovingAverage
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MovingAverageImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  MuteSolo
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  NoiseGate
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleHighPass
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  OnePoleLowPass
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  Panner
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PannerImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  PhaseInverter
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return OverdriveEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -10958,48 +9711,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RevertBuffer
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+  ReverbEffect
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SvfOutputs
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SampleAndHold
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  SoftClipper
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  StateVariableFilter
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalDcoDecode(raw as List<dynamic>);
+    return ReverbEffectImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -11009,15 +9726,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return VisualizerProcessorImpl.frbInternalDcoDecode(raw as List<dynamic>);
-  }
-
-  @protected
-  WaveShaper
-  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    dynamic raw,
-  ) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -11060,7 +9768,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 8)
       throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return BandEnergy(
-      kind: dco_decode_band_kind(arr[0]),
+      kind: dco_decode_v_band_kind(arr[0]),
       minHz: dco_decode_f_32(arr[1]),
       maxHz: dco_decode_f_32(arr[2]),
       raw: dco_decode_f_32(arr[3]),
@@ -11069,12 +9777,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       normalized: dco_decode_f_32(arr[6]),
       beat: dco_decode_f_32(arr[7]),
     );
-  }
-
-  @protected
-  BandKind dco_decode_band_kind(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return BandKind.values[raw as int];
   }
 
   @protected
@@ -11093,15 +9795,97 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BiquadType dco_decode_biquad_type(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return BiquadType.values[raw as int];
-  }
-
-  @protected
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
+  }
+
+  @protected
+  BandConfig
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+      raw,
+    );
+  }
+
+  @protected
+  ChorusEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+      raw,
+    );
+  }
+
+  @protected
+  CompressorEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+      raw,
+    );
+  }
+
+  @protected
+  DelayEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+      raw,
+    );
+  }
+
+  @protected
+  GainEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+      raw,
+    );
+  }
+
+  @protected
+  HardClipEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+      raw,
+    );
+  }
+
+  @protected
+  OverdriveEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+      raw,
+    );
+  }
+
+  @protected
+  ReverbEffect
+  dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+      raw,
+    );
   }
 
   @protected
@@ -11148,12 +9932,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<BandKind> dco_decode_list_band_kind(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return (raw as List<dynamic>).map(dco_decode_band_kind).toList();
-  }
-
-  @protected
   List<double> dco_decode_list_prim_f_32_loose(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as List<double>;
@@ -11172,15 +9950,113 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Param dco_decode_param(dynamic raw) {
+  List<VBandKind> dco_decode_list_v_band_kind(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return Param.values[raw as int];
+    return (raw as List<dynamic>).map(dco_decode_v_band_kind).toList();
   }
 
   @protected
-  ParamError dco_decode_param_error(dynamic raw) {
+  BandConfig?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    dynamic raw,
+  ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return ParamError.values[raw as int];
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+            raw,
+          );
+  }
+
+  @protected
+  ChorusEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+            raw,
+          );
+  }
+
+  @protected
+  CompressorEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+            raw,
+          );
+  }
+
+  @protected
+  DelayEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+            raw,
+          );
+  }
+
+  @protected
+  GainEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+            raw,
+          );
+  }
+
+  @protected
+  HardClipEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+            raw,
+          );
+  }
+
+  @protected
+  OverdriveEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+            raw,
+          );
+  }
+
+  @protected
+  ReverbEffect?
+  dco_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null
+        ? null
+        : dco_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+            raw,
+          );
   }
 
   @protected
@@ -11230,9 +10106,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WaveShapeCurve dco_decode_wave_shape_curve(dynamic raw) {
+  VBandKind dco_decode_v_band_kind(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
-    return WaveShapeCurve.values[raw as int];
+    return VBandKind.values[raw as int];
+  }
+
+  @protected
+  AudioOutput
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return AudioOutputImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
   }
 
   @protected
@@ -11242,18 +10130,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return AudioPlayerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  AudioProcessor
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11272,6 +10148,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BandConfig
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BandConfigImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BandKind
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BandKindImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BiquadCoeffs
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   BiquadFilter
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
     SseDeserializer deserializer,
@@ -11284,36 +10196,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  BiquadState
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalSseDecode(
+    return BiquadStateImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Compressor
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  ChorusEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return CompressorImpl.frbInternalSseDecode(
+    return ChorusEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  DcRemover
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+  CompressorEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DcRemoverImpl.frbInternalSseDecode(
+    return CompressorEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11332,168 +10244,72 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DelayLine
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  DelayEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DelayLineImpl.frbInternalSseDecode(
+    return DelayEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  EnvelopeFollower
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  EffectsChain
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalSseDecode(
+    return EffectsChainImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Foldback
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  Equalizer
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FoldbackImpl.frbInternalSseDecode(
+    return EqualizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  FractionalDelay
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  GainEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalSseDecode(
+    return GainEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Gain
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
+  HardClipEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return GainImpl.frbInternalSseDecode(
+    return HardClipEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  HardClipper
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+  OverdriveEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return HardClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Limiter
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return LimiterImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  MovingAverage
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return MovingAverageImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  MuteSolo
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  NoiseGate
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleHighPass
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleLowPass
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Panner
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PannerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  PhaseInverter
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalSseDecode(
+    return OverdriveEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11512,60 +10328,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RevertBuffer
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+  ReverbEffect
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SvfOutputs
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SampleAndHold
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SoftClipper
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  StateVariableFilter
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalSseDecode(
+    return ReverbEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11584,12 +10352,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WaveShaper
-  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
+  AudioOutput
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalSseDecode(
+    return AudioOutputImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11608,24 +10376,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AudioProcessor
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   AudioState
   sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return AudioStateImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BandConfig
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BandConfigImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BiquadCoeffs
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11644,216 +10424,96 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  ChorusEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalSseDecode(
+    return ChorusEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Compressor
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  CompressorEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return CompressorImpl.frbInternalSseDecode(
+    return CompressorEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  DcRemover
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+  DelayEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DcRemoverImpl.frbInternalSseDecode(
+    return DelayEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  DecodePool
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool(
+  EffectsChain
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DecodePoolImpl.frbInternalSseDecode(
+    return EffectsChainImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  DelayLine
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  Equalizer
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DelayLineImpl.frbInternalSseDecode(
+    return EqualizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  EnvelopeFollower
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  GainEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalSseDecode(
+    return GainEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Foldback
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  HardClipEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FoldbackImpl.frbInternalSseDecode(
+    return HardClipEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  FractionalDelay
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  OverdriveEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Gain
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return GainImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  HardClipper
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return HardClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Limiter
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return LimiterImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  MovingAverage
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return MovingAverageImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  MuteSolo
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  NoiseGate
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleHighPass
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleLowPass
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Panner
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PannerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  PhaseInverter
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalSseDecode(
+    return OverdriveEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11872,60 +10532,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RevertBuffer
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+  ReverbEffect
+  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SvfOutputs
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SampleAndHold
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SoftClipper
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  StateVariableFilter
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalSseDecode(
+    return ReverbEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11944,12 +10556,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WaveShaper
-  sse_decode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
+  AudioOutput
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalSseDecode(
+    return AudioOutputImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -11968,24 +10580,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AudioProcessor
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   AudioState
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return AudioStateImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BandConfig
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BandConfigImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BiquadCoeffs
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12004,24 +10628,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  ChorusEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalSseDecode(
+    return ChorusEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Compressor
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  CompressorEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return CompressorImpl.frbInternalSseDecode(
+    return CompressorEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12040,228 +10664,96 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DelayLine
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  DelayEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DelayLineImpl.frbInternalSseDecode(
+    return DelayEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  EnvelopeFollower
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  EffectsChain
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalSseDecode(
+    return EffectsChainImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Foldback
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  Equalizer
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FoldbackImpl.frbInternalSseDecode(
+    return EqualizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  FractionalDelay
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  GainEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalSseDecode(
+    return GainEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Gain
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
+  HardClipEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return GainImpl.frbInternalSseDecode(
+    return HardClipEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  HardClipper
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+  OverdriveEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return HardClipperImpl.frbInternalSseDecode(
+    return OverdriveEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Limiter
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
+  ReverbEffect
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return LimiterImpl.frbInternalSseDecode(
+    return ReverbEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  MuteSolo
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
+  AudioOutput
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  NoiseGate
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleHighPass
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleLowPass
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Panner
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PannerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  PhaseInverter
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  RevertBuffer
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SvfOutputs
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SampleAndHold
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SoftClipper
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  StateVariableFilter
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  WaveShaper
-  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalSseDecode(
+    return AudioOutputImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12280,24 +10772,48 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  AudioProcessor
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return AudioProcessorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
   AudioState
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return AudioStateImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BandConfig
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BandConfigImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BandKind
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BandKindImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  BiquadCoeffs
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return BiquadCoeffsImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12316,36 +10832,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BitCrusher
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
+  BiquadState
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return BitCrusherImpl.frbInternalSseDecode(
+    return BiquadStateImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Compressor
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
+  ChorusEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return CompressorImpl.frbInternalSseDecode(
+    return ChorusEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  DcRemover
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
+  CompressorEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DcRemoverImpl.frbInternalSseDecode(
+    return CompressorEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12364,168 +10880,72 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  DelayLine
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
+  DelayEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return DelayLineImpl.frbInternalSseDecode(
+    return DelayEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  EnvelopeFollower
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
+  EffectsChain
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return EnvelopeFollowerImpl.frbInternalSseDecode(
+    return EffectsChainImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Foldback
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
+  Equalizer
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FoldbackImpl.frbInternalSseDecode(
+    return EqualizerImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  FractionalDelay
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
+  GainEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return FractionalDelayImpl.frbInternalSseDecode(
+    return GainEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  Gain
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
+  HardClipEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return GainImpl.frbInternalSseDecode(
+    return HardClipEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
   }
 
   @protected
-  HardClipper
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
+  OverdriveEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return HardClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Limiter
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return LimiterImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  MovingAverage
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return MovingAverageImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  MuteSolo
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return MuteSoloImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  NoiseGate
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return NoiseGateImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleHighPass
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleHighPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  OnePoleLowPass
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return OnePoleLowPassImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  Panner
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PannerImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  PhaseInverter
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return PhaseInverterImpl.frbInternalSseDecode(
+    return OverdriveEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12544,60 +10964,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  RevertBuffer
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
+  ReverbEffect
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return RevertBufferImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SvfOutputs
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SvfOutputsImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SampleAndHold
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SampleAndHoldImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  SoftClipper
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return SoftClipperImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  StateVariableFilter
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return StateVariableFilterImpl.frbInternalSseDecode(
+    return ReverbEffectImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12610,18 +10982,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return VisualizerProcessorImpl.frbInternalSseDecode(
-      sse_decode_usize(deserializer),
-      sse_decode_i_32(deserializer),
-    );
-  }
-
-  @protected
-  WaveShaper
-  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    SseDeserializer deserializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return WaveShaperImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -12670,7 +11030,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   BandEnergy sse_decode_band_energy(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_kind = sse_decode_band_kind(deserializer);
+    var var_kind = sse_decode_v_band_kind(deserializer);
     var var_minHz = sse_decode_f_32(deserializer);
     var var_maxHz = sse_decode_f_32(deserializer);
     var var_raw = sse_decode_f_32(deserializer);
@@ -12691,13 +11051,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BandKind sse_decode_band_kind(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return BandKind.values[inner];
-  }
-
-  @protected
   BandState sse_decode_band_state(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_smoothed = sse_decode_f_32(deserializer);
@@ -12715,16 +11068,97 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BiquadType sse_decode_biquad_type(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return BiquadType.values[inner];
-  }
-
-  @protected
   bool sse_decode_bool(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8() != 0;
+  }
+
+  @protected
+  BandConfig
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+      deserializer,
+    ));
+  }
+
+  @protected
+  ChorusEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+      deserializer,
+    ));
+  }
+
+  @protected
+  CompressorEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+      deserializer,
+    ));
+  }
+
+  @protected
+  DelayEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+      deserializer,
+    ));
+  }
+
+  @protected
+  GainEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+      deserializer,
+    ));
+  }
+
+  @protected
+  HardClipEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+      deserializer,
+    ));
+  }
+
+  @protected
+  OverdriveEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+      deserializer,
+    ));
+  }
+
+  @protected
+  ReverbEffect
+  sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+      deserializer,
+    ));
   }
 
   @protected
@@ -12779,18 +11213,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  List<BandKind> sse_decode_list_band_kind(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    var len_ = sse_decode_i_32(deserializer);
-    var ans_ = <BandKind>[];
-    for (var idx_ = 0; idx_ < len_; ++idx_) {
-      ans_.add(sse_decode_band_kind(deserializer));
-    }
-    return ans_;
-  }
-
-  @protected
   List<double> sse_decode_list_prim_f_32_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -12812,17 +11234,143 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  Param sse_decode_param(SseDeserializer deserializer) {
+  List<VBandKind> sse_decode_list_v_band_kind(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return Param.values[inner];
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <VBandKind>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_v_band_kind(deserializer));
+    }
+    return ans_;
   }
 
   @protected
-  ParamError sse_decode_param_error(SseDeserializer deserializer) {
+  BandConfig?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var inner = sse_decode_i_32(deserializer);
-    return ParamError.values[inner];
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  ChorusEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  CompressorEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  DelayEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  GainEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  HardClipEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  OverdriveEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
+  ReverbEffect?
+  sse_decode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+        deserializer,
+      ));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -12870,10 +11418,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  WaveShapeCurve sse_decode_wave_shape_curve(SseDeserializer deserializer) {
+  VBandKind sse_decode_v_band_kind(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
-    return WaveShapeCurve.values[inner];
+    return VBandKind.values[inner];
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
+    AudioOutput self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as AudioOutputImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
   }
 
   @protected
@@ -12885,19 +11446,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as AudioPlayerImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    AudioProcessor self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AudioProcessorImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -12917,6 +11465,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    BandConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BandConfigImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+    BandKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BandKindImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    BiquadCoeffs self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BiquadCoeffsImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadFilter(
     BiquadFilter self,
     SseSerializer serializer,
@@ -12930,39 +11517,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-    BitCrusher self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState(
+    BiquadState self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as BitCrusherImpl).frbInternalSseEncode(move: true),
+      (self as BiquadStateImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-    Compressor self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    ChorusEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as CompressorImpl).frbInternalSseEncode(move: true),
+      (self as ChorusEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
-    DcRemover self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    CompressorEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DcRemoverImpl).frbInternalSseEncode(move: true),
+      (self as CompressorEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -12982,182 +11569,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-    DelayLine self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    DelayEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DelayLineImpl).frbInternalSseEncode(move: true),
+      (self as DelayEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-    EnvelopeFollower self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+    EffectsChain self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as EnvelopeFollowerImpl).frbInternalSseEncode(move: true),
+      (self as EffectsChainImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-    Foldback self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+    Equalizer self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FoldbackImpl).frbInternalSseEncode(move: true),
+      (self as EqualizerImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-    FractionalDelay self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    GainEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FractionalDelayImpl).frbInternalSseEncode(move: true),
+      (self as GainEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-    Gain self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    HardClipEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as GainImpl).frbInternalSseEncode(move: true),
+      (self as HardClipEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-    HardClipper self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    OverdriveEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as HardClipperImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    Limiter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as LimiterImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    MovingAverage self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as MovingAverageImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    MuteSolo self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as MuteSoloImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    NoiseGate self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as NoiseGateImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    OnePoleHighPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleHighPassImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    OnePoleLowPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleLowPassImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    Panner self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PannerImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    PhaseInverter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PhaseInverterImpl).frbInternalSseEncode(move: true),
+      (self as OverdriveEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -13177,65 +11660,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-    RevertBuffer self,
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    ReverbEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as RevertBufferImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SvfOutputs self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SvfOutputsImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SampleAndHold self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SampleAndHoldImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SoftClipper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SoftClipperImpl).frbInternalSseEncode(move: true),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    StateVariableFilter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as StateVariableFilterImpl).frbInternalSseEncode(move: true),
+      (self as ReverbEffectImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -13255,13 +11686,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    WaveShaper self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
+    AudioOutput self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as WaveShaperImpl).frbInternalSseEncode(move: true),
+      (self as AudioOutputImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13281,19 +11712,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    AudioProcessor self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AudioProcessorImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     AudioState self,
     SseSerializer serializer,
@@ -13301,6 +11719,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as AudioStateImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    BandConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BandConfigImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    BiquadCoeffs self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BiquadCoeffsImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13320,234 +11764,104 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-    BitCrusher self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    ChorusEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as BitCrusherImpl).frbInternalSseEncode(move: false),
+      (self as ChorusEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-    Compressor self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    CompressorEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as CompressorImpl).frbInternalSseEncode(move: false),
+      (self as CompressorEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
-    DcRemover self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    DelayEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DcRemoverImpl).frbInternalSseEncode(move: false),
+      (self as DelayEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecodePool(
-    DecodePool self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+    EffectsChain self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DecodePoolImpl).frbInternalSseEncode(move: false),
+      (self as EffectsChainImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-    DelayLine self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+    Equalizer self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DelayLineImpl).frbInternalSseEncode(move: false),
+      (self as EqualizerImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-    EnvelopeFollower self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    GainEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as EnvelopeFollowerImpl).frbInternalSseEncode(move: false),
+      (self as GainEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-    Foldback self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    HardClipEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FoldbackImpl).frbInternalSseEncode(move: false),
+      (self as HardClipEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-    FractionalDelay self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    OverdriveEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FractionalDelayImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-    Gain self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as GainImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-    HardClipper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as HardClipperImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    Limiter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as LimiterImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    MovingAverage self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as MovingAverageImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    MuteSolo self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as MuteSoloImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    NoiseGate self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as NoiseGateImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    OnePoleHighPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleHighPassImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    OnePoleLowPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleLowPassImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    Panner self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PannerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    PhaseInverter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PhaseInverterImpl).frbInternalSseEncode(move: false),
+      (self as OverdriveEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13567,65 +11881,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-    RevertBuffer self,
+  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    ReverbEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as RevertBufferImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SvfOutputs self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SvfOutputsImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SampleAndHold self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SampleAndHoldImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SoftClipper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SoftClipperImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    StateVariableFilter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as StateVariableFilterImpl).frbInternalSseEncode(move: false),
+      (self as ReverbEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13645,13 +11907,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    WaveShaper self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
+    AudioOutput self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as WaveShaperImpl).frbInternalSseEncode(move: false),
+      (self as AudioOutputImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13671,19 +11933,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    AudioProcessor self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AudioProcessorImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     AudioState self,
     SseSerializer serializer,
@@ -13691,6 +11940,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as AudioStateImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    BandConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BandConfigImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    BiquadCoeffs self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BiquadCoeffsImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13710,26 +11985,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-    BitCrusher self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    ChorusEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as BitCrusherImpl).frbInternalSseEncode(move: false),
+      (self as ChorusEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-    Compressor self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    CompressorEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as CompressorImpl).frbInternalSseEncode(move: false),
+      (self as CompressorEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -13749,247 +12024,104 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-    DelayLine self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    DelayEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DelayLineImpl).frbInternalSseEncode(move: false),
+      (self as DelayEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-    EnvelopeFollower self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+    EffectsChain self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as EnvelopeFollowerImpl).frbInternalSseEncode(move: false),
+      (self as EffectsChainImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-    Foldback self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+    Equalizer self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FoldbackImpl).frbInternalSseEncode(move: false),
+      (self as EqualizerImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-    FractionalDelay self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    GainEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FractionalDelayImpl).frbInternalSseEncode(move: false),
+      (self as GainEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-    Gain self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    HardClipEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as GainImpl).frbInternalSseEncode(move: false),
+      (self as HardClipEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-    HardClipper self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    OverdriveEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as HardClipperImpl).frbInternalSseEncode(move: false),
+      (self as OverdriveEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    Limiter self,
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    ReverbEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as LimiterImpl).frbInternalSseEncode(move: false),
+      (self as ReverbEffectImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    MuteSolo self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioOutput(
+    AudioOutput self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as MuteSoloImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    NoiseGate self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as NoiseGateImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    OnePoleHighPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleHighPassImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    OnePoleLowPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleLowPassImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    Panner self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PannerImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    PhaseInverter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PhaseInverterImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-    RevertBuffer self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as RevertBufferImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SvfOutputs self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SvfOutputsImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SampleAndHold self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SampleAndHoldImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SoftClipper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SoftClipperImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    StateVariableFilter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as StateVariableFilterImpl).frbInternalSseEncode(move: false),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    WaveShaper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as WaveShaperImpl).frbInternalSseEncode(move: false),
+      (self as AudioOutputImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -14009,19 +12141,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioProcessor(
-    AudioProcessor self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as AudioProcessorImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAudioState(
     AudioState self,
     SseSerializer serializer,
@@ -14029,6 +12148,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as AudioStateImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    BandConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BandConfigImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandKind(
+    BandKind self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BandKindImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadCoeffs(
+    BiquadCoeffs self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as BiquadCoeffsImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -14048,39 +12206,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBitCrusher(
-    BitCrusher self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBiquadState(
+    BiquadState self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as BitCrusherImpl).frbInternalSseEncode(move: null),
+      (self as BiquadStateImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressor(
-    Compressor self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    ChorusEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as CompressorImpl).frbInternalSseEncode(move: null),
+      (self as ChorusEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDCRemover(
-    DcRemover self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    CompressorEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DcRemoverImpl).frbInternalSseEncode(move: null),
+      (self as CompressorEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -14100,182 +12258,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayLine(
-    DelayLine self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    DelayEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as DelayLineImpl).frbInternalSseEncode(move: null),
+      (self as DelayEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEnvelopeFollower(
-    EnvelopeFollower self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEffectsChain(
+    EffectsChain self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as EnvelopeFollowerImpl).frbInternalSseEncode(move: null),
+      (self as EffectsChainImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFoldback(
-    Foldback self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerEqualizer(
+    Equalizer self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FoldbackImpl).frbInternalSseEncode(move: null),
+      (self as EqualizerImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFractionalDelay(
-    FractionalDelay self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    GainEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as FractionalDelayImpl).frbInternalSseEncode(move: null),
+      (self as GainEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGain(
-    Gain self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    HardClipEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as GainImpl).frbInternalSseEncode(move: null),
+      (self as HardClipEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipper(
-    HardClipper self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    OverdriveEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as HardClipperImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerLimiter(
-    Limiter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as LimiterImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMovingAverage(
-    MovingAverage self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as MovingAverageImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerMuteSolo(
-    MuteSolo self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as MuteSoloImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerNoiseGate(
-    NoiseGate self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as NoiseGateImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleHighPass(
-    OnePoleHighPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleHighPassImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOnePoleLowPass(
-    OnePoleLowPass self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as OnePoleLowPassImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPanner(
-    Panner self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PannerImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPhaseInverter(
-    PhaseInverter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as PhaseInverterImpl).frbInternalSseEncode(move: null),
+      (self as OverdriveEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -14295,65 +12349,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerRevertBuffer(
-    RevertBuffer self,
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    ReverbEffect self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-      (self as RevertBufferImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSVFOutputs(
-    SvfOutputs self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SvfOutputsImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSampleAndHold(
-    SampleAndHold self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SampleAndHoldImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSoftClipper(
-    SoftClipper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as SoftClipperImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerStateVariableFilter(
-    StateVariableFilter self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as StateVariableFilterImpl).frbInternalSseEncode(move: null),
+      (self as ReverbEffectImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -14367,19 +12369,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as VisualizerProcessorImpl).frbInternalSseEncode(move: null),
-      serializer,
-    );
-  }
-
-  @protected
-  void
-  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerWaveShaper(
-    WaveShaper self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_usize(
-      (self as WaveShaperImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -14419,7 +12408,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_band_energy(BandEnergy self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_band_kind(self.kind, serializer);
+    sse_encode_v_band_kind(self.kind, serializer);
     sse_encode_f_32(self.minHz, serializer);
     sse_encode_f_32(self.maxHz, serializer);
     sse_encode_f_32(self.raw, serializer);
@@ -14427,12 +12416,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_f_32(self.peak, serializer);
     sse_encode_f_32(self.normalized, serializer);
     sse_encode_f_32(self.beat, serializer);
-  }
-
-  @protected
-  void sse_encode_band_kind(BandKind self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
   }
 
   @protected
@@ -14446,15 +12429,113 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_biquad_type(BiquadType self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
-  }
-
-  @protected
   void sse_encode_bool(bool self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    BandConfig self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    ChorusEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    CompressorEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    DelayEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    GainEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    HardClipEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    OverdriveEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+      self,
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    ReverbEffect self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+      self,
+      serializer,
+    );
   }
 
   @protected
@@ -14508,18 +12589,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_list_band_kind(
-    List<BandKind> self,
-    SseSerializer serializer,
-  ) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.length, serializer);
-    for (final item in self) {
-      sse_encode_band_kind(item, serializer);
-    }
-  }
-
-  @protected
   void sse_encode_list_prim_f_32_loose(
     List<double> self,
     SseSerializer serializer,
@@ -14552,15 +12621,151 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_param(Param self, SseSerializer serializer) {
+  void sse_encode_list_v_band_kind(
+    List<VBandKind> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_v_band_kind(item, serializer);
+    }
   }
 
   @protected
-  void sse_encode_param_error(ParamError self, SseSerializer serializer) {
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+    BandConfig? self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.index, serializer);
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerBandConfig(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+    ChorusEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerChorusEffect(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+    CompressorEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerCompressorEffect(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+    DelayEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDelayEffect(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+    GainEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerGainEffect(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+    HardClipEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerHardClipEffect(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+    OverdriveEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerOverdriveEffect(
+        self,
+        serializer,
+      );
+    }
+  }
+
+  @protected
+  void
+  sse_encode_opt_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+    ReverbEffect? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_box_autoadd_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerReverbEffect(
+        self,
+        serializer,
+      );
+    }
   }
 
   @protected
@@ -14609,13 +12814,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_wave_shape_curve(
-    WaveShapeCurve self,
-    SseSerializer serializer,
-  ) {
+  void sse_encode_v_band_kind(VBandKind self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
   }
+}
+
+@sealed
+class AudioOutputImpl extends RustOpaque implements AudioOutput {
+  // Not to be used by end users
+  AudioOutputImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  AudioOutputImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_AudioOutput,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_AudioOutput,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_AudioOutputPtr,
+  );
+
+  Future<AudioOutputConfig> currentConfig() => RustLib.instance.api
+      .crateApiRendererOutputAudioOutputCurrentConfig(that: this);
+
+  Future<void> disposeOldStream() => RustLib.instance.api
+      .crateApiRendererOutputAudioOutputDisposeOldStream(that: this);
 }
 
 @sealed
@@ -14637,24 +12865,29 @@ class AudioPlayerImpl extends RustOpaque implements AudioPlayer {
         RustLib.instance.api.rust_arc_decrement_strong_count_AudioPlayerPtr,
   );
 
-  /// Add Effect to output audio.
-  Future<void> addEffect({required AudioProcessor effect}) => RustLib
-      .instance
-      .api
-      .crateApiPlayerAudioPlayerAddEffect(that: this, effect: effect);
-
   /// Clear the effect chain of every output channel.
-  Future<void> clearEffects() =>
+  void clearEffects() =>
       RustLib.instance.api.crateApiPlayerAudioPlayerClearEffects(that: this);
 
   /// Duration in millisecond of current source.
   int durationMillis() =>
       RustLib.instance.api.crateApiPlayerAudioPlayerDurationMillis(that: this);
 
+  List<BandEnergy> getBand({required List<VBandKind> kinds}) => RustLib
+      .instance
+      .api
+      .crateApiPlayerAudioPlayerGetBand(that: this, kinds: kinds);
+
+  Float32List getBars() =>
+      RustLib.instance.api.crateApiPlayerAudioPlayerGetBars(that: this);
+
   AudioOutputConfig getOutputConfig() =>
       RustLib.instance.api.crateApiPlayerAudioPlayerGetOutputConfig(that: this);
 
-  Future<int> getState() =>
+  Float32List getSamples({required int buffSize}) => RustLib.instance.api
+      .crateApiPlayerAudioPlayerGetSamples(that: this, buffSize: buffSize);
+
+  int getState() =>
       RustLib.instance.api.crateApiPlayerAudioPlayerGetState(that: this);
 
   bool isCompleted() =>
@@ -14671,80 +12904,93 @@ class AudioPlayerImpl extends RustOpaque implements AudioPlayer {
   /// Play current audio source. If current source is empty then an error will be throw.
   void play() => RustLib.instance.api.crateApiPlayerAudioPlayerPlay(that: this);
 
-  Future<int> position() =>
+  int position() =>
       RustLib.instance.api.crateApiPlayerAudioPlayerPosition(that: this);
 
   void resume() =>
       RustLib.instance.api.crateApiPlayerAudioPlayerResume(that: this);
 
-  Future<Float32List> samplesData() =>
-      RustLib.instance.api.crateApiPlayerAudioPlayerSamplesData(that: this);
+  double sampleRate() =>
+      RustLib.instance.api.crateApiPlayerAudioPlayerSampleRate(that: this);
 
   /// Play audio at given position in millisecond.
   void seek({required int position}) => RustLib.instance.api
       .crateApiPlayerAudioPlayerSeek(that: this, position: position);
 
+  void set10BandEq() =>
+      RustLib.instance.api.crateApiPlayerAudioPlayerSet10BandEq(that: this);
+
+  void setBandGain({required int index, required double gain}) =>
+      RustLib.instance.api.crateApiPlayerAudioPlayerSetBandGain(
+        that: this,
+        index: index,
+        gain: gain,
+      );
+
+  void setChorus({
+    required double rate,
+    required double depth,
+    required double wet,
+  }) => RustLib.instance.api.crateApiPlayerAudioPlayerSetChorus(
+    that: this,
+    rate: rate,
+    depth: depth,
+    wet: wet,
+  );
+
+  void setDelay({
+    required double delaySeconds,
+    required double feedback,
+    required double wet,
+  }) => RustLib.instance.api.crateApiPlayerAudioPlayerSetDelay(
+    that: this,
+    delaySeconds: delaySeconds,
+    feedback: feedback,
+    wet: wet,
+  );
+
+  void setOverride({required double drive, required double output}) =>
+      RustLib.instance.api.crateApiPlayerAudioPlayerSetOverride(
+        that: this,
+        drive: drive,
+        output: output,
+      );
+
+  void setProcessor({required int barCount, required int fftSize}) =>
+      RustLib.instance.api.crateApiPlayerAudioPlayerSetProcessor(
+        that: this,
+        barCount: barCount,
+        fftSize: fftSize,
+      );
+
   /// Set playback speed of output audio.
-  Future<void> setRate({required double rate}) => RustLib.instance.api
+  void setRate({required double rate}) => RustLib.instance.api
       .crateApiPlayerAudioPlayerSetRate(that: this, rate: rate);
+
+  void setReverb({
+    required double roomSize,
+    required double damping,
+    required double wet,
+  }) => RustLib.instance.api.crateApiPlayerAudioPlayerSetReverb(
+    that: this,
+    roomSize: roomSize,
+    damping: damping,
+    wet: wet,
+  );
 
   /// Set source for preparing to play.
   void setSource({required AudioSource source}) => RustLib.instance.api
       .crateApiPlayerAudioPlayerSetSource(that: this, source: source);
 
+  void setThreshold({required double threshold}) => RustLib.instance.api
+      .crateApiPlayerAudioPlayerSetThreshold(that: this, threshold: threshold);
+
   /// Set volume of ouput audio.
-  Future<void> setVolumn({required double volumn}) => RustLib.instance.api
+  void setVolumn({required double volumn}) => RustLib.instance.api
       .crateApiPlayerAudioPlayerSetVolumn(that: this, volumn: volumn);
 
   /// Stop current playing audio.
-  Future<void> stop() =>
-      RustLib.instance.api.crateApiPlayerAudioPlayerStop(that: this);
-}
-
-@sealed
-class AudioProcessorImpl extends RustOpaque implements AudioProcessor {
-  // Not to be used by end users
-  AudioProcessorImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  AudioProcessorImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_AudioProcessor,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_AudioProcessor,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_AudioProcessorPtr,
-  );
-
-  /// Get a float parameter value
-  Future<double> get_({required Param param}) => RustLib.instance.api
-      .crateApiFiltersAudioProcessorGet(that: this, param: param);
-
-  /// Get processor name
-  Future<void> name() =>
-      RustLib.instance.api.crateApiFiltersAudioProcessorName(that: this);
-
-  /// Process a single sample
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersAudioProcessorProcess(that: this, sample: sample);
-
-  /// Reset processor state
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersAudioProcessorReset(that: this);
-
-  /// Set a float parameter
-  Future<void> set_({required Param param, required double value}) => RustLib
-      .instance
-      .api
-      .crateApiFiltersAudioProcessorSet(that: this, param: param, value: value);
-
-  /// Get list of valid params for this processor
-  Future<void> validParams() =>
-      RustLib.instance.api.crateApiFiltersAudioProcessorValidParams(that: this);
+  void stop() => RustLib.instance.api.crateApiPlayerAudioPlayerStop(that: this);
 }
 
 @sealed
@@ -14766,15 +13012,46 @@ class AudioStateImpl extends RustOpaque implements AudioState {
         RustLib.instance.api.rust_arc_decrement_strong_count_AudioStatePtr,
   );
 
+  EffectsChain get effects => RustLib.instance.api
+      .crateApiRendererStateAudioStateAutoAccessorGetEffects(that: this);
+
+  Equalizer get equalizer => RustLib.instance.api
+      .crateApiRendererStateAudioStateAutoAccessorGetEqualizer(that: this);
+
+  set effects(EffectsChain effects) => RustLib.instance.api
+      .crateApiRendererStateAudioStateAutoAccessorSetEffects(
+        that: this,
+        effects: effects,
+      );
+
+  set equalizer(Equalizer equalizer) => RustLib.instance.api
+      .crateApiRendererStateAudioStateAutoAccessorSetEqualizer(
+        that: this,
+        equalizer: equalizer,
+      );
+
   /// Clear all transient audio state without touching volume / rate / device.
   Future<void> clearAudioState() => RustLib.instance.api
       .crateApiRendererStateAudioStateClearAudioState(that: this);
 
-  Future<double> nextSample({required BigInt channels}) =>
-      RustLib.instance.api.crateApiRendererStateAudioStateNextSample(
-        that: this,
-        channels: channels,
-      );
+  Future<void> clearEffects() => RustLib.instance.api
+      .crateApiRendererStateAudioStateClearEffects(that: this);
+
+  /// Clear all equalizer bands
+  Future<void> clearEq() =>
+      RustLib.instance.api.crateApiRendererStateAudioStateClearEq(that: this);
+
+  /// Copy the most recent `out.len()` samples from the visualiser ring into
+  /// `out`.  Returns the number of samples written.
+  Future<Float32List> copyLatestVisualizerSamples({required BigInt size}) =>
+      RustLib.instance.api
+          .crateApiRendererStateAudioStateCopyLatestVisualizerSamples(
+            that: this,
+            size: size,
+          );
+
+  Future<double> nextSample() => RustLib.instance.api
+      .crateApiRendererStateAudioStateNextSample(that: this);
 
   /// Current playback position in milliseconds.
   Future<int> position() =>
@@ -14793,6 +13070,167 @@ class AudioStateImpl extends RustOpaque implements AudioState {
         that: this,
         sample: sample,
       );
+
+  Future<void> setEffect({required EffectsChain effects}) => RustLib
+      .instance
+      .api
+      .crateApiRendererStateAudioStateSetEffect(that: this, effects: effects);
+
+  Future<void> setEqualizer({required Equalizer equalizer}) =>
+      RustLib.instance.api.crateApiRendererStateAudioStateSetEqualizer(
+        that: this,
+        equalizer: equalizer,
+      );
+
+  Future<void> updateDeviceConfig({
+    required BuffConfig config,
+    required BuffConfig vConfig,
+    required BigInt channels,
+  }) => RustLib.instance.api.crateApiRendererStateAudioStateUpdateDeviceConfig(
+    that: this,
+    config: config,
+    vConfig: vConfig,
+    channels: channels,
+  );
+
+  /// Copy the most recent interleaved samples needed for FFT analysis.
+  Future<Float32List> visualizerWindow({required BigInt maxSamples}) =>
+      RustLib.instance.api.crateApiRendererStateAudioStateVisualizerWindow(
+        that: this,
+        maxSamples: maxSamples,
+      );
+}
+
+@sealed
+class BandConfigImpl extends RustOpaque implements BandConfig {
+  // Not to be used by end users
+  BandConfigImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  BandConfigImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_BandConfig,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_BandConfig,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_BandConfigPtr,
+  );
+
+  bool get enabled => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorGetEnabled(that: this);
+
+  double get freq => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorGetFreq(that: this);
+
+  double get gainDb => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorGetGainDb(that: this);
+
+  BandKind get kind => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorGetKind(that: this);
+
+  double get q => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorGetQ(that: this);
+
+  set enabled(bool enabled) => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorSetEnabled(
+        that: this,
+        enabled: enabled,
+      );
+
+  set freq(double freq) => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorSetFreq(
+        that: this,
+        freq: freq,
+      );
+
+  set gainDb(double gainDb) => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorSetGainDb(
+        that: this,
+        gainDb: gainDb,
+      );
+
+  set kind(BandKind kind) => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorSetKind(
+        that: this,
+        kind: kind,
+      );
+
+  set q(double q) => RustLib.instance.api
+      .crateApiFiltersEqualizerBandConfigAutoAccessorSetQ(that: this, q: q);
+}
+
+@sealed
+class BandKindImpl extends RustOpaque implements BandKind {
+  // Not to be used by end users
+  BandKindImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  BandKindImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_BandKind,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_BandKind,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_BandKindPtr,
+  );
+}
+
+@sealed
+class BiquadCoeffsImpl extends RustOpaque implements BiquadCoeffs {
+  // Not to be used by end users
+  BiquadCoeffsImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  BiquadCoeffsImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_BiquadCoeffs,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_BiquadCoeffs,
+    rustArcDecrementStrongCountPtr:
+        RustLib.instance.api.rust_arc_decrement_strong_count_BiquadCoeffsPtr,
+  );
+
+  double get a1 => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA1(that: this);
+
+  double get a2 => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetA2(that: this);
+
+  double get b0 => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB0(that: this);
+
+  double get b1 => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB1(that: this);
+
+  double get b2 => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorGetB2(that: this);
+
+  set a1(double a1) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA1(that: this, a1: a1);
+
+  set a2(double a2) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetA2(that: this, a2: a2);
+
+  set b0(double b0) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB0(that: this, b0: b0);
+
+  set b1(double b1) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB1(that: this, b1: b1);
+
+  set b2(double b2) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadCoeffsAutoAccessorSetB2(that: this, b2: b2);
 }
 
 @sealed
@@ -14814,154 +13252,215 @@ class BiquadFilterImpl extends RustOpaque implements BiquadFilter {
         RustLib.instance.api.rust_arc_decrement_strong_count_BiquadFilterPtr,
   );
 
-  Future<double> frequency() =>
-      RustLib.instance.api.crateApiFiltersBiquadFilterFrequency(that: this);
+  BiquadCoeffs get coeffs => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadFilterAutoAccessorGetCoeffs(that: this);
 
-  Future<double> gainDb() =>
-      RustLib.instance.api.crateApiFiltersBiquadFilterGainDb(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersBiquadFilterProcess(that: this, sample: sample);
-
-  Future<double> q() =>
-      RustLib.instance.api.crateApiFiltersBiquadFilterQ(that: this);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersBiquadFilterReset(that: this);
-
-  Future<void> setFrequency({required double freq}) => RustLib.instance.api
-      .crateApiFiltersBiquadFilterSetFrequency(that: this, freq: freq);
-
-  Future<void> setGain({required double gainDb}) => RustLib.instance.api
-      .crateApiFiltersBiquadFilterSetGain(that: this, gainDb: gainDb);
-
-  Future<void> setQ({required double q}) =>
-      RustLib.instance.api.crateApiFiltersBiquadFilterSetQ(that: this, q: q);
-}
-
-@sealed
-class BitCrusherImpl extends RustOpaque implements BitCrusher {
-  // Not to be used by end users
-  BitCrusherImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  BitCrusherImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_BitCrusher,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_BitCrusher,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_BitCrusherPtr,
-  );
-
-  Future<double> bitDepth() => RustLib.instance.api
-      .crateApiFiltersDistortionBitCrusherBitDepth(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDistortionBitCrusherProcess(that: this, sample: sample);
-
-  Future<double> rateReduction() => RustLib.instance.api
-      .crateApiFiltersDistortionBitCrusherRateReduction(that: this);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDistortionBitCrusherReset(that: this);
-
-  Future<void> setBitDepth({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionBitCrusherSetBitDepth(that: this, v: v);
-
-  Future<void> setSampleRateReduction({required double v}) => RustLib
-      .instance
-      .api
-      .crateApiFiltersDistortionBitCrusherSetSampleRateReduction(
+  set coeffs(BiquadCoeffs coeffs) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadFilterAutoAccessorSetCoeffs(
         that: this,
-        v: v,
+        coeffs: coeffs,
+      );
+
+  /// Process one sample through the filter. Direct Form I.
+  Future<double> process({required double x}) => RustLib.instance.api
+      .crateApiFiltersBiquadBiquadFilterProcess(that: this, x: x);
+
+  Future<void> reset() =>
+      RustLib.instance.api.crateApiFiltersBiquadBiquadFilterReset(that: this);
+
+  /// Replace coefficients without resetting delay state (glitch-free update).
+  Future<void> updateCoeffs({required BiquadCoeffs coeffs}) =>
+      RustLib.instance.api.crateApiFiltersBiquadBiquadFilterUpdateCoeffs(
+        that: this,
+        coeffs: coeffs,
       );
 }
 
 @sealed
-class CompressorImpl extends RustOpaque implements Compressor {
+class BiquadStateImpl extends RustOpaque implements BiquadState {
   // Not to be used by end users
-  CompressorImpl.frbInternalDcoDecode(List<dynamic> wire)
+  BiquadStateImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  CompressorImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  BiquadStateImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Compressor,
+        RustLib.instance.api.rust_arc_increment_strong_count_BiquadState,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Compressor,
+        RustLib.instance.api.rust_arc_decrement_strong_count_BiquadState,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_CompressorPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_BiquadStatePtr,
   );
-
-  Future<double> attack() =>
-      RustLib.instance.api.crateApiFiltersDynamicsCompressorAttack(that: this);
-
-  Future<double> makeupGain() => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorMakeupGain(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorProcess(that: this, sample: sample);
-
-  Future<double> ratio() =>
-      RustLib.instance.api.crateApiFiltersDynamicsCompressorRatio(that: this);
-
-  Future<double> release() =>
-      RustLib.instance.api.crateApiFiltersDynamicsCompressorRelease(that: this);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDynamicsCompressorReset(that: this);
-
-  Future<void> setAttack({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorSetAttack(that: this, v: v);
-
-  Future<void> setMakeupGain({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorSetMakeupGain(that: this, v: v);
-
-  Future<void> setRatio({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorSetRatio(that: this, v: v);
-
-  Future<void> setRelease({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorSetRelease(that: this, v: v);
-
-  Future<void> setThreshold({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorSetThreshold(that: this, v: v);
-
-  Future<double> threshold() => RustLib.instance.api
-      .crateApiFiltersDynamicsCompressorThreshold(that: this);
 }
 
 @sealed
-class DcRemoverImpl extends RustOpaque implements DcRemover {
+class ChorusEffectImpl extends RustOpaque implements ChorusEffect {
   // Not to be used by end users
-  DcRemoverImpl.frbInternalDcoDecode(List<dynamic> wire)
+  ChorusEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  DcRemoverImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  ChorusEffectImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_DcRemover,
+        RustLib.instance.api.rust_arc_increment_strong_count_ChorusEffect,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DcRemover,
+        RustLib.instance.api.rust_arc_decrement_strong_count_ChorusEffect,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DcRemoverPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_ChorusEffectPtr,
   );
 
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorGetBypass(that: this);
+
+  double get depth => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorGetDepth(that: this);
+
+  double get rate => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorGetRate(that: this);
+
+  double get wet => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorGetWet(that: this);
+
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorSetBypass(
+        that: this,
+        bypass: bypass,
+      );
+
+  set depth(double depth) => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorSetDepth(
+        that: this,
+        depth: depth,
+      );
+
+  set rate(double rate) => RustLib.instance.api
+      .crateApiFiltersEffectsChorusEffectAutoAccessorSetRate(
+        that: this,
+        rate: rate,
+      );
+
+  set wet(double wet) =>
+      RustLib.instance.api.crateApiFiltersEffectsChorusEffectAutoAccessorSetWet(
+        that: this,
+        wet: wet,
+      );
+
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesDcRemoverProcess(that: this, sample: sample);
+      .crateApiFiltersEffectsChorusEffectProcess(that: this, sample: sample);
 
   Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesDcRemoverReset(that: this);
+      RustLib.instance.api.crateApiFiltersEffectsChorusEffectReset(that: this);
+
+  Future<void> setSampleRate({required double sampleRate}) =>
+      RustLib.instance.api.crateApiFiltersEffectsChorusEffectSetSampleRate(
+        that: this,
+        sampleRate: sampleRate,
+      );
+}
+
+@sealed
+class CompressorEffectImpl extends RustOpaque implements CompressorEffect {
+  // Not to be used by end users
+  CompressorEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  CompressorEffectImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_CompressorEffect,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_CompressorEffect,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_CompressorEffectPtr,
+  );
+
+  double get attackS => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorGetAttackS(that: this);
+
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorGetBypass(that: this);
+
+  double get makeupDb => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorGetMakeupDb(
+        that: this,
+      );
+
+  double get ratio => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorGetRatio(that: this);
+
+  double get releaseS => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorGetReleaseS(
+        that: this,
+      );
+
+  double get thresholdDb => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorGetThresholdDb(
+        that: this,
+      );
+
+  set attackS(double attackS) => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorSetAttackS(
+        that: this,
+        attackS: attackS,
+      );
+
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorSetBypass(
+        that: this,
+        bypass: bypass,
+      );
+
+  set makeupDb(double makeupDb) => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorSetMakeupDb(
+        that: this,
+        makeupDb: makeupDb,
+      );
+
+  set ratio(double ratio) => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorSetRatio(
+        that: this,
+        ratio: ratio,
+      );
+
+  set releaseS(double releaseS) => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorSetReleaseS(
+        that: this,
+        releaseS: releaseS,
+      );
+
+  set thresholdDb(double thresholdDb) => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectAutoAccessorSetThresholdDb(
+        that: this,
+        thresholdDb: thresholdDb,
+      );
+
+  Future<double> process({required double sample}) =>
+      RustLib.instance.api.crateApiFiltersEffectsCompressorEffectProcess(
+        that: this,
+        sample: sample,
+      );
+
+  Future<void> reset() => RustLib.instance.api
+      .crateApiFiltersEffectsCompressorEffectReset(that: this);
+
+  Future<void> setSampleRate({required double sampleRate}) =>
+      RustLib.instance.api.crateApiFiltersEffectsCompressorEffectSetSampleRate(
+        that: this,
+        sampleRate: sampleRate,
+      );
 }
 
 @sealed
@@ -14983,555 +13482,388 @@ class DecodePoolImpl extends RustOpaque implements DecodePool {
         RustLib.instance.api.rust_arc_decrement_strong_count_DecodePoolPtr,
   );
 
-  int get decodeStart => RustLib.instance.api
-      .crateApiSourceDecodeDecodePoolAutoAccessorGetDecodeStart(that: this);
-
-  set decodeStart(int decodeStart) => RustLib.instance.api
-      .crateApiSourceDecodeDecodePoolAutoAccessorSetDecodeStart(
-        that: this,
-        decodeStart: decodeStart,
-      );
-
   Future<bool> isDecoding() =>
       RustLib.instance.api.crateApiSourceDecodeDecodePoolIsDecoding(that: this);
+
+  /// Fast seek! No thread restart.
+  Future<void> seek({required int millis}) => RustLib.instance.api
+      .crateApiSourceDecodeDecodePoolSeek(that: this, millis: millis);
 }
 
 @sealed
-class DelayLineImpl extends RustOpaque implements DelayLine {
+class DelayEffectImpl extends RustOpaque implements DelayEffect {
   // Not to be used by end users
-  DelayLineImpl.frbInternalDcoDecode(List<dynamic> wire)
+  DelayEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  DelayLineImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  DelayEffectImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_DelayLine,
+        RustLib.instance.api.rust_arc_increment_strong_count_DelayEffect,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DelayLine,
+        RustLib.instance.api.rust_arc_decrement_strong_count_DelayEffect,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_DelayLinePtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_DelayEffectPtr,
   );
 
-  Future<double> feedback() =>
-      RustLib.instance.api.crateApiFiltersDelayDelayLineFeedback(that: this);
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsDelayEffectAutoAccessorGetBypass(that: this);
 
-  Future<double> mix() =>
-      RustLib.instance.api.crateApiFiltersDelayDelayLineMix(that: this);
+  double get feedback => RustLib.instance.api
+      .crateApiFiltersEffectsDelayEffectAutoAccessorGetFeedback(that: this);
 
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDelayDelayLineProcess(that: this, sample: sample);
+  double get wet => RustLib.instance.api
+      .crateApiFiltersEffectsDelayEffectAutoAccessorGetWet(that: this);
 
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDelayDelayLineReset(that: this);
-
-  Future<void> setDelayTime({
-    required double delayMs,
-    required double sampleRate,
-  }) => RustLib.instance.api.crateApiFiltersDelayDelayLineSetDelayTime(
-    that: this,
-    delayMs: delayMs,
-    sampleRate: sampleRate,
-  );
-
-  Future<void> setFeedback({required double feedback}) => RustLib.instance.api
-      .crateApiFiltersDelayDelayLineSetFeedback(that: this, feedback: feedback);
-
-  Future<void> setMix({required double mix}) => RustLib.instance.api
-      .crateApiFiltersDelayDelayLineSetMix(that: this, mix: mix);
-}
-
-@sealed
-class EnvelopeFollowerImpl extends RustOpaque implements EnvelopeFollower {
-  // Not to be used by end users
-  EnvelopeFollowerImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  EnvelopeFollowerImpl.frbInternalSseDecode(
-    BigInt ptr,
-    int externalSizeOnNative,
-  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_EnvelopeFollower,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_EnvelopeFollower,
-    rustArcDecrementStrongCountPtr: RustLib
-        .instance
-        .api
-        .rust_arc_decrement_strong_count_EnvelopeFollowerPtr,
-  );
-
-  Future<double> attack() => RustLib.instance.api
-      .crateApiFiltersDynamicsEnvelopeFollowerAttack(that: this);
-
-  Future<double> getEnvelope() => RustLib.instance.api
-      .crateApiFiltersDynamicsEnvelopeFollowerGetEnvelope(that: this);
-
-  Future<double> process({required double sample}) =>
-      RustLib.instance.api.crateApiFiltersDynamicsEnvelopeFollowerProcess(
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsDelayEffectAutoAccessorSetBypass(
         that: this,
-        sample: sample,
+        bypass: bypass,
       );
 
-  Future<double> release() => RustLib.instance.api
-      .crateApiFiltersDynamicsEnvelopeFollowerRelease(that: this);
-
-  Future<void> reset() => RustLib.instance.api
-      .crateApiFiltersDynamicsEnvelopeFollowerReset(that: this);
-
-  Future<void> setAttack({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsEnvelopeFollowerSetAttack(that: this, v: v);
-
-  Future<void> setRelease({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsEnvelopeFollowerSetRelease(that: this, v: v);
-}
-
-@sealed
-class FoldbackImpl extends RustOpaque implements Foldback {
-  // Not to be used by end users
-  FoldbackImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  FoldbackImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Foldback,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Foldback,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_FoldbackPtr,
-  );
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDistortionFoldbackProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDistortionFoldbackReset(that: this);
-
-  Future<void> setThreshold({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionFoldbackSetThreshold(that: this, v: v);
-
-  Future<double> threshold() => RustLib.instance.api
-      .crateApiFiltersDistortionFoldbackThreshold(that: this);
-}
-
-@sealed
-class FractionalDelayImpl extends RustOpaque implements FractionalDelay {
-  // Not to be used by end users
-  FractionalDelayImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  FractionalDelayImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_FractionalDelay,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_FractionalDelay,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_FractionalDelayPtr,
-  );
-
-  Future<double> feedback() => RustLib.instance.api
-      .crateApiFiltersDelayFractionalDelayFeedback(that: this);
-
-  Future<double> mix() =>
-      RustLib.instance.api.crateApiFiltersDelayFractionalDelayMix(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDelayFractionalDelayProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDelayFractionalDelayReset(that: this);
-
-  Future<void> setDelayTime({
-    required double delayMs,
-    required double sampleRate,
-  }) => RustLib.instance.api.crateApiFiltersDelayFractionalDelaySetDelayTime(
-    that: this,
-    delayMs: delayMs,
-    sampleRate: sampleRate,
-  );
-
-  Future<void> setFeedback({required double feedback}) =>
-      RustLib.instance.api.crateApiFiltersDelayFractionalDelaySetFeedback(
+  set feedback(double feedback) => RustLib.instance.api
+      .crateApiFiltersEffectsDelayEffectAutoAccessorSetFeedback(
         that: this,
         feedback: feedback,
       );
 
-  Future<void> setMix({required double mix}) => RustLib.instance.api
-      .crateApiFiltersDelayFractionalDelaySetMix(that: this, mix: mix);
-}
-
-@sealed
-class GainImpl extends RustOpaque implements Gain {
-  // Not to be used by end users
-  GainImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  GainImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Gain,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Gain,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_GainPtr,
-  );
-
-  Future<double> gainDb() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesGainGainDb(that: this);
-
-  Future<double> gainLinear() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesGainGainLinear(that: this);
+  set wet(double wet) =>
+      RustLib.instance.api.crateApiFiltersEffectsDelayEffectAutoAccessorSetWet(
+        that: this,
+        wet: wet,
+      );
 
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesGainProcess(that: this, sample: sample);
+      .crateApiFiltersEffectsDelayEffectProcess(that: this, sample: sample);
 
   Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesGainReset(that: this);
+      RustLib.instance.api.crateApiFiltersEffectsDelayEffectReset(that: this);
 
-  Future<void> setGainDb({required double db}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesGainSetGainDb(that: this, db: db);
-
-  Future<void> setGainLinear({required double v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesGainSetGainLinear(that: this, v: v);
+  /// Change delay time without clearing the buffer.
+  Future<void> setDelay({
+    required double delaySeconds,
+    required double sampleRate,
+  }) => RustLib.instance.api.crateApiFiltersEffectsDelayEffectSetDelay(
+    that: this,
+    delaySeconds: delaySeconds,
+    sampleRate: sampleRate,
+  );
 }
 
 @sealed
-class HardClipperImpl extends RustOpaque implements HardClipper {
+class EffectsChainImpl extends RustOpaque implements EffectsChain {
   // Not to be used by end users
-  HardClipperImpl.frbInternalDcoDecode(List<dynamic> wire)
+  EffectsChainImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  HardClipperImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  EffectsChainImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_HardClipper,
+        RustLib.instance.api.rust_arc_increment_strong_count_EffectsChain,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HardClipper,
+        RustLib.instance.api.rust_arc_decrement_strong_count_EffectsChain,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_HardClipperPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_EffectsChainPtr,
   );
 
-  Future<double> mix() =>
-      RustLib.instance.api.crateApiFiltersDistortionHardClipperMix(that: this);
+  ChorusEffect? get chorus => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetChorus(that: this);
 
+  CompressorEffect? get compressor => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetCompressor(that: this);
+
+  DelayEffect? get delay => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetDelay(that: this);
+
+  GainEffect? get gain => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetGain(that: this);
+
+  HardClipEffect? get hardClip => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetHardClip(that: this);
+
+  OverdriveEffect? get overdrive => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetOverdrive(that: this);
+
+  ReverbEffect? get reverb => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorGetReverb(that: this);
+
+  set chorus(ChorusEffect? chorus) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetChorus(
+        that: this,
+        chorus: chorus,
+      );
+
+  set compressor(CompressorEffect? compressor) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetCompressor(
+        that: this,
+        compressor: compressor,
+      );
+
+  set delay(DelayEffect? delay) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetDelay(
+        that: this,
+        delay: delay,
+      );
+
+  set gain(GainEffect? gain) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetGain(
+        that: this,
+        gain: gain,
+      );
+
+  set hardClip(HardClipEffect? hardClip) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetHardClip(
+        that: this,
+        hardClip: hardClip,
+      );
+
+  set overdrive(OverdriveEffect? overdrive) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetOverdrive(
+        that: this,
+        overdrive: overdrive,
+      );
+
+  set reverb(ReverbEffect? reverb) => RustLib.instance.api
+      .crateApiFiltersEffectsEffectsChainAutoAccessorSetReverb(
+        that: this,
+        reverb: reverb,
+      );
+
+  /// Process a single sample through every enabled effect in order:
+  ///
+  /// gain → overdrive → hard_clip → compressor → delay → chorus → reverb
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDistortionHardClipperProcess(that: this, sample: sample);
-
-  Future<void> reset() => RustLib.instance.api
-      .crateApiFiltersDistortionHardClipperReset(that: this);
-
-  Future<void> setMix({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionHardClipperSetMix(that: this, v: v);
-
-  Future<void> setThreshold({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionHardClipperSetThreshold(that: this, v: v);
-
-  Future<double> threshold() => RustLib.instance.api
-      .crateApiFiltersDistortionHardClipperThreshold(that: this);
+      .crateApiFiltersEffectsEffectsChainProcess(that: this, sample: sample);
 }
 
 @sealed
-class LimiterImpl extends RustOpaque implements Limiter {
+class EqualizerImpl extends RustOpaque implements Equalizer {
   // Not to be used by end users
-  LimiterImpl.frbInternalDcoDecode(List<dynamic> wire)
+  EqualizerImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  LimiterImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  EqualizerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Limiter,
+        RustLib.instance.api.rust_arc_increment_strong_count_Equalizer,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Limiter,
+        RustLib.instance.api.rust_arc_decrement_strong_count_Equalizer,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_LimiterPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_EqualizerPtr,
   );
 
+  /// Add a new band at the end of the chain.
+  void addBand({required BandConfig config}) => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerAddBand(that: this, config: config);
+
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerAutoAccessorGetBypass(that: this);
+
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerAutoAccessorSetBypass(
+        that: this,
+        bypass: bypass,
+      );
+
+  /// Get a copy of a band's current configuration.
+  BandConfig? bandConfig({required BigInt index}) => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerBandConfig(that: this, index: index);
+
+  BigInt bandCount() => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerBandCount(that: this);
+
+  Future<void> clearBands() => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerClearBands(that: this);
+
+  /// **Core DSP entry point** – process a single `f32` sample.
+  ///
+  /// All bands are applied in series. With no bands, or when bypassed,
+  /// returns `sample` unchanged.
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDynamicsLimiterProcess(that: this, sample: sample);
+      .crateApiFiltersEqualizerEqualizerProcess(that: this, sample: sample);
 
-  Future<double> release() =>
-      RustLib.instance.api.crateApiFiltersDynamicsLimiterRelease(that: this);
+  void removeBand({required BigInt index}) => RustLib.instance.api
+      .crateApiFiltersEqualizerEqualizerRemoveBand(that: this, index: index);
 
+  /// Reset all filter delay states (call after a seek or stream switch).
   Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDynamicsLimiterReset(that: this);
+      RustLib.instance.api.crateApiFiltersEqualizerEqualizerReset(that: this);
 
-  Future<void> setRelease({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsLimiterSetRelease(that: this, v: v);
+  /// Replace configuration for band `index` (zero-based).
+  /// Returns `false` if the index is out of range.
+  bool setBand({required BigInt index, required BandConfig config}) =>
+      RustLib.instance.api.crateApiFiltersEqualizerEqualizerSetBand(
+        that: this,
+        index: index,
+        config: config,
+      );
 
-  Future<void> setThreshold({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsLimiterSetThreshold(that: this, v: v);
+  /// Enable / disable a single band without rebuilding coefficients.
+  bool setBandEnabled({required BigInt index, required bool enabled}) =>
+      RustLib.instance.api.crateApiFiltersEqualizerEqualizerSetBandEnabled(
+        that: this,
+        index: index,
+        enabled: enabled,
+      );
 
-  Future<double> threshold() =>
-      RustLib.instance.api.crateApiFiltersDynamicsLimiterThreshold(that: this);
+  /// Convenience: just change the gain of an existing band.
+  bool setBandGain({required BigInt index, required double gainDb}) =>
+      RustLib.instance.api.crateApiFiltersEqualizerEqualizerSetBandGain(
+        that: this,
+        index: index,
+        gainDb: gainDb,
+      );
+
+  /// Update sample rate and recompute all coefficients.
+  Future<void> setSampleRate({required double sampleRate}) =>
+      RustLib.instance.api.crateApiFiltersEqualizerEqualizerSetSampleRate(
+        that: this,
+        sampleRate: sampleRate,
+      );
 }
 
 @sealed
-class MovingAverageImpl extends RustOpaque implements MovingAverage {
+class GainEffectImpl extends RustOpaque implements GainEffect {
   // Not to be used by end users
-  MovingAverageImpl.frbInternalDcoDecode(List<dynamic> wire)
+  GainEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  MovingAverageImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  GainEffectImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_MovingAverage,
+        RustLib.instance.api.rust_arc_increment_strong_count_GainEffect,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_MovingAverage,
+        RustLib.instance.api.rust_arc_decrement_strong_count_GainEffect,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_MovingAveragePtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_GainEffectPtr,
   );
+
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsGainEffectAutoAccessorGetBypass(that: this);
+
+  double get gainDb => RustLib.instance.api
+      .crateApiFiltersEffectsGainEffectAutoAccessorGetGainDb(that: this);
+
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsGainEffectAutoAccessorSetBypass(
+        that: this,
+        bypass: bypass,
+      );
+
+  set gainDb(double gainDb) => RustLib.instance.api
+      .crateApiFiltersEffectsGainEffectAutoAccessorSetGainDb(
+        that: this,
+        gainDb: gainDb,
+      );
 
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersMovingAverageProcess(that: this, sample: sample);
+      .crateApiFiltersEffectsGainEffectProcess(that: this, sample: sample);
 
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersMovingAverageReset(that: this);
+  Future<void> setGainDb({required double gainDb}) => RustLib.instance.api
+      .crateApiFiltersEffectsGainEffectSetGainDb(that: this, gainDb: gainDb);
 }
 
 @sealed
-class MuteSoloImpl extends RustOpaque implements MuteSolo {
+class HardClipEffectImpl extends RustOpaque implements HardClipEffect {
   // Not to be used by end users
-  MuteSoloImpl.frbInternalDcoDecode(List<dynamic> wire)
+  HardClipEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  MuteSoloImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  HardClipEffectImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_MuteSolo,
+        RustLib.instance.api.rust_arc_increment_strong_count_HardClipEffect,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_MuteSolo,
+        RustLib.instance.api.rust_arc_decrement_strong_count_HardClipEffect,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_MuteSoloPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_HardClipEffectPtr,
   );
 
-  Future<bool> isMuted() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesMuteSoloIsMuted(that: this);
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsHardClipEffectAutoAccessorGetBypass(that: this);
 
-  Future<bool> isSoloed() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesMuteSoloIsSoloed(that: this);
+  double get threshold => RustLib.instance.api
+      .crateApiFiltersEffectsHardClipEffectAutoAccessorGetThreshold(that: this);
+
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsHardClipEffectAutoAccessorSetBypass(
+        that: this,
+        bypass: bypass,
+      );
+
+  set threshold(double threshold) => RustLib.instance.api
+      .crateApiFiltersEffectsHardClipEffectAutoAccessorSetThreshold(
+        that: this,
+        threshold: threshold,
+      );
 
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesMuteSoloProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesMuteSoloReset(that: this);
-
-  Future<void> setAnySoloActive({required bool v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesMuteSoloSetAnySoloActive(that: this, v: v);
-
-  Future<void> setMute({required bool v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesMuteSoloSetMute(that: this, v: v);
-
-  Future<void> setSolo({required bool v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesMuteSoloSetSolo(that: this, v: v);
+      .crateApiFiltersEffectsHardClipEffectProcess(that: this, sample: sample);
 }
 
 @sealed
-class NoiseGateImpl extends RustOpaque implements NoiseGate {
+class OverdriveEffectImpl extends RustOpaque implements OverdriveEffect {
   // Not to be used by end users
-  NoiseGateImpl.frbInternalDcoDecode(List<dynamic> wire)
+  OverdriveEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  NoiseGateImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  OverdriveEffectImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_NoiseGate,
+        RustLib.instance.api.rust_arc_increment_strong_count_OverdriveEffect,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_NoiseGate,
+        RustLib.instance.api.rust_arc_decrement_strong_count_OverdriveEffect,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_NoiseGatePtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_OverdriveEffectPtr,
   );
 
-  Future<double> attack() =>
-      RustLib.instance.api.crateApiFiltersDynamicsNoiseGateAttack(that: this);
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsOverdriveEffectAutoAccessorGetBypass(that: this);
 
-  Future<double> hold() =>
-      RustLib.instance.api.crateApiFiltersDynamicsNoiseGateHold(that: this);
+  double get drive => RustLib.instance.api
+      .crateApiFiltersEffectsOverdriveEffectAutoAccessorGetDrive(that: this);
+
+  double get output => RustLib.instance.api
+      .crateApiFiltersEffectsOverdriveEffectAutoAccessorGetOutput(that: this);
+
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsOverdriveEffectAutoAccessorSetBypass(
+        that: this,
+        bypass: bypass,
+      );
+
+  set drive(double drive) => RustLib.instance.api
+      .crateApiFiltersEffectsOverdriveEffectAutoAccessorSetDrive(
+        that: this,
+        drive: drive,
+      );
+
+  set output(double output) => RustLib.instance.api
+      .crateApiFiltersEffectsOverdriveEffectAutoAccessorSetOutput(
+        that: this,
+        output: output,
+      );
 
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDynamicsNoiseGateProcess(that: this, sample: sample);
-
-  Future<double> release() =>
-      RustLib.instance.api.crateApiFiltersDynamicsNoiseGateRelease(that: this);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDynamicsNoiseGateReset(that: this);
-
-  Future<void> setAttack({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsNoiseGateSetAttack(that: this, v: v);
-
-  Future<void> setHold({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsNoiseGateSetHold(that: this, v: v);
-
-  Future<void> setRelease({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsNoiseGateSetRelease(that: this, v: v);
-
-  Future<void> setThreshold({required double v}) => RustLib.instance.api
-      .crateApiFiltersDynamicsNoiseGateSetThreshold(that: this, v: v);
-
-  Future<double> threshold() => RustLib.instance.api
-      .crateApiFiltersDynamicsNoiseGateThreshold(that: this);
-}
-
-@sealed
-class OnePoleHighPassImpl extends RustOpaque implements OnePoleHighPass {
-  // Not to be used by end users
-  OnePoleHighPassImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  OnePoleHighPassImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_OnePoleHighPass,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_OnePoleHighPass,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_OnePoleHighPassPtr,
-  );
-
-  Future<double> coefficient() => RustLib.instance.api
-      .crateApiFiltersOnePoleHighPassCoefficient(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersOnePoleHighPassProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersOnePoleHighPassReset(that: this);
-
-  Future<void> setCoefficient({required double coeff}) => RustLib.instance.api
-      .crateApiFiltersOnePoleHighPassSetCoefficient(that: this, coeff: coeff);
-}
-
-@sealed
-class OnePoleLowPassImpl extends RustOpaque implements OnePoleLowPass {
-  // Not to be used by end users
-  OnePoleLowPassImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  OnePoleLowPassImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_OnePoleLowPass,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_OnePoleLowPass,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_OnePoleLowPassPtr,
-  );
-
-  Future<double> coefficient() =>
-      RustLib.instance.api.crateApiFiltersOnePoleLowPassCoefficient(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersOnePoleLowPassProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersOnePoleLowPassReset(that: this);
-
-  Future<void> setCoefficient({required double coeff}) => RustLib.instance.api
-      .crateApiFiltersOnePoleLowPassSetCoefficient(that: this, coeff: coeff);
-}
-
-@sealed
-class PannerImpl extends RustOpaque implements Panner {
-  // Not to be used by end users
-  PannerImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  PannerImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_Panner,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_Panner,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_PannerPtr,
-  );
-
-  Future<double> pan() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesPannerPan(that: this);
-
-  Future<(double, double)> process({required double sample}) => RustLib
-      .instance
-      .api
-      .crateApiFiltersUtilitiesPannerProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersUtilitiesPannerReset(that: this);
-
-  Future<void> setPan({required double v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesPannerSetPan(that: this, v: v);
-}
-
-@sealed
-class PhaseInverterImpl extends RustOpaque implements PhaseInverter {
-  // Not to be used by end users
-  PhaseInverterImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  PhaseInverterImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_PhaseInverter,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_PhaseInverter,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_PhaseInverterPtr,
-  );
-
-  Future<bool> isInverted() => RustLib.instance.api
-      .crateApiFiltersUtilitiesPhaseInverterIsInverted(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesPhaseInverterProcess(that: this, sample: sample);
-
-  Future<void> reset() => RustLib.instance.api
-      .crateApiFiltersUtilitiesPhaseInverterReset(that: this);
-
-  Future<void> setInverted({required bool v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesPhaseInverterSetInverted(that: this, v: v);
+      .crateApiFiltersEffectsOverdriveEffectProcess(that: this, sample: sample);
 }
 
 @sealed
@@ -15558,225 +13890,68 @@ class ResampleStateImpl extends RustOpaque implements ResampleState {
 }
 
 @sealed
-class RevertBufferImpl extends RustOpaque implements RevertBuffer {
+class ReverbEffectImpl extends RustOpaque implements ReverbEffect {
   // Not to be used by end users
-  RevertBufferImpl.frbInternalDcoDecode(List<dynamic> wire)
+  ReverbEffectImpl.frbInternalDcoDecode(List<dynamic> wire)
     : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
-  RevertBufferImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
+  ReverbEffectImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
     : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_RevertBuffer,
+        RustLib.instance.api.rust_arc_increment_strong_count_ReverbEffect,
     rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_RevertBuffer,
+        RustLib.instance.api.rust_arc_decrement_strong_count_ReverbEffect,
     rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_RevertBufferPtr,
+        RustLib.instance.api.rust_arc_decrement_strong_count_ReverbEffectPtr,
   );
 
-  Future<bool> isPlaying() => RustLib.instance.api
-      .crateApiFiltersDelayRevertBufferIsPlaying(that: this);
+  bool get bypass => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorGetBypass(that: this);
 
-  Future<bool> isRecording() => RustLib.instance.api
-      .crateApiFiltersDelayRevertBufferIsRecording(that: this);
+  double get damping => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorGetDamping(that: this);
 
-  Future<double> mix() =>
-      RustLib.instance.api.crateApiFiltersDelayRevertBufferMix(that: this);
+  double get roomSize => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorGetRoomSize(that: this);
 
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDelayRevertBufferProcess(that: this, sample: sample);
+  double get wet => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorGetWet(that: this);
 
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDelayRevertBufferReset(that: this);
-
-  Future<void> setLoop({required bool loopPlayback}) =>
-      RustLib.instance.api.crateApiFiltersDelayRevertBufferSetLoop(
+  set bypass(bool bypass) => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorSetBypass(
         that: this,
-        loopPlayback: loopPlayback,
+        bypass: bypass,
       );
 
-  Future<void> setMix({required double mix}) => RustLib.instance.api
-      .crateApiFiltersDelayRevertBufferSetMix(that: this, mix: mix);
-
-  Future<void> startPlayback() => RustLib.instance.api
-      .crateApiFiltersDelayRevertBufferStartPlayback(that: this);
-
-  Future<void> startRecording() => RustLib.instance.api
-      .crateApiFiltersDelayRevertBufferStartRecording(that: this);
-
-  Future<void> stop() =>
-      RustLib.instance.api.crateApiFiltersDelayRevertBufferStop(that: this);
-}
-
-@sealed
-class SampleAndHoldImpl extends RustOpaque implements SampleAndHold {
-  // Not to be used by end users
-  SampleAndHoldImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  SampleAndHoldImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_SampleAndHold,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_SampleAndHold,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_SampleAndHoldPtr,
-  );
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesSampleAndHoldProcess(that: this, sample: sample);
-
-  Future<void> reset() => RustLib.instance.api
-      .crateApiFiltersUtilitiesSampleAndHoldReset(that: this);
-
-  Future<void> setTriggerThreshold({required double v}) => RustLib.instance.api
-      .crateApiFiltersUtilitiesSampleAndHoldSetTriggerThreshold(
+  set damping(double damping) => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorSetDamping(
         that: this,
-        v: v,
+        damping: damping,
       );
 
-  Future<double> triggerThreshold() => RustLib.instance.api
-      .crateApiFiltersUtilitiesSampleAndHoldTriggerThreshold(that: this);
-}
+  set roomSize(double roomSize) => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectAutoAccessorSetRoomSize(
+        that: this,
+        roomSize: roomSize,
+      );
 
-@sealed
-class SoftClipperImpl extends RustOpaque implements SoftClipper {
-  // Not to be used by end users
-  SoftClipperImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  SoftClipperImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_SoftClipper,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_SoftClipper,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_SoftClipperPtr,
-  );
-
-  Future<double> drive() => RustLib.instance.api
-      .crateApiFiltersDistortionSoftClipperDrive(that: this);
-
-  Future<double> mix() =>
-      RustLib.instance.api.crateApiFiltersDistortionSoftClipperMix(that: this);
+  set wet(double wet) =>
+      RustLib.instance.api.crateApiFiltersEffectsReverbEffectAutoAccessorSetWet(
+        that: this,
+        wet: wet,
+      );
 
   Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDistortionSoftClipperProcess(that: this, sample: sample);
-
-  Future<void> reset() => RustLib.instance.api
-      .crateApiFiltersDistortionSoftClipperReset(that: this);
-
-  Future<void> setDrive({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionSoftClipperSetDrive(that: this, v: v);
-
-  Future<void> setMix({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionSoftClipperSetMix(that: this, v: v);
-}
-
-@sealed
-class StateVariableFilterImpl extends RustOpaque
-    implements StateVariableFilter {
-  // Not to be used by end users
-  StateVariableFilterImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  StateVariableFilterImpl.frbInternalSseDecode(
-    BigInt ptr,
-    int externalSizeOnNative,
-  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount: RustLib
-        .instance
-        .api
-        .rust_arc_increment_strong_count_StateVariableFilter,
-    rustArcDecrementStrongCount: RustLib
-        .instance
-        .api
-        .rust_arc_decrement_strong_count_StateVariableFilter,
-    rustArcDecrementStrongCountPtr: RustLib
-        .instance
-        .api
-        .rust_arc_decrement_strong_count_StateVariableFilterPtr,
-  );
-
-  Future<double> frequency() => RustLib.instance.api
-      .crateApiFiltersStateVariableFilterFrequency(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersStateVariableFilterProcess(that: this, sample: sample);
-
-  Future<SvfOutputs> processAll({required double sample}) => RustLib
-      .instance
-      .api
-      .crateApiFiltersStateVariableFilterProcessAll(that: this, sample: sample);
+      .crateApiFiltersEffectsReverbEffectProcess(that: this, sample: sample);
 
   Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersStateVariableFilterReset(that: this);
+      RustLib.instance.api.crateApiFiltersEffectsReverbEffectReset(that: this);
 
-  Future<double> resonance() => RustLib.instance.api
-      .crateApiFiltersStateVariableFilterResonance(that: this);
-
-  Future<void> setFrequency({required double freq}) => RustLib.instance.api
-      .crateApiFiltersStateVariableFilterSetFrequency(that: this, freq: freq);
-
-  Future<void> setResonance({required double res}) => RustLib.instance.api
-      .crateApiFiltersStateVariableFilterSetResonance(that: this, res: res);
-}
-
-@sealed
-class SvfOutputsImpl extends RustOpaque implements SvfOutputs {
-  // Not to be used by end users
-  SvfOutputsImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  SvfOutputsImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_SvfOutputs,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_SvfOutputs,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_SvfOutputsPtr,
-  );
-
-  double get band => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorGetBand(that: this);
-
-  double get high => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorGetHigh(that: this);
-
-  double get low => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorGetLow(that: this);
-
-  double get notch => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorGetNotch(that: this);
-
-  set band(double band) => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorSetBand(that: this, band: band);
-
-  set high(double high) => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorSetHigh(that: this, high: high);
-
-  set low(double low) => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorSetLow(that: this, low: low);
-
-  set notch(double notch) => RustLib.instance.api
-      .crateApiFiltersSvfOutputsAutoAccessorSetNotch(that: this, notch: notch);
+  Future<void> updateParams() => RustLib.instance.api
+      .crateApiFiltersEffectsReverbEffectUpdateParams(that: this);
 }
 
 @sealed
@@ -15812,7 +13987,7 @@ class VisualizerProcessorImpl extends RustOpaque
     required List<double> samples,
     required BigInt channels,
     required int sampleRate,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
     required bool playing,
   }) => RustLib.instance.api.crateApiVisualizerVisualizerProcessorAnalyzeBands(
     that: this,
@@ -15838,7 +14013,7 @@ class VisualizerProcessorImpl extends RustOpaque
 
   /// Compute band energies using cached magnitudes from the last
   /// `compute()` or `analyze_bands()` call. Near-zero cost.
-  Future<List<BandEnergy>> computeBands({required List<BandKind> kinds}) =>
+  Future<List<BandEnergy>> computeBands({required List<VBandKind> kinds}) =>
       RustLib.instance.api.crateApiVisualizerVisualizerProcessorComputeBands(
         that: this,
         kinds: kinds,
@@ -15855,42 +14030,4 @@ class VisualizerProcessorImpl extends RustOpaque
 
   Future<void> reset() => RustLib.instance.api
       .crateApiVisualizerVisualizerProcessorReset(that: this);
-}
-
-@sealed
-class WaveShaperImpl extends RustOpaque implements WaveShaper {
-  // Not to be used by end users
-  WaveShaperImpl.frbInternalDcoDecode(List<dynamic> wire)
-    : super.frbInternalDcoDecode(wire, _kStaticData);
-
-  // Not to be used by end users
-  WaveShaperImpl.frbInternalSseDecode(BigInt ptr, int externalSizeOnNative)
-    : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
-
-  static final _kStaticData = RustArcStaticData(
-    rustArcIncrementStrongCount:
-        RustLib.instance.api.rust_arc_increment_strong_count_WaveShaper,
-    rustArcDecrementStrongCount:
-        RustLib.instance.api.rust_arc_decrement_strong_count_WaveShaper,
-    rustArcDecrementStrongCountPtr:
-        RustLib.instance.api.rust_arc_decrement_strong_count_WaveShaperPtr,
-  );
-
-  Future<double> amount() => RustLib.instance.api
-      .crateApiFiltersDistortionWaveShaperAmount(that: this);
-
-  Future<WaveShapeCurve> curve() =>
-      RustLib.instance.api.crateApiFiltersDistortionWaveShaperCurve(that: this);
-
-  Future<double> process({required double sample}) => RustLib.instance.api
-      .crateApiFiltersDistortionWaveShaperProcess(that: this, sample: sample);
-
-  Future<void> reset() =>
-      RustLib.instance.api.crateApiFiltersDistortionWaveShaperReset(that: this);
-
-  Future<void> setAmount({required double v}) => RustLib.instance.api
-      .crateApiFiltersDistortionWaveShaperSetAmount(that: this, v: v);
-
-  Future<void> setCurve({required WaveShapeCurve v}) => RustLib.instance.api
-      .crateApiFiltersDistortionWaveShaperSetCurve(that: this, v: v);
 }

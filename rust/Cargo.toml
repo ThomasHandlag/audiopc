@@ -21,6 +21,7 @@ symphonia = { version = "0.6.0", features = ["all"] }
 rustfft = "6.2"
 tempfile = "3.14"
 crossbeam-channel = "0.5.16"
+parking_lot = "0.12"
 flutter_rust_bridge = "=2.12.0"
 
 [target.'cfg(target_os = "android")'.dependencies]

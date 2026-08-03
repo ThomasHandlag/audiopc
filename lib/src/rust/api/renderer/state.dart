@@ -4,14 +4,33 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../../frb_generated.dart';
+import '../filters/effects.dart';
+import '../filters/equalizer.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `eq`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioState>>
 abstract class AudioState implements RustOpaqueInterface {
+  EffectsChain get effects;
+
+  Equalizer get equalizer;
+
+  set effects(EffectsChain effects);
+
+  set equalizer(Equalizer equalizer);
+
   /// Clear all transient audio state without touching volume / rate / device.
   Future<void> clearAudioState();
+
+  Future<void> clearEffects();
+
+  /// Clear all equalizer bands
+  Future<void> clearEq();
+
+  /// Copy the most recent `out.len()` samples from the visualiser ring into
+  /// `out`.  Returns the number of samples written.
+  Future<Float32List> copyLatestVisualizerSamples({required BigInt size});
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
   static Future<AudioState> newInstance({
@@ -24,7 +43,7 @@ abstract class AudioState implements RustOpaqueInterface {
     channels: channels,
   );
 
-  Future<double> nextSample({required BigInt channels});
+  Future<double> nextSample();
 
   /// Current playback position in milliseconds.
   Future<int> position();
@@ -34,6 +53,19 @@ abstract class AudioState implements RustOpaqueInterface {
   Future<BigInt> pushSamplesBounded({required List<double> samples});
 
   Future<void> pushVisualizerSample({required double sample});
+
+  Future<void> setEffect({required EffectsChain effects});
+
+  Future<void> setEqualizer({required Equalizer equalizer});
+
+  Future<void> updateDeviceConfig({
+    required BuffConfig config,
+    required BuffConfig vConfig,
+    required BigInt channels,
+  });
+
+  /// Copy the most recent interleaved samples needed for FFT analysis.
+  Future<Float32List> visualizerWindow({required BigInt maxSamples});
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ResampleState>>

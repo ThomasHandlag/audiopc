@@ -4,31 +4,37 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
-import 'filters.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'renderer/output.dart';
 import 'source.dart';
+import 'visualizer.dart';
+
+// These functions are ignored because they are not marked as `pub`: `ensure_stream`, `start_decode`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>>
 abstract class AudioPlayer implements RustOpaqueInterface {
-  /// Add Effect to output audio.
-  Future<void> addEffect({required AudioProcessor effect});
-
   /// Clear the effect chain of every output channel.
-  Future<void> clearEffects();
+  void clearEffects();
 
   /// Duration in millisecond of current source.
   int durationMillis();
 
+  List<BandEnergy> getBand({required List<VBandKind> kinds});
+
+  Float32List getBars();
+
   AudioOutputConfig getOutputConfig();
 
-  Future<int> getState();
+  Float32List getSamples({required int buffSize});
+
+  int getState();
 
   bool isCompleted();
 
   /// Whether player is playing or not.
   bool isPlaying();
 
+  /// Create new player instance.
   factory AudioPlayer() => RustLib.instance.api.crateApiPlayerAudioPlayerNew();
 
   /// Pause curent playing song.
@@ -37,24 +43,52 @@ abstract class AudioPlayer implements RustOpaqueInterface {
   /// Play current audio source. If current source is empty then an error will be throw.
   void play();
 
-  Future<int> position();
+  int position();
 
   void resume();
 
-  Future<Float32List> samplesData();
+  double sampleRate();
 
   /// Play audio at given position in millisecond.
   void seek({required int position});
 
+  void set10BandEq();
+
+  void setBandGain({required int index, required double gain});
+
+  void setChorus({
+    required double rate,
+    required double depth,
+    required double wet,
+  });
+
+  void setDelay({
+    required double delaySeconds,
+    required double feedback,
+    required double wet,
+  });
+
+  void setOverride({required double drive, required double output});
+
+  void setProcessor({required int barCount, required int fftSize});
+
   /// Set playback speed of output audio.
-  Future<void> setRate({required double rate});
+  void setRate({required double rate});
+
+  void setReverb({
+    required double roomSize,
+    required double damping,
+    required double wet,
+  });
 
   /// Set source for preparing to play.
   void setSource({required AudioSource source});
 
+  void setThreshold({required double threshold});
+
   /// Set volume of ouput audio.
-  Future<void> setVolumn({required double volumn});
+  void setVolumn({required double volumn});
 
   /// Stop current playing audio.
-  Future<void> stop();
+  void stop();
 }

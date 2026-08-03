@@ -4,7 +4,7 @@ use rustfft::{Fft, FftPlanner, num_complex::Complex};
 /// Enum representing different frequency bands / instruments.
 /// Each variant knows its own frequency range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum BandKind {
+pub enum VBandKind {
     // Standard / Detailed Bands
     SubBass,
     Bass,
@@ -26,71 +26,71 @@ pub enum BandKind {
     Cymbals,
 }
 
-impl BandKind {
+impl VBandKind {
     /// Returns the (min_hz, max_hz) frequency range for this band kind.
     pub fn freq_range(&self) -> (f32, f32) {
         match self {
-            BandKind::SubBass => (20.0, 60.0),
-            BandKind::Bass => (60.0, 250.0),
-            BandKind::UpperBass => (150.0, 300.0),
-            BandKind::LowMid => (250.0, 500.0),
-            BandKind::Mid => (500.0, 2000.0),
-            BandKind::UpperMid => (2000.0, 4000.0),
-            BandKind::Presence => (4000.0, 6000.0),
-            BandKind::High => (4800.0, 8000.0),
-            BandKind::Brilliance => (6000.0, 12000.0),
-            BandKind::Air => (12000.0, 20000.0),
-            BandKind::Kick => (40.0, 100.0),
-            BandKind::SnareBody => (150.0, 300.0),
-            BandKind::SnareCrack => (2000.0, 5000.0),
-            BandKind::Toms => (80.0, 350.0),
-            BandKind::Vocal => (300.0, 3400.0),
-            BandKind::HiHat => (6000.0, 15000.0),
-            BandKind::Cymbals => (5000.0, 18000.0),
+            VBandKind::SubBass => (20.0, 60.0),
+            VBandKind::Bass => (60.0, 250.0),
+            VBandKind::UpperBass => (150.0, 300.0),
+            VBandKind::LowMid => (250.0, 500.0),
+            VBandKind::Mid => (500.0, 2000.0),
+            VBandKind::UpperMid => (2000.0, 4000.0),
+            VBandKind::Presence => (4000.0, 6000.0),
+            VBandKind::High => (4800.0, 8000.0),
+            VBandKind::Brilliance => (6000.0, 12000.0),
+            VBandKind::Air => (12000.0, 20000.0),
+            VBandKind::Kick => (40.0, 100.0),
+            VBandKind::SnareBody => (150.0, 300.0),
+            VBandKind::SnareCrack => (2000.0, 5000.0),
+            VBandKind::Toms => (80.0, 350.0),
+            VBandKind::Vocal => (300.0, 3400.0),
+            VBandKind::HiHat => (6000.0, 15000.0),
+            VBandKind::Cymbals => (5000.0, 18000.0),
         }
     }
 
     /// Standard frequency bands covering the full audible spectrum.
-    pub fn standard() -> Vec<BandKind> {
+    pub fn standard() -> Vec<VBandKind> {
         vec![
-            BandKind::SubBass,
-            BandKind::Bass,
-            BandKind::LowMid,
-            BandKind::Mid,
-            BandKind::UpperMid,
-            BandKind::Presence,
-            BandKind::Brilliance,
-            BandKind::Air,
+            VBandKind::SubBass,
+            VBandKind::Bass,
+            VBandKind::LowMid,
+            VBandKind::Mid,
+            VBandKind::UpperMid,
+            VBandKind::Presence,
+            VBandKind::Brilliance,
+            VBandKind::Air,
         ]
     }
 
     /// Instrument-approximation bands (overlapping ranges).
-    pub fn instrument() -> Vec<BandKind> {
+    pub fn instrument() -> Vec<VBandKind> {
         vec![
-            BandKind::Kick,
-            BandKind::Bass,
-            BandKind::SnareBody,
-            BandKind::SnareCrack,
-            BandKind::Toms,
-            BandKind::Vocal,
-            BandKind::HiHat,
-            BandKind::Cymbals,
+            VBandKind::Kick,
+            VBandKind::Bass,
+            VBandKind::SnareBody,
+            VBandKind::SnareCrack,
+            VBandKind::Toms,
+            VBandKind::Vocal,
+            VBandKind::HiHat,
+            VBandKind::Cymbals,
         ]
     }
 
     /// Detailed 10-band breakdown with finer mid-range resolution.
-    pub fn detailed() -> Vec<BandKind> {
+    pub fn detailed() -> Vec<VBandKind> {
         vec![
-            BandKind::SubBass,
-            BandKind::Bass,
-            BandKind::UpperBass,
-            BandKind::LowMid,
-            BandKind::Mid,
-            BandKind::UpperMid,
-            BandKind::Presence,
-            BandKind::High,
-            BandKind::Brilliance,
-            BandKind::Air,
+            VBandKind::SubBass,
+            VBandKind::Bass,
+            VBandKind::UpperBass,
+            VBandKind::LowMid,
+            VBandKind::Mid,
+            VBandKind::UpperMid,
+            VBandKind::Presence,
+            VBandKind::High,
+            VBandKind::Brilliance,
+            VBandKind::Air,
         ]
     }
 }
@@ -99,7 +99,7 @@ impl BandKind {
 #[derive(Debug, Clone)]
 pub struct BandEnergy {
     /// The band category analyzed.
-    pub kind: BandKind,
+    pub kind: VBandKind,
     /// Lower frequency bound in Hz.
     pub min_hz: f32,
     /// Upper frequency bound in Hz.
@@ -140,6 +140,7 @@ impl Default for BandState {
 
 // ─── Visualizer Processor ────────────────────────────────────────────
 #[frb(opaque)]
+#[derive(Clone)]
 pub struct VisualizerProcessor {
     fft: std::sync::Arc<dyn Fft<f32>>,
     fft_buffer: Vec<Complex<f32>>,
@@ -364,7 +365,7 @@ impl VisualizerProcessor {
 
     /// Compute band energies using cached magnitudes from the last
     /// `compute()` or `analyze_bands()` call. Near-zero cost.
-    pub fn compute_bands(&mut self, kinds: &[BandKind]) -> Vec<BandEnergy> {
+    pub fn compute_bands(&mut self, kinds: &[VBandKind]) -> Vec<BandEnergy> {
         self.ensure_band_states(kinds.len());
 
         if self.last_magnitudes.is_empty() || self.last_sample_rate == 0 {
@@ -441,7 +442,7 @@ impl VisualizerProcessor {
         samples: &[f32],
         channels: usize,
         sample_rate: u32,
-        kinds: &[BandKind],
+        kinds: &[VBandKind],
         playing: bool,
     ) -> Vec<BandEnergy> {
         self.ensure_band_states(kinds.len());
@@ -460,7 +461,7 @@ impl VisualizerProcessor {
         self.compute_bands(kinds)
     }
 
-    fn decay_bands(&mut self, kinds: &[BandKind]) -> Vec<BandEnergy> {
+    fn decay_bands(&mut self, kinds: &[VBandKind]) -> Vec<BandEnergy> {
         self.ensure_band_states(kinds.len());
 
         let mut results = Vec::with_capacity(kinds.len());
@@ -490,12 +491,11 @@ impl VisualizerProcessor {
         results
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    //  Convenience Aggregators
-    // ═══════════════════════════════════════════════════════════════════
+    
+    // -------- Convenience Aggregators
 
     /// Maximum beat value across bands matching the requested kinds.
-    pub fn beat_for_kinds(bands: &[BandEnergy], kinds: &[BandKind]) -> f32 {
+    pub fn beat_for_kinds(bands: &[BandEnergy], kinds: &[VBandKind]) -> f32 {
         bands
             .iter()
             .filter(|b| kinds.contains(&b.kind))
@@ -504,34 +504,38 @@ impl VisualizerProcessor {
     }
 
     /// Composite drum hit strength (kick + snare body + snare crack + toms).
+    #[frb(sync)]
     pub fn drum_beat(bands: &[BandEnergy]) -> f32 {
         Self::beat_for_kinds(
             bands,
             &[
-                BandKind::Kick,
-                BandKind::SnareBody,
-                BandKind::SnareCrack,
-                BandKind::Toms,
+                VBandKind::Kick,
+                VBandKind::SnareBody,
+                VBandKind::SnareCrack,
+                VBandKind::Toms,
             ],
         )
     }
 
     /// Composite bass hit strength (kick + bass).
+    #[frb(sync)]
     pub fn bass_beat(bands: &[BandEnergy]) -> f32 {
-        Self::beat_for_kinds(bands, &[BandKind::Kick, BandKind::Bass])
+        Self::beat_for_kinds(bands, &[VBandKind::Kick, VBandKind::Bass])
     }
 
     /// Vocal presence as normalized energy.
+    #[frb(sync)]
     pub fn vocal_presence(bands: &[BandEnergy]) -> f32 {
         bands
             .iter()
-            .find(|b| b.kind == BandKind::Vocal)
+            .find(|b| b.kind == VBandKind::Vocal)
             .map(|b| b.normalized)
             .unwrap_or(0.0)
     }
 
     /// High-frequency energy (hi-hat, cymbals, sibilance) as max normalized
     /// value across bands starting at 4 kHz or above.
+    #[frb(sync)]
     pub fn high_frequency_energy(bands: &[BandEnergy]) -> f32 {
         bands
             .iter()
@@ -542,6 +546,7 @@ impl VisualizerProcessor {
 
     /// Low-frequency energy (sub bass + bass) as max normalized value
     /// across bands below 250 Hz.
+    #[frb(sync)]
     pub fn low_frequency_energy(bands: &[BandEnergy]) -> f32 {
         bands
             .iter()

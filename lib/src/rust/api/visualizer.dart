@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `decay_bands`, `ensure_band_states`, `hann_window`, `hz_to_bin`, `log_interp`, `perform_fft`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `hash`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `hash`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VisualizerProcessor>>
 abstract class VisualizerProcessor implements RustOpaqueInterface {
@@ -16,12 +16,12 @@ abstract class VisualizerProcessor implements RustOpaqueInterface {
     required List<double> samples,
     required BigInt channels,
     required int sampleRate,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
     required bool playing,
   });
 
   /// Composite bass hit strength (kick + bass).
-  static Future<double> bassBeat({required List<BandEnergy> bands}) => RustLib
+  static double bassBeat({required List<BandEnergy> bands}) => RustLib
       .instance
       .api
       .crateApiVisualizerVisualizerProcessorBassBeat(bands: bands);
@@ -29,7 +29,7 @@ abstract class VisualizerProcessor implements RustOpaqueInterface {
   /// Maximum beat value across bands matching the requested kinds.
   static Future<double> beatForKinds({
     required List<BandEnergy> bands,
-    required List<BandKind> kinds,
+    required List<VBandKind> kinds,
   }) => RustLib.instance.api.crateApiVisualizerVisualizerProcessorBeatForKinds(
     bands: bands,
     kinds: kinds,
@@ -44,12 +44,12 @@ abstract class VisualizerProcessor implements RustOpaqueInterface {
 
   /// Compute band energies using cached magnitudes from the last
   /// `compute()` or `analyze_bands()` call. Near-zero cost.
-  Future<List<BandEnergy>> computeBands({required List<BandKind> kinds});
+  Future<List<BandEnergy>> computeBands({required List<VBandKind> kinds});
 
   Future<Float32List> decayOnly();
 
   /// Composite drum hit strength (kick + snare body + snare crack + toms).
-  static Future<double> drumBeat({required List<BandEnergy> bands}) => RustLib
+  static double drumBeat({required List<BandEnergy> bands}) => RustLib
       .instance
       .api
       .crateApiVisualizerVisualizerProcessorDrumBeat(bands: bands);
@@ -58,18 +58,18 @@ abstract class VisualizerProcessor implements RustOpaqueInterface {
 
   /// High-frequency energy (hi-hat, cymbals, sibilance) as max normalized
   /// value across bands starting at 4 kHz or above.
-  static Future<double> highFrequencyEnergy({
-    required List<BandEnergy> bands,
-  }) => RustLib.instance.api
-      .crateApiVisualizerVisualizerProcessorHighFrequencyEnergy(bands: bands);
+  static double highFrequencyEnergy({required List<BandEnergy> bands}) =>
+      RustLib.instance.api
+          .crateApiVisualizerVisualizerProcessorHighFrequencyEnergy(
+            bands: bands,
+          );
 
   /// Low-frequency energy (sub bass + bass) as max normalized value
   /// across bands below 250 Hz.
-  static Future<double> lowFrequencyEnergy({required List<BandEnergy> bands}) =>
-      RustLib.instance.api
-          .crateApiVisualizerVisualizerProcessorLowFrequencyEnergy(
-            bands: bands,
-          );
+  static double lowFrequencyEnergy({required List<BandEnergy> bands}) => RustLib
+      .instance
+      .api
+      .crateApiVisualizerVisualizerProcessorLowFrequencyEnergy(bands: bands);
 
   factory VisualizerProcessor({
     required BigInt barCount,
@@ -82,16 +82,16 @@ abstract class VisualizerProcessor implements RustOpaqueInterface {
   Future<void> reset();
 
   /// Vocal presence as normalized energy.
-  static Future<double> vocalPresence({required List<BandEnergy> bands}) =>
-      RustLib.instance.api.crateApiVisualizerVisualizerProcessorVocalPresence(
-        bands: bands,
-      );
+  static double vocalPresence({required List<BandEnergy> bands}) => RustLib
+      .instance
+      .api
+      .crateApiVisualizerVisualizerProcessorVocalPresence(bands: bands);
 }
 
 /// Computed energy metrics for a single frequency band.
 class BandEnergy {
   /// The band category analyzed.
-  final BandKind kind;
+  final VBandKind kind;
 
   /// Lower frequency bound in Hz.
   final double minHz;
@@ -151,44 +151,6 @@ class BandEnergy {
           beat == other.beat;
 }
 
-/// Enum representing different frequency bands / instruments.
-/// Each variant knows its own frequency range.
-enum BandKind {
-  subBass,
-  bass,
-  upperBass,
-  lowMid,
-  mid,
-  upperMid,
-  presence,
-  high,
-  brilliance,
-  air,
-  kick,
-  snareBody,
-  snareCrack,
-  toms,
-  vocal,
-  hiHat,
-  cymbals;
-
-  /// Detailed 10-band breakdown with finer mid-range resolution.
-  static Future<List<BandKind>> detailed() =>
-      RustLib.instance.api.crateApiVisualizerBandKindDetailed();
-
-  /// Returns the (min_hz, max_hz) frequency range for this band kind.
-  Future<(double, double)> freqRange() =>
-      RustLib.instance.api.crateApiVisualizerBandKindFreqRange(that: this);
-
-  /// Instrument-approximation bands (overlapping ranges).
-  static Future<List<BandKind>> instrument() =>
-      RustLib.instance.api.crateApiVisualizerBandKindInstrument();
-
-  /// Standard frequency bands covering the full audible spectrum.
-  static Future<List<BandKind>> standard() =>
-      RustLib.instance.api.crateApiVisualizerBandKindStandard();
-}
-
 /// Internal per-band smoothing state.
 class BandState {
   final double smoothed;
@@ -226,4 +188,42 @@ class BandState {
           fastEnergy == other.fastEnergy &&
           slowEnergy == other.slowEnergy &&
           adaptiveLevel == other.adaptiveLevel;
+}
+
+/// Enum representing different frequency bands / instruments.
+/// Each variant knows its own frequency range.
+enum VBandKind {
+  subBass,
+  bass,
+  upperBass,
+  lowMid,
+  mid,
+  upperMid,
+  presence,
+  high,
+  brilliance,
+  air,
+  kick,
+  snareBody,
+  snareCrack,
+  toms,
+  vocal,
+  hiHat,
+  cymbals;
+
+  /// Detailed 10-band breakdown with finer mid-range resolution.
+  static Future<List<VBandKind>> detailed() =>
+      RustLib.instance.api.crateApiVisualizerVBandKindDetailed();
+
+  /// Returns the (min_hz, max_hz) frequency range for this band kind.
+  Future<(double, double)> freqRange() =>
+      RustLib.instance.api.crateApiVisualizerVBandKindFreqRange(that: this);
+
+  /// Instrument-approximation bands (overlapping ranges).
+  static Future<List<VBandKind>> instrument() =>
+      RustLib.instance.api.crateApiVisualizerVBandKindInstrument();
+
+  /// Standard frequency bands covering the full audible spectrum.
+  static Future<List<VBandKind>> standard() =>
+      RustLib.instance.api.crateApiVisualizerVBandKindStandard();
 }

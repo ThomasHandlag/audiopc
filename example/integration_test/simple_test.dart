@@ -5,5 +5,6 @@ import 'package:audiopc/audiopc.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async => await RustLib.init());
-  
+
+  test('', () {}); 
 }

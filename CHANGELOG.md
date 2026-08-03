@@ -1,5 +1,11 @@
 # Plugin change logs
 
+## VERSION 0.2.0
+
+* BREAKING: change to use flutter_rust_brige
+* BREAKING: AudioPlayer now become PcPlayer
+* BREAKING: In order to get computed bars, you must call [setProcessor] first.
+
 ## VERSION 0.1.2+1
 
 * Update documentation

@@ -1,29 +1,25 @@
 import 'dart:async';
 
-import 'package:audiopc/src/dart/playback_state.dart';
+import 'package:audiopc/audiopc.dart';
 import 'package:audiopc/src/rust/api/player.dart';
-import 'package:audiopc/src/rust/api/renderer/output.dart';
-import 'package:audiopc/src/rust/api/source.dart';
-import 'package:audiopc/src/rust/api/filters.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
-export 'package:audiopc/src/rust/api/filters.dart';
-export 'package:audiopc/src/rust/api/visualizer.dart';
-export 'package:audiopc/src/rust/api/source.dart';
 
 /// player instance
 final class PcPlayer {
   /// player api
   final AudioPlayer player;
+  
   PcPlayer._(this.player) {
     _stateController = StreamController.broadcast();
     _posController = StreamController.broadcast();
 
-    _positionTimer = Timer.periodic(90.millis, (_) async {
-      _posController.add(await player.position());
+    _positionTimer = Timer.periodic(90.millis, (_) {
+      _posController.add(player.position());
     });
 
-    _stateTimer = Timer.periodic(90.millis, (_) async {
-      _stateController.add((await player.getState()).mapState());
+    _stateTimer = Timer.periodic(90.millis, (_) {
+      final state = player.getState().mapState();
+      _stateController.add(state);
     });
   }
 
@@ -39,7 +35,7 @@ final class PcPlayer {
   late final Timer _positionTimer;
   late final Timer _stateTimer;
 
-  /// create new instance
+  /// Create new instance.
   static PcPlayer instance() {
     final player = AudioPlayer();
 
@@ -75,28 +71,60 @@ final class PcPlayer {
     player.pause();
   }
 
+  /// Set source to player.
+  void setSource(AudioSource source) {
+    player.setSource(source: source);
+  }
+
+  List<BandEnergy> getBands(List<VBandKind> kinds) {
+    return player.getBand(kinds: kinds);
+  }
+
+  /// Resume audio playback.
   void resume() {
     player.resume();
   }
 
   /// Stop audio playback.
-  Future<void> stop() async {
-    await player.stop();
+  void stop() {
+    player.stop();
   }
 
   /// Set playback speed.
-  Future<void> setRate(double rate) async {
-    await player.setRate(rate: rate);
+  void setRate(double rate) {
+    player.setRate(rate: rate);
+  }
+
+  /// Set 10 bands equalizer.
+  void set10BandsEqualizer() {
+    player.set10BandEq();
+  }
+
+  /// Manually add equalizer band.
+  void setBand(int index, double gainDb) {
+    player.setBandGain(index: index, gain: gainDb);
+  }
+
+  /// Enable(if disabled) and control the effect.
+  void setReverb(double roomSize, double damping, double wet) {
+    player.setReverb(roomSize: roomSize, damping: damping, wet: wet);
+  }
+
+  void setChorus(double rate, double depth, double wet) {
+    player.setChorus(rate: rate, depth: depth, wet: wet);
+  }
+
+  void setDelay(double delaySeconds, double feedback, double wet) {
+    player.setDelay(delaySeconds: delaySeconds, feedback: feedback, wet: wet);
+  }
+
+  void setOverride(double drive, double output) {
+    player.setOverride(drive: drive, output: output);
   }
 
   /// Set volumn of ouput audio.
-  Future<void> setVolumn(double volumn) async {
-    await player.setVolumn(volumn: volumn);
-  }
-
-  /// Add effect to control output audio.
-  Future<void> addEffect(AudioProcessor effect) async {
-    await player.addEffect(effect: effect);
+  void setVolumn(double volumn) {
+    player.setVolumn(volumn: volumn);
   }
 
   /// Whether audio completed or not.
@@ -109,9 +137,31 @@ final class PcPlayer {
     return player.isPlaying();
   }
 
-  /// Current samples data.
-  Future<Float32List> samplesData() async {
-    return await player.samplesData();
+  /// Get computed bars. The return data sized is determined by processor.
+  /// 
+  /// If audio processor did not set yet then an exception will be throw.
+  /// To set how many bars and precise the bars is just call [setProcesor].
+  Float32List getBars() {
+    return player.getBars();
+  }
+
+  Float32List getSamples(int buffSize) {
+    return player.getSamples(buffSize: buffSize);
+  }
+
+  /// Create new processor with bar count and fft size.
+  /// 
+  /// Increase [fftSize] can help visualizer bar more presice,
+  /// but should consider performance if it too large.
+  void setProcesor(int barCount, int fftSize) {
+    player.setProcessor(barCount: barCount, fftSize: fftSize);
+  }
+
+
+  double drumBeat() {
+    return VisualizerProcessor.drumBeat(
+      bands: getBands([.kick, .snareBody, .snareCrack]),
+    );
   }
 
   /// Return current output config.

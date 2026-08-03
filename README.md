@@ -12,30 +12,38 @@
 ## 🚀 Overview
 
 **audiopc** is a Rust-powered Flutter audio plugin built using **FFI** and powered by the **CPAL** backend.  
-It provides low-level, high-performance audio playback and processing for Flutter applications.
-
-Designed for developers who want more control over audio pipelines, `audiopc` supports decoding, streaming, and real-time audio processing directly inside the audio callback.
+Provide seamless playback, and advance features like equalizer, audio sample, visualizer.
 
 ---
+
+## 💪 Supported platforms
+
+- Windows ✅
+- Android ✅
+- Linux   ✅
+- IOS     🚧
+- MacOS   🚧
+- Web     🚨
 
 ## ✨ Features
 
 - 🎵 Play local audio files via native CPAL backend  
 - 🌐 Stream audio from direct internet URLs  
 - 🧩 Decode multiple formats using **Symphonia**  
-- 🎚️ Real-time processing (volume & low-pass filter)  
+- 🎚️ Real-time processing (volume & effects, fliter, visualizer)  
 - 🔊 Access and query active output device configuration  
-- ⚡ High-performance Rust core with Flutter FFI bridge
+- ⚡ High-performance with Rust.
 
 | Feature          | Status |
 | ---------------- | ------ |
-| Local Playback   | ✅      |
-| URL Streaming    | ✅      |
-| Format Decoding  | ✅      |
-| Audio Processing | ✅      |
-| Device Query     | ✅      |
+| Local Playback   | ✅     |
+| URL Streaming    | ✅     |
+| Audio Processing | ✅     |
+| Device Query     | ✅     |
 
 ## 📦 Installation
+
+### 🧳 Dependency
 
 Add to your `pubspec.yaml`:
 
@@ -44,28 +52,80 @@ dependencies:
   audiopc: ^0.1.3
 ```
 
+### &#x1F527; Platform Specific Config
+
+#### Linux
+
+Nothing to do
+
+#### Windows
+
+Nothing to do
+
+#### Android
+
+Add plugin to your main activity.
+
 ```kotlin
-  // Add these line of code to your MainActivity.kt
-  import com.thugbn.audiopc.AudiopcBridge
-  AudiopcBridge.init(applicationContext)
+// MainActivity.kt
+import com.thugbn.audiopc.AudiopcPlugin
+  
+class MainActivity : FlutterActivity() {
+  ...
+
+   override fun configureFlutterEngine(
+        @NonNull flutterEngine: FlutterEngine,
+    ) {
+        flutterEngine.plugins.add(AudiopcPlugin())
+        super.configureFlutterEngine(flutterEngine)
+    }
+  ... 
+}
+
+```
+
+### Dart
+
+```dart
+void main() async {
+  /// Make sure you add this line before you use any api.
+  await RustLib.init();
+
+  runApp(YourApp());
+}
+
 ```
 
 ## Usage
 
+Create player instance and play audio source.
+
 ```dart
 import 'package:audiopc/audiopc.dart';
 
-final player = AudioPlayer();
+final player = PcPlayer.instance();
 
-player.playSource("youraudio_file");
+// Set and play audio source.
+player.playSource(AudioSource.path(source));
 
-// Adjust volume
+// Adjust volume.
 player.setVolume(0.8);
 
-// Apply low-pass filter
 player.setRate(0.5);
+```
+
+Get visualizer bars.
+
+```dart
+  player.setProcessor(54, 512);
+
+  final bars = player.getBars();
 ```
 
 ## ⭐ Support
 
 If you find this project useful, consider giving it a ⭐ on GitHub!
+
+## Contribute
+
+**Feel free to create pull request, issues**;

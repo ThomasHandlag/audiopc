@@ -20,7 +20,6 @@ abstract class CargoKitBuildTask extends DefaultTask {
     @Inject
     abstract ExecOperations getExecOperations()
 
-
     @Input
     String buildMode
 

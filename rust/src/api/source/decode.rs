@@ -1,15 +1,14 @@
 use std::{
     fs::File,
     io::{Seek, SeekFrom, Write},
-    sync::{
-        Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
-    },
+    sync::Arc,
     thread::{self, JoinHandle},
     time::Duration,
 };
 
+use crossbeam_channel::Receiver;
 use flutter_rust_bridge::frb;
+use parking_lot::Mutex;
 use symphonia::core::{
     audio::GenericAudioBufferRef,
     codecs::{CodecParameters, audio::AudioDecoderOptions},
@@ -22,19 +21,32 @@ use tempfile::tempfile;
 
 use crate::{
     api::{
-        enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE}, renderer::{
-            output::AudioOutputConfig, state::{AudioState, PlaybackState, ResampleState},
-        }, source::{AudioSource, http_stream::HttpStream},
-    }, error,
+        enums::{
+            AudioCommand, DECODE_BACKPRESSURE_SLEEP_MS, DEFAULT_MAX_QUEUE_SECONDS,
+            DEFAULT_VISUALIZER_SECONDS, MAX_RATE, MIN_RATE,
+        },
+        renderer::{
+            output::{AudioOutput, AudioOutputConfig},
+            state::{AudioState, BuffConfig, PlaybackState, ResampleState},
+        },
+        source::{AudioSource, http_stream::HttpStream},
+    },
+    error, info, warn,
 };
 
 type BoxedMediaSource = Box<dyn symphonia::core::io::MediaSource>;
 
+use crossbeam_channel::Sender;
+
+pub enum DecodeCommand {
+    Seek { millis: i32 },
+    Stop,
+}
+
 #[frb(opaque)]
 pub struct DecodePool {
-    stop_flag: Arc<AtomicBool>,
+    pub(crate) command_tx: Option<Sender<DecodeCommand>>, // Replaces stop_flag
     pool: Option<JoinHandle<()>>,
-    pub decode_start: i32,
     pub(crate) duration: i32,
     pub(crate) source: Option<AudioSource>,
 }
@@ -42,21 +54,11 @@ pub struct DecodePool {
 impl DecodePool {
     pub(crate) fn new() -> DecodePool {
         DecodePool {
+            command_tx: None,
             pool: None,
-            stop_flag: Arc::new(AtomicBool::new(true)),
             duration: -1,
             source: None,
-            decode_start: 0
         }
-    }
-
-    pub(crate) fn stop(&mut self) {
-        self.stop_flag.store(true, Ordering::SeqCst);
-        if let Some(handle) = self.pool.take() {
-            let _ = handle.join();
-        }
-        self.stop_flag.store(false, Ordering::SeqCst);
-        self.pool = None;
     }
 
     pub(crate) fn set_source(&mut self, source: AudioSource) {
@@ -65,52 +67,152 @@ impl DecodePool {
     }
 
     pub fn is_decoding(&self) -> bool {
-        self.pool.is_some()
+        self.pool.as_ref().is_some_and(|h| !h.is_finished())
     }
 
-    pub(crate) fn build<F>(
+    /// Drop handles for a decode thread that has already exited.
+    pub(crate) fn reap_finished(&mut self) {
+        if self.pool.as_ref().is_some_and(|h| h.is_finished()) {
+            if let Some(handle) = self.pool.take() {
+                let _ = handle.join();
+            }
+            self.command_tx = None;
+        }
+    }
+
+    /// Call this once when playback starts
+    pub(crate) fn start(
         &mut self,
-        f: F,
+        output: Arc<Mutex<AudioOutput>>,
         state: Arc<Mutex<AudioState>>,
         output_config: AudioOutputConfig,
-    ) 
-    where
-        F: Fn() + Send + 'static,
-    {
-        self.stop_flag.store(false, Ordering::SeqCst);
+        initial_millis: i32,
+        rc: Receiver<AudioCommand>,
+    ) {
+        // If already running, just seek instead of restarting
+        if self.command_tx.is_some() && self.is_decoding() {
+            self.seek(initial_millis);
+            return;
+        }
 
-        let stop_flag = Arc::clone(&self.stop_flag);
+        self.reap_finished();
 
-        let source = self.source.clone().expect("Source is empty!");
+        let (tx, rx) = crossbeam_channel::bounded::<DecodeCommand>(16);
+        let tx_clone = tx.clone();
+        self.command_tx = Some(tx);
 
-        let decode_start = self.decode_start;
+        let source = match self.source.clone() {
+            Some(source) => source,
+            None => {
+                warn!("Call set source first!");
+                return;
+            }
+        };
+
+        let state_for_callback = Arc::clone(&state);
 
         let thr_handle = thread::Builder::new()
             .name("Decode thread".to_string())
             .spawn(move || {
-                let _ = decode_and_feed(
+                if let Err(e) = decode_and_feed(
                     source,
-                    stop_flag,
                     state,
                     output_config.channels as usize,
                     output_config.sample_rate,
-                    decode_start,
-                    f,
-                );
+                    initial_millis,
+                    rx,
+                    move || {
+                        while let Ok(cmd) = rc.try_recv() {
+                            match cmd {
+                                AudioCommand::RebuildOuput => {
+                                    state_for_callback.lock().pl_state = PlaybackState::Paused;
+
+                                    let mut out = output.lock();
+                                    out.dispose_old_stream();
+
+                                    match out.build() {
+                                        Ok(new_cfg) => {
+                                            if new_cfg.sample_rate != output_config.sample_rate
+                                                || new_cfg.channels != output_config.channels
+                                            {
+                                                let mut s = state_for_callback.lock();
+                                                s.update_device_config(
+                                                    BuffConfig::new(
+                                                        (new_cfg.sample_rate as usize)
+                                                            .saturating_mul(
+                                                                new_cfg.channels as usize,
+                                                            )
+                                                            .saturating_mul(
+                                                                DEFAULT_MAX_QUEUE_SECONDS,
+                                                            ),
+                                                        DEFAULT_MAX_QUEUE_SECONDS,
+                                                        new_cfg.sample_rate,
+                                                    ),
+                                                    BuffConfig::new(
+                                                        (new_cfg.sample_rate as usize)
+                                                            .saturating_mul(
+                                                                new_cfg.channels as usize,
+                                                            )
+                                                            .saturating_mul(
+                                                                DEFAULT_VISUALIZER_SECONDS,
+                                                            ),
+                                                        DEFAULT_VISUALIZER_SECONDS,
+                                                        new_cfg.sample_rate,
+                                                    ),
+                                                    new_cfg.channels as usize,
+                                                );
+                                            }
+                                            state_for_callback.lock().pl_state =
+                                                PlaybackState::Playing;
+
+                                            let millis = state_for_callback.lock().position();
+
+                                            let _ = tx_clone.send(DecodeCommand::Seek { millis });
+                                        }
+                                        Err(e) => {
+                                            warn!("Failed to rebuild audio output: {e}");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                ) {
+                    error!("Decode thread failed: {e}");
+                }
             })
             .expect("Can not start decode thread");
 
         self.pool = Some(thr_handle);
     }
+
+    /// Fast seek! No thread restart.
+    pub fn seek(&self, millis: i32) {
+        if let Some(tx) = &self.command_tx {
+            let _ = tx.send(DecodeCommand::Seek { millis });
+        }
+    }
+
+    pub(crate) fn stop(&mut self) {
+        if let Some(tx) = self.command_tx.take() {
+            let _ = tx.send(DecodeCommand::Stop);
+        }
+        if let Some(handle) = self.pool.take() {
+            let _ = handle.join();
+        }
+        self.pool = None;
+    }
 }
+use symphonia::core::formats::SeekTo;
+use symphonia::core::units::Time;
 
 fn decode_and_feed<F>(
     source: AudioSource,
-    stop_flag: Arc<AtomicBool>,
     shared: Arc<Mutex<AudioState>>,
     out_channels: usize,
     out_sample_rate: u32,
-    decode_start: i32,
+    initial_millis: i32,
+    command_rx: Receiver<DecodeCommand>,
     f: F,
 ) -> Result<(), String>
 where
@@ -139,6 +241,8 @@ where
         })
         .expect("No audio track can be found");
 
+    let track_id = track.id;
+
     let mut decoder = symphonia::default::get_codecs()
         .make_audio_decoder(
             track
@@ -151,33 +255,53 @@ where
         )
         .map_err(|e| format!("Failed to create decoder: {e}"))?;
 
-    let initial_playback_rate = shared
-        .lock()
-        .map(|s| s.pl_rate.clamp(MIN_RATE, MAX_RATE))
-        .unwrap_or(1.0);
-
-    let start_millis = decode_start;
-
     let mut resample_state = ResampleState::new();
-    let mut skip_output_samples = source_millis_to_output_samples(
-        start_millis,
-        out_sample_rate,
-        out_channels,
-        initial_playback_rate,
-    );
 
-    let decode_result = loop {
-        if stop_flag.load(Ordering::SeqCst) {
-            break Ok(());
+    {
+        let mut s = shared.lock();
+        s.stream_ended = false;
+    }
+
+    if initial_millis > 0 {
+        {
+            let mut s = shared.lock();
+            s.visualizer.clear();
+            s.queue.clear();
         }
 
+        decoder.reset();
+
+        resample_state.reset();
+
+        let seek_time = Time::from_millis(initial_millis as i64);
+        let _ = probed.seek(
+            symphonia::core::formats::SeekMode::Accurate,
+            SeekTo::Time {
+                time: seek_time,
+                track_id: Some(track_id),
+            },
+        );
+    }
+
+    loop {
         f();
 
         let packet = match probed.next_packet() {
-            Ok(p) => p,
-            Err(e) => break Err(format!("Failed to read next packet: {e}")),
-        }
-        .unwrap();
+            Ok(Some(p)) => p,
+            Ok(None) => {
+                let mut s = shared.lock();
+                s.stream_ended = true;
+                break Ok(());
+            }
+            Err(_) => {
+                // End of stream — signal the audio output to drain remaining
+                // buffered samples before transitioning to Completed.
+                let mut s = shared.lock();
+                s.stream_ended = true;
+                info!("End of file");
+                break Ok(());
+            }
+        };
 
         let decoded = match decoder.decode(&packet) {
             Ok(b) => b,
@@ -189,16 +313,8 @@ where
             continue;
         }
 
-        if stop_flag.load(Ordering::SeqCst) {
-            break Ok(());
-        }
+        let playback_rate = shared.lock().pl_rate.clamp(MIN_RATE, MAX_RATE);
 
-        let playback_rate = shared
-            .lock()
-            .map(|s| s.pl_rate.clamp(MIN_RATE, MAX_RATE))
-            .unwrap_or(1.0);
-
-        // Scale the target rate to implement speed without pitch shift.
         let effective_out_rate = ((out_sample_rate as f32) / playback_rate).max(1.0) as u32;
 
         let out = convert_to_output(
@@ -214,28 +330,39 @@ where
             continue;
         }
 
-        let mut start = 0usize;
-        if skip_output_samples > 0 {
-            let consumed = skip_output_samples.min(out.len());
-            skip_output_samples -= consumed;
-            start = consumed;
-        }
-        if start >= out.len() {
-            continue;
-        }
-
-        let out_slice = &out[start..];
         let mut offset = 0;
+        while offset < out.len() {
+            while let Ok(cmd) = command_rx.try_recv() {
+                match cmd {
+                    DecodeCommand::Seek { millis } => {
+                        {
+                            let mut s = shared.lock();
+                            s.visualizer.clear();
+                            s.queue.clear();
+                            s.stream_ended = false;
+                        }
 
-        while offset < out_slice.len() {
-            if stop_flag.load(Ordering::SeqCst) {
-                break;
+                        decoder.reset();
+
+                        resample_state.reset();
+
+                        let seek_time = Time::from_millis(millis as i64);
+                        let _ = probed.seek(
+                            symphonia::core::formats::SeekMode::Accurate,
+                            SeekTo::Time {
+                                time: seek_time,
+                                track_id: Some(track_id),
+                            },
+                        );
+                    }
+                    DecodeCommand::Stop => return Ok(()),
+                }
             }
 
-            let pushed = shared
-                .lock()
-                .map(|mut s| s.push_samples_bounded(&out_slice[offset..]))
-                .unwrap_or(0);
+            let pushed = {
+                let mut s = shared.lock();
+                s.push_samples_bounded(&out[offset..])
+            };
 
             if pushed == 0 {
                 thread::sleep(Duration::from_millis(DECODE_BACKPRESSURE_SLEEP_MS));
@@ -243,27 +370,7 @@ where
                 offset += pushed;
             }
         }
-    };
-
-    if let Ok(mut s) = shared.lock() {
-        s.stream_ended = true;
-        s.pl_state = PlaybackState::Completed;
     }
-
-    decode_result
-}
-
-/// Convert a source-time offset into the number of output samples to skip.
-fn source_millis_to_output_samples(
-    start_millis: i32,
-    out_sample_rate: u32,
-    out_channels: usize,
-    playback_rate: f32,
-) -> usize {
-    let playback_rate = playback_rate.clamp(MIN_RATE, MAX_RATE).max(1.0e-6);
-    ((start_millis.max(0) as f64) * out_sample_rate as f64 * out_channels as f64
-        / 1000.0
-        / playback_rate as f64) as usize
 }
 
 // ── Sample format conversion helpers ─────────────────────────────────────────
