@@ -1,6 +1,9 @@
-use std::sync::Arc;
+use std::{
+    sync::{Arc, atomic::AtomicBool},
+    thread,
+};
 
-use crossbeam_channel::{Receiver, unbounded};
+use crossbeam_channel::{Receiver, Sender, unbounded};
 use flutter_rust_bridge::frb;
 use parking_lot::Mutex;
 
@@ -15,7 +18,10 @@ use crate::{
             output::{AudioOutput, AudioOutputConfig},
             state::PlaybackState,
         },
-        source::{AudioSource, decode::DecodePool},
+        source::{
+            AudioSource,
+            decode::{DecodeCommand, DecodePool},
+        },
         visualizer::{BandEnergy, VBandKind, VisualizerProcessor},
     },
     info, warn,
@@ -31,10 +37,13 @@ pub struct AudioPlayer {
     decode: DecodePool,
     output: Arc<Mutex<AudioOutput>>,
     state: Arc<Mutex<AudioState>>,
-    cmd_rc: Receiver<AudioCommand>,
+    cmd_rc: Receiver<DecodeCommand>,
     visualizer_pc: Option<Mutex<VisualizerProcessor>>,
     visualizer_fft_size: usize,
     output_config: AudioOutputConfig,
+    device_pool: thread::JoinHandle<()>,
+    device_pool_stop: Arc<AtomicBool>,
+    cmd_tx: Sender<DecodeCommand>,
 }
 
 impl AudioPlayer {
@@ -75,14 +84,90 @@ impl AudioPlayer {
             out_config,
         )));
 
+        let state_for_callback = Arc::clone(&state);
+
+        let (cmd_tx, cmd_rc) = unbounded();
+
+        let dc_tx_clone = cmd_tx.clone();
+
+        let output_config = AudioOutput::get_output_config();
+
+        let rc_clone = rc.clone();
+
+        let output_clone = Arc::clone(&output);
+
+        let device_pool_stop = Arc::new(AtomicBool::new(false));
+
+        let stop_flag = Arc::clone(&device_pool_stop);
+
+        let device_pool = thread::Builder::new()
+            .name("Device Pool".to_string())
+            .spawn(move || {
+                loop {
+                    if stop_flag.load(std::sync::atomic::Ordering::SeqCst) {
+                        break;
+                    }
+
+                    while let Ok(cmd) = rc_clone.try_recv() {
+                        match cmd {
+                            AudioCommand::RebuildOuput => {
+                                state_for_callback.lock().pl_state = PlaybackState::Paused;
+
+                                let mut mvd_output = output_clone.lock();
+                                mvd_output.dispose_old_stream();
+
+                                match mvd_output.build() {
+                                    Ok(new_cfg) => {
+                                        if new_cfg.sample_rate != output_config.sample_rate
+                                            || new_cfg.channels != output_config.channels
+                                        {
+                                            let mut s = state_for_callback.lock();
+                                            s.update_device_config(
+                                                BuffConfig::new(
+                                                    (new_cfg.sample_rate as usize)
+                                                        .saturating_mul(new_cfg.channels as usize)
+                                                        .saturating_mul(DEFAULT_MAX_QUEUE_SECONDS),
+                                                    DEFAULT_MAX_QUEUE_SECONDS,
+                                                    new_cfg.sample_rate,
+                                                ),
+                                                BuffConfig::new(
+                                                    (new_cfg.sample_rate as usize)
+                                                        .saturating_mul(new_cfg.channels as usize)
+                                                        .saturating_mul(DEFAULT_VISUALIZER_SECONDS),
+                                                    DEFAULT_VISUALIZER_SECONDS,
+                                                    new_cfg.sample_rate,
+                                                ),
+                                                new_cfg.channels as usize,
+                                            );
+                                        }
+                                        state_for_callback.lock().pl_state = PlaybackState::Playing;
+
+                                        let millis = state_for_callback.lock().position();
+
+                                        let _ = dc_tx_clone.send(DecodeCommand::Seek { millis });
+                                    }
+                                    Err(e) => {
+                                        warn!("Failed to rebuild audio output: {e}");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            })
+            .expect("Can not start device pool!");
+
         AudioPlayer {
             decode,
             output,
-            cmd_rc: rc,
+            cmd_rc,
             state,
             visualizer_pc: None,
             visualizer_fft_size: 2048,
             output_config: out_config,
+            device_pool,
+            device_pool_stop,
+            cmd_tx,
         }
     }
 
@@ -131,13 +216,16 @@ impl AudioPlayer {
 
         info!("Creating new decoder!");
 
-        let rc = self.cmd_rc.clone();
         let state = Arc::clone(&self.state);
-        let output = Arc::clone(&self.output);
         let output_config = self.output_config;
 
-
-        self.decode.start(output, state, output_config, 0, rc);
+        self.decode.start(
+            state,
+            output_config,
+            0,
+            self.cmd_tx.clone(),
+            self.cmd_rc.clone(),
+        );
     }
 
     /// Pause curent playing song.
@@ -394,6 +482,13 @@ impl AudioPlayer {
     #[frb(sync)]
     pub fn get_output_config(&self) -> AudioOutputConfig {
         self.output.lock().current_config()
+    }
+}
+
+impl Drop for AudioPlayer {
+    fn drop(&mut self) {
+        self.device_pool_stop
+            .store(true, std::sync::atomic::Ordering::SeqCst);
     }
 }
 

@@ -83,11 +83,11 @@ impl DecodePool {
     /// Call this once when playback starts
     pub(crate) fn start(
         &mut self,
-        output: Arc<Mutex<AudioOutput>>,
         state: Arc<Mutex<AudioState>>,
         output_config: AudioOutputConfig,
         initial_millis: i32,
-        rc: Receiver<AudioCommand>,
+        tx: Sender<DecodeCommand>,
+        rx: Receiver<DecodeCommand>,
     ) {
         // If already running, just seek instead of restarting
         if self.command_tx.is_some() && self.is_decoding() {
@@ -97,8 +97,6 @@ impl DecodePool {
 
         self.reap_finished();
 
-        let (tx, rx) = crossbeam_channel::bounded::<DecodeCommand>(16);
-        let tx_clone = tx.clone();
         self.command_tx = Some(tx);
 
         let source = match self.source.clone() {
@@ -108,8 +106,6 @@ impl DecodePool {
                 return;
             }
         };
-
-        let state_for_callback = Arc::clone(&state);
 
         let thr_handle = thread::Builder::new()
             .name("Decode thread".to_string())
@@ -121,62 +117,6 @@ impl DecodePool {
                     output_config.sample_rate,
                     initial_millis,
                     rx,
-                    move || {
-                        while let Ok(cmd) = rc.try_recv() {
-                            match cmd {
-                                AudioCommand::RebuildOuput => {
-                                    state_for_callback.lock().pl_state = PlaybackState::Paused;
-
-                                    let mut out = output.lock();
-                                    out.dispose_old_stream();
-
-                                    match out.build() {
-                                        Ok(new_cfg) => {
-                                            if new_cfg.sample_rate != output_config.sample_rate
-                                                || new_cfg.channels != output_config.channels
-                                            {
-                                                let mut s = state_for_callback.lock();
-                                                s.update_device_config(
-                                                    BuffConfig::new(
-                                                        (new_cfg.sample_rate as usize)
-                                                            .saturating_mul(
-                                                                new_cfg.channels as usize,
-                                                            )
-                                                            .saturating_mul(
-                                                                DEFAULT_MAX_QUEUE_SECONDS,
-                                                            ),
-                                                        DEFAULT_MAX_QUEUE_SECONDS,
-                                                        new_cfg.sample_rate,
-                                                    ),
-                                                    BuffConfig::new(
-                                                        (new_cfg.sample_rate as usize)
-                                                            .saturating_mul(
-                                                                new_cfg.channels as usize,
-                                                            )
-                                                            .saturating_mul(
-                                                                DEFAULT_VISUALIZER_SECONDS,
-                                                            ),
-                                                        DEFAULT_VISUALIZER_SECONDS,
-                                                        new_cfg.sample_rate,
-                                                    ),
-                                                    new_cfg.channels as usize,
-                                                );
-                                            }
-                                            state_for_callback.lock().pl_state =
-                                                PlaybackState::Playing;
-
-                                            let millis = state_for_callback.lock().position();
-
-                                            let _ = tx_clone.send(DecodeCommand::Seek { millis });
-                                        }
-                                        Err(e) => {
-                                            warn!("Failed to rebuild audio output: {e}");
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
                 ) {
                     error!("Decode thread failed: {e}");
                 }
@@ -203,21 +143,18 @@ impl DecodePool {
         self.pool = None;
     }
 }
+
 use symphonia::core::formats::SeekTo;
 use symphonia::core::units::Time;
 
-fn decode_and_feed<F>(
+fn decode_and_feed(
     source: AudioSource,
     shared: Arc<Mutex<AudioState>>,
     out_channels: usize,
     out_sample_rate: u32,
     initial_millis: i32,
     command_rx: Receiver<DecodeCommand>,
-    f: F,
-) -> Result<(), String>
-where
-    F: Fn() + Send + 'static,
-{
+) -> Result<(), String> {
     let media = media_source_from_owned(source)?;
     let mss = MediaSourceStream::new(media, MediaSourceStreamOptions::default());
 
@@ -284,8 +221,6 @@ where
     }
 
     loop {
-        f();
-
         let packet = match probed.next_packet() {
             Ok(Some(p)) => p,
             Ok(None) => {

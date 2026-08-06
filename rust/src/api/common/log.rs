@@ -10,9 +10,9 @@ pub const RESET_COLOR: &str = "\x1b[0m";
 #[macro_export]
 macro_rules! error {
     () => {
-        eprintln!();
+        log::info!();
     };    ($($arg:tt)*) => {
-        eprintln!("{}[ERROR] {}{}", $crate::api::common::log::ERROR_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
+        log::info!("{}[ERROR] {}{}", $crate::api::common::log::ERROR_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
     };   
 }
 
@@ -20,29 +20,29 @@ macro_rules! error {
 #[macro_export]
 macro_rules! warn {
     () => {
-        print("\n");
+        log::info!("\n");
     };
     ($($arg:tt)*) => {
-        eprintln!("{}[WARN] {}{}", $crate::api::common::log::WARN_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
+        log::info!("{}[WARN] {}{}", $crate::api::common::log::WARN_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
     };
 }
 
 #[macro_export]
 macro_rules! info {
     () => {
-        print("\n");
+        log::info!("\n");
     };
     ($($arg:tt)*) => {
-        eprintln!("{}[INFO] {}{}", $crate::api::common::log::INFO_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
+        log::info!("{}[INFO] {}{}", $crate::api::common::log::INFO_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
     };
 }
 
 #[macro_export]
 macro_rules! debug {
     () => {
-        print("\n");
+        log::info!("\n");
     };
     ($($arg:tt)*) => {
-        eprintln!("{}[DEBUG] {}{}", $crate::api::common::log::DEBUG_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
+        log::info!("{}[DEBUG] {}{}", $crate::api::common::log::DEBUG_COLOR, format!($($arg)*), $crate::api::common::log::RESET_COLOR);
     };
 }

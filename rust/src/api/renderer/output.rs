@@ -8,13 +8,10 @@ use crate::{
         error::AudioError,
         renderer::state::AudioState,
     },
-    info,
+    error, info,
 };
 use cpal::{
-    BufferSize,
-    // ErrorKind::DeviceChanged,
-    OutputCallbackInfo, SampleFormat, Stream, StreamConfig,
-    traits::{DeviceTrait, HostTrait, StreamTrait},
+    BufferSize, ErrorKind::{DeviceChanged, DeviceNotAvailable, Xrun}, OutputCallbackInfo, SampleFormat, Stream, StreamConfig, traits::{DeviceTrait, HostTrait, StreamTrait},
 };
 use crossbeam_channel::Sender;
 use flutter_rust_bridge::frb;
@@ -67,9 +64,9 @@ impl AudioOutput {
     }
 
     pub fn dispose_old_stream(&mut self) {
-        // if let Some(stream) = self.stream.as_ref() {
-        //     let _ = stream.pause();
-        // }
+        if let Some(stream) = self.stream.as_ref() {
+            let _ = stream.pause();
+        }
         self.stream = None;
     }
 
@@ -112,8 +109,18 @@ impl AudioOutput {
         let err_fn = move |e: cpal::Error| {
             info!("Error in output stream");
             let _ = match e.kind() {
-                // DeviceChanged => tx.send(RebuildOuput), // because android AAudio backend does not strigger any device changed so skip this.
-                _ => tx.send(RebuildOuput),
+                Xrun => {
+                    error!("{}", Xrun);
+                    Ok(())
+                }
+                DeviceChanged | DeviceNotAvailable => {
+                    info!("{} or {}", DeviceChanged, DeviceNotAvailable);
+                    tx.send(RebuildOuput)
+                }
+                val => {
+                    info!("{}", val);
+                    Ok(())
+                } // because android AAudio backend does not strigger any device changed so skip this.
             };
         };
 
@@ -162,6 +169,8 @@ impl AudioOutput {
             sample_rate: output_config.sample_rate(),
             channels: output_config.channels(),
         };
+
+        info!("Stream built successfully!");
 
         Ok(self.current_config)
     }

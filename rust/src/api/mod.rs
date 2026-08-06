@@ -10,6 +10,7 @@ pub mod filters;
 
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {
+    flutter_rust_bridge::setup_log_to_console(log::LevelFilter::Info);
     // Default utilities - feel free to customize
     flutter_rust_bridge::setup_default_user_utils();
 }
