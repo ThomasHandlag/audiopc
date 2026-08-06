@@ -1,5 +1,9 @@
 # Plugin change logs
 
+## VERSION 0.2.0+1
+
+* Replace hard code in visualizer
+
 ## VERSION 0.2.0
 
 * BREAKING: change to use flutter_rust_brige
