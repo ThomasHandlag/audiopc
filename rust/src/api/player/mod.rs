@@ -41,7 +41,7 @@ pub struct AudioPlayer {
     visualizer_pc: Option<Mutex<VisualizerProcessor>>,
     visualizer_fft_size: usize,
     output_config: AudioOutputConfig,
-    device_pool: thread::JoinHandle<()>,
+    device_pool: Option<thread::JoinHandle<()>>,
     device_pool_stop: Arc<AtomicBool>,
     cmd_tx: Sender<DecodeCommand>,
 }
@@ -165,7 +165,7 @@ impl AudioPlayer {
             visualizer_pc: None,
             visualizer_fft_size: 2048,
             output_config: out_config,
-            device_pool,
+            device_pool: Some(device_pool),
             device_pool_stop,
             cmd_tx,
         }
@@ -489,6 +489,9 @@ impl Drop for AudioPlayer {
     fn drop(&mut self) {
         self.device_pool_stop
             .store(true, std::sync::atomic::Ordering::SeqCst);
+        if let Some(pool) = self.device_pool.take() {
+           let _ = pool.join();
+        }
     }
 }
 

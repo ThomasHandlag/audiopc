@@ -21,13 +21,10 @@ use tempfile::tempfile;
 
 use crate::{
     api::{
-        enums::{
-            AudioCommand, DECODE_BACKPRESSURE_SLEEP_MS, DEFAULT_MAX_QUEUE_SECONDS,
-            DEFAULT_VISUALIZER_SECONDS, MAX_RATE, MIN_RATE,
-        },
+        enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE},
         renderer::{
-            output::{AudioOutput, AudioOutputConfig},
-            state::{AudioState, BuffConfig, PlaybackState, ResampleState},
+            output::AudioOutputConfig,
+            state::{AudioState, ResampleState},
         },
         source::{AudioSource, http_stream::HttpStream},
     },
