@@ -102,6 +102,7 @@ dependencies = [
  "crossbeam-channel",
  "flutter_rust_bridge",
  "jni 0.21.1",
+ "log",
  "ndk-context",
  "parking_lot",
  "reqwest",
