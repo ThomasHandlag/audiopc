@@ -186,7 +186,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    player.setProcesor(54, 4096);
+    player.setProcesor(128, 4096);
 
     config = player.getConfig();
 
@@ -536,7 +536,7 @@ class _MyAppState extends State<MyApp> {
             final state = snapshot.data ?? PlaybackState.idle;
             final isPlaying = state == PlaybackState.playing;
 
-            return TextButton(
+            return ElevatedButton(
               onPressed: () {
                 switch (state) {
                   case PlaybackState.playing:
@@ -558,11 +558,9 @@ class _MyAppState extends State<MyApp> {
         const SizedBox(width: 8),
 
         // Stop
-        IconButton(
-          icon: const Icon(Icons.stop),
-          color: const Color(0xFFFF5252),
-          iconSize: 28,
+        ElevatedButton(
           onPressed: stop,
+          child: const Icon(Icons.stop, color: Color(0xFFFF5252), size: 28),
         ),
         const SizedBox(width: 8),
       ],
@@ -834,9 +832,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ],
           ),
-          Divider(
-            height: 24,
-          ),
+          Divider(height: 24),
           _buildEffectGroup(
             title: 'Delay',
             icon: Icons.timer,
@@ -882,9 +878,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ],
           ),
-          Divider(
-            height: 24,
-          ),
+          Divider(height: 24),
           _buildEffectGroup(
             title: 'Chorus',
             icon: Icons.audiotrack,
@@ -930,9 +924,7 @@ class _MyAppState extends State<MyApp> {
               ),
             ],
           ),
-          Divider(
-            height: 24,
-          ),
+          Divider(height: 24),
           _buildEffectGroup(
             title: 'Override',
             icon: Icons.tune,
@@ -1016,11 +1008,7 @@ class _SpectrumPainter extends CustomPainter {
       final y = size.height - barHeight;
 
       // Gradient from cyan to green based on value
-      final color = Color.lerp(
-        Colors.white,
-        Colors.black,
-        value,
-      )!;
+      final color = Color.lerp(Colors.white, Colors.black, value)!;
 
       paint.color = color.withValues(alpha: 0.7 + value * 0.3);
       paint.style = PaintingStyle.fill;
