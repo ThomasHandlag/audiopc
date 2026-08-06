@@ -117,7 +117,8 @@ class _ShaderWidgetState extends State<ShaderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_programLoaded) {
+    // Wait for BOTH the shader AND the texture
+    if (!_programLoaded || _spectrumTexture == null) {
       return Container(
         decoration: BoxDecoration(
           color: Colors.black,
@@ -130,7 +131,7 @@ class _ShaderWidgetState extends State<ShaderWidget> {
               CircularProgressIndicator(color: Colors.cyanAccent),
               SizedBox(height: 8),
               Text(
-                'Loading shader...',
+                'Loading shader & texture...',
                 style: TextStyle(color: Colors.white54),
               ),
             ],
@@ -142,11 +143,12 @@ class _ShaderWidgetState extends State<ShaderWidget> {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: CustomPaint(
+        // Now we know program and texture are 100% not null
         painter: _ShaderPainter(
           program: _program!,
           time: _frame * 0.016,
           frame: _frame,
-          spectrumTexture: _spectrumTexture,
+          spectrumTexture: _spectrumTexture!, // Safe!
           uniforms: widget.uniforms,
         ),
         size: Size.infinite,
