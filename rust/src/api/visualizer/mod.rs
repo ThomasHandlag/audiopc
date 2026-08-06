@@ -1,6 +1,8 @@
 use flutter_rust_bridge::frb;
 use rustfft::{Fft, FftPlanner, num_complex::Complex};
 
+use crate::api::enums::VISUALIZER_MIN_HZ;
+
 /// Enum representing different frequency bands / instruments.
 /// Each variant knows its own frequency range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -294,7 +296,7 @@ impl VisualizerProcessor {
         self.slow_energy = self.slow_energy * 0.97 + rms * 0.03;
         let beat = ((self.fast_energy - self.slow_energy) * 11.0).clamp(0.0, 1.0);
 
-        let min_hz = 20.0;
+        let min_hz = VISUALIZER_MIN_HZ;
         let max_hz = ((sample_rate as f32) * 0.46).max(min_hz + 1.0);
         let bar_count = self.bar_count;
         let mut raw_bars = vec![0.0f32; bar_count];
