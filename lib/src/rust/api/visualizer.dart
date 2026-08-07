@@ -6,20 +6,11 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decay_bands`, `ensure_band_states`, `hann_window`, `hz_to_bin`, `log_interp`, `perform_fft`
+// These functions are ignored because they are not marked as `pub`: `analyze_bands`, `compute`, `decay_bands`, `ensure_band_states`, `hann_window`, `hz_to_bin`, `log_interp`, `perform_fft`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `eq`, `fmt`, `fmt`, `hash`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<VisualizerProcessor>>
 abstract class VisualizerProcessor implements RustOpaqueInterface {
-  /// Standalone band analysis — performs its own FFT.
-  Future<List<BandEnergy>> analyzeBands({
-    required List<double> samples,
-    required BigInt channels,
-    required int sampleRate,
-    required List<VBandKind> kinds,
-    required bool playing,
-  });
-
   /// Composite bass hit strength (kick + bass).
   static double bassBeat({required List<BandEnergy> bands}) => RustLib
       .instance
@@ -34,13 +25,6 @@ abstract class VisualizerProcessor implements RustOpaqueInterface {
     bands: bands,
     kinds: kinds,
   );
-
-  Future<Float32List> compute({
-    required List<double> samples,
-    required BigInt channels,
-    required int sampleRate,
-    required bool playing,
-  });
 
   /// Compute band energies using cached magnitudes from the last
   /// `compute()` or `analyze_bands()` call. Near-zero cost.

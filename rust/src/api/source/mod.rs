@@ -10,7 +10,7 @@ pub mod http_stream;
 ///
 /// New source kinds can be added here without changing call sites, because
 /// `engine::media_source_from_owned` is the single point of dispatch.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum AudioSource {
     /// A path to a local file (absolute or relative).
     Path(String),

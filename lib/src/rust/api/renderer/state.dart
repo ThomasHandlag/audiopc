@@ -8,6 +8,7 @@ import '../filters/effects.dart';
 import '../filters/equalizer.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These functions are ignored because they are not marked as `pub`: `make_sample_queue`, `new_with_ctrl`, `new`, `push_visualizer_samples`, `render_output_f32`, `update_device_config_with_consumer`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `clone`, `eq`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioState>>
@@ -20,19 +21,18 @@ abstract class AudioState implements RustOpaqueInterface {
 
   set equalizer(Equalizer equalizer);
 
-  /// Clear all transient audio state without touching volume / rate / device.
   Future<void> clearAudioState();
+
+  Future<void> clearBuffers();
 
   Future<void> clearEffects();
 
-  /// Clear all equalizer bands
   Future<void> clearEq();
 
-  /// Copy the most recent `out.len()` samples from the visualiser ring into
-  /// `out`.  Returns the number of samples written.
   Future<Float32List> copyLatestVisualizerSamples({required BigInt size});
 
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  /// Constructor called by frb_generated (3-arg legacy signature).
   static Future<AudioState> newInstance({
     required BuffConfig config,
     required BuffConfig vConfig,
@@ -45,12 +45,7 @@ abstract class AudioState implements RustOpaqueInterface {
 
   Future<double> nextSample();
 
-  /// Current playback position in milliseconds.
   Future<int> position();
-
-  /// Push up to `max_samples - queue.len()` samples.  Returns the count
-  /// actually pushed; caller retries the rest after sleeping.
-  Future<BigInt> pushSamplesBounded({required List<double> samples});
 
   Future<void> pushVisualizerSample({required double sample});
 
@@ -58,14 +53,61 @@ abstract class AudioState implements RustOpaqueInterface {
 
   Future<void> setEqualizer({required Equalizer equalizer});
 
+  /// Legacy 3-arg version called by frb_generated.rs.
   Future<void> updateDeviceConfig({
     required BuffConfig config,
     required BuffConfig vConfig,
     required BigInt channels,
   });
 
-  /// Copy the most recent interleaved samples needed for FFT analysis.
   Future<Float32List> visualizerWindow({required BigInt maxSamples});
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<BuffConfig>>
+abstract class BuffConfig implements RustOpaqueInterface {
+  BigInt get mQueueSec;
+
+  BigInt get maxSamples;
+
+  int get sampleRate;
+
+  set mQueueSec(BigInt mQueueSec);
+
+  set maxSamples(BigInt maxSamples);
+
+  set sampleRate(int sampleRate);
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<BuffConfig> newInstance({
+    required BigInt maxSamples,
+    required BigInt mQueueSec,
+    required int sampleRate,
+  }) => RustLib.instance.api.crateApiRendererStateBuffConfigNew(
+    maxSamples: maxSamples,
+    mQueueSec: mQueueSec,
+    sampleRate: sampleRate,
+  );
+}
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DspState>>
+abstract class DspState implements RustOpaqueInterface {
+  EffectsChain get effects;
+
+  Equalizer get equalizer;
+
+  set effects(EffectsChain effects);
+
+  set equalizer(Equalizer equalizer);
+
+  Future<void> clearEffects();
+
+  Future<void> clearEq();
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<DspState> newInstance({required double sampleRate}) => RustLib
+      .instance
+      .api
+      .crateApiRendererStateDspStateNew(sampleRate: sampleRate);
 }
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<ResampleState>>
@@ -80,40 +122,19 @@ abstract class ResampleState implements RustOpaqueInterface {
   Future<void> reset();
 }
 
-class BuffConfig {
-  final int sampleRate;
-  final BigInt maxSamples;
-  final BigInt mQueueSec;
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SharedControlState>>
+abstract class SharedControlState implements RustOpaqueInterface {
+  Future<double> getVolume();
 
-  const BuffConfig({
-    required this.sampleRate,
-    required this.maxSamples,
-    required this.mQueueSec,
-  });
+  Future<double> rate();
 
-  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<BuffConfig> newInstance({
-    required BigInt maxSamples,
-    required BigInt mQueueSec,
-    required int sampleRate,
-  }) => RustLib.instance.api.crateApiRendererStateBuffConfigNew(
-    maxSamples: maxSamples,
-    mQueueSec: mQueueSec,
-    sampleRate: sampleRate,
-  );
+  Future<void> setRate({required double r});
 
-  @override
-  int get hashCode =>
-      sampleRate.hashCode ^ maxSamples.hashCode ^ mQueueSec.hashCode;
+  Future<void> setState({required PlaybackState s});
 
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BuffConfig &&
-          runtimeType == other.runtimeType &&
-          sampleRate == other.sampleRate &&
-          maxSamples == other.maxSamples &&
-          mQueueSec == other.mQueueSec;
+  Future<void> setVolume({required double v});
+
+  Future<PlaybackState> state();
 }
 
 enum PlaybackState {
@@ -124,6 +145,12 @@ enum PlaybackState {
   stopped,
   completed;
 
+  static Future<PlaybackState> fromU8({required int v}) =>
+      RustLib.instance.api.crateApiRendererStatePlaybackStateFromU8(v: v);
+
   Future<int> id() =>
       RustLib.instance.api.crateApiRendererStatePlaybackStateId(that: this);
+
+  Future<int> toU8() =>
+      RustLib.instance.api.crateApiRendererStatePlaybackStateToU8(that: this);
 }

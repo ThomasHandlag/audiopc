@@ -1,30 +1,27 @@
 use std::{
     fs::File,
-    io::{Seek, SeekFrom, Write},
+    io::{Cursor, Read, Seek, SeekFrom},
     sync::Arc,
     thread::{self, JoinHandle},
     time::Duration,
 };
 
-use crossbeam_channel::Receiver;
+use crossbeam_channel::{Receiver, Sender};
 use flutter_rust_bridge::frb;
-use parking_lot::Mutex;
 use symphonia::core::{
     audio::GenericAudioBufferRef,
     codecs::{CodecParameters, audio::AudioDecoderOptions},
     formats::{FormatOptions, TrackType, probe::Hint},
-    io::{MediaSourceStream, MediaSourceStreamOptions},
+    io::{MediaSource, MediaSourceStream, MediaSourceStreamOptions},
     meta::MetadataOptions,
 };
-
-use tempfile::tempfile;
 
 use crate::{
     api::{
         enums::{DECODE_BACKPRESSURE_SLEEP_MS, MAX_RATE, MIN_RATE},
         renderer::{
             output::AudioOutputConfig,
-            state::{AudioState, ResampleState},
+            state::{ResampleState, SharedControlState},
         },
         source::{AudioSource, http_stream::HttpStream},
     },
@@ -33,8 +30,6 @@ use crate::{
 
 type BoxedMediaSource = Box<dyn symphonia::core::io::MediaSource>;
 
-use crossbeam_channel::Sender;
-
 pub enum DecodeCommand {
     Seek { millis: i32 },
     Stop,
@@ -42,7 +37,7 @@ pub enum DecodeCommand {
 
 #[frb(opaque)]
 pub struct DecodePool {
-    pub(crate) command_tx: Option<Sender<DecodeCommand>>, // Replaces stop_flag
+    pub(crate) command_tx: Option<Sender<DecodeCommand>>,
     pool: Option<JoinHandle<()>>,
     pub(crate) duration: i32,
     pub(crate) source: Option<AudioSource>,
@@ -50,12 +45,7 @@ pub struct DecodePool {
 
 impl DecodePool {
     pub(crate) fn new() -> DecodePool {
-        DecodePool {
-            command_tx: None,
-            pool: None,
-            duration: -1,
-            source: None,
-        }
+        DecodePool { command_tx: None, pool: None, duration: -1, source: None }
     }
 
     pub(crate) fn set_source(&mut self, source: AudioSource) {
@@ -67,8 +57,15 @@ impl DecodePool {
         self.pool.as_ref().is_some_and(|h| !h.is_finished())
     }
 
-    /// Drop handles for a decode thread that has already exited.
+    /// Drop handles for a decode thread that has already exited, or join one
+    /// that was signaled to stop via [`signal_stop`].
     pub(crate) fn reap_finished(&mut self) {
+        if self.command_tx.is_none() {
+            if let Some(handle) = self.pool.take() {
+                let _ = handle.join();
+            }
+            return;
+        }
         if self.pool.as_ref().is_some_and(|h| h.is_finished()) {
             if let Some(handle) = self.pool.take() {
                 let _ = handle.join();
@@ -77,30 +74,29 @@ impl DecodePool {
         }
     }
 
-    /// Call this once when playback starts
+    /// Start a new decode thread.  Each call creates a fresh command channel so
+    /// there are never stale commands from a previous playback session.
     pub(crate) fn start(
         &mut self,
-        state: Arc<Mutex<AudioState>>,
+        ctrl: Arc<SharedControlState>,
+        queue_prod: ringbuf::HeapProd<f32>,
         output_config: AudioOutputConfig,
         initial_millis: i32,
-        tx: Sender<DecodeCommand>,
-        rx: Receiver<DecodeCommand>,
-    ) {
-        // If already running, just seek instead of restarting
+    ) -> Sender<DecodeCommand> {
+        // If a thread is already running, just seek it.
         if self.command_tx.is_some() && self.is_decoding() {
             self.seek(initial_millis);
-            return;
+            return self.command_tx.as_ref().unwrap().clone();
         }
 
-        self.reap_finished();
-
-        self.command_tx = Some(tx);
+        let (tx, rx) = crossbeam_channel::unbounded::<DecodeCommand>();
+        self.command_tx = Some(tx.clone());
 
         let source = match self.source.clone() {
-            Some(source) => source,
+            Some(s) => s,
             None => {
                 warn!("Call set source first!");
-                return;
+                return tx;
             }
         };
 
@@ -109,7 +105,8 @@ impl DecodePool {
             .spawn(move || {
                 if let Err(e) = decode_and_feed(
                     source,
-                    state,
+                    ctrl,
+                    queue_prod,
                     output_config.channels as usize,
                     output_config.sample_rate,
                     initial_millis,
@@ -121,19 +118,27 @@ impl DecodePool {
             .expect("Can not start decode thread");
 
         self.pool = Some(thr_handle);
+        tx
     }
 
-    /// Fast seek! No thread restart.
+    /// Send a seek command to the running decode thread (no restart).
     pub fn seek(&self, millis: i32) {
+        info!("Seek to {}", millis);
         if let Some(tx) = &self.command_tx {
             let _ = tx.send(DecodeCommand::Seek { millis });
         }
     }
 
-    pub(crate) fn stop(&mut self) {
+    /// Signal the decode thread to stop without blocking.
+    pub(crate) fn signal_stop(&mut self) {
         if let Some(tx) = self.command_tx.take() {
             let _ = tx.send(DecodeCommand::Stop);
         }
+    }
+
+    /// Signal stop and wait for the decode thread to exit.
+    pub(crate) fn stop(&mut self) {
+        self.signal_stop();
         if let Some(handle) = self.pool.take() {
             let _ = handle.join();
         }
@@ -141,112 +146,96 @@ impl DecodePool {
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// decode_and_feed — runs in the dedicated decode thread
+// ─────────────────────────────────────────────────────────────────────────────
+
 use symphonia::core::formats::SeekTo;
 use symphonia::core::units::Time;
 
 fn decode_and_feed(
     source: AudioSource,
-    shared: Arc<Mutex<AudioState>>,
+    ctrl: Arc<SharedControlState>,
+    mut queue_prod: ringbuf::HeapProd<f32>,
     out_channels: usize,
     out_sample_rate: u32,
     initial_millis: i32,
     command_rx: Receiver<DecodeCommand>,
 ) -> Result<(), String> {
+    use ringbuf::traits::Producer;
+
     let media = media_source_from_owned(source)?;
     let mss = MediaSourceStream::new(media, MediaSourceStreamOptions::default());
 
     let mut probed = symphonia::default::get_probe()
-        .probe(
-            &Hint::new(),
-            mss,
-            FormatOptions::default(),
-            MetadataOptions::default(),
-        )
+        .probe(&Hint::new(), mss, FormatOptions::default(), MetadataOptions::default())
         .map_err(|e| format!("Failed to probe audio format: {e}"))?;
 
     let track = probed
         .tracks()
         .iter()
-        .find(|v| {
-            v.codec_params
-                .as_ref()
-                .expect("No codec available")
-                .is_audio()
-        })
-        .expect("No audio track can be found");
+        .find(|v| v.codec_params.as_ref().map(|p| p.is_audio()).unwrap_or(false))
+        .ok_or_else(|| "No audio track can be found".to_string())?;
 
     let track_id = track.id;
 
+    let codec_params = track
+        .codec_params
+        .as_ref()
+        .ok_or_else(|| "No codec available".to_string())?;
+
+    let audio_params = codec_params
+        .audio()
+        .ok_or_else(|| "Invalid audio codec".to_string())?;
+
     let mut decoder = symphonia::default::get_codecs()
-        .make_audio_decoder(
-            track
-                .codec_params
-                .as_ref()
-                .expect("No codec found")
-                .audio()
-                .expect("Invalid audio codec"),
-            &AudioDecoderOptions::default(),
-        )
+        .make_audio_decoder(audio_params, &AudioDecoderOptions::default())
         .map_err(|e| format!("Failed to create decoder: {e}"))?;
 
     let mut resample_state = ResampleState::new();
 
-    {
-        let mut s = shared.lock();
-        s.stream_ended = false;
-    }
+    ctrl.stream_ended.store(false, std::sync::atomic::Ordering::Release);
 
-    if initial_millis > 0 {
-        {
-            let mut s = shared.lock();
-            s.visualizer.clear();
-            s.queue.clear();
-        }
-
+    // Seek to initial position (skip if initial_millis < 0, meaning "start of file").
+    if initial_millis >= 0 {
         decoder.reset();
-
         resample_state.reset();
-
         let seek_time = Time::from_millis(initial_millis as i64);
         let _ = probed.seek(
             symphonia::core::formats::SeekMode::Accurate,
-            SeekTo::Time {
-                time: seek_time,
-                track_id: Some(track_id),
-            },
+            SeekTo::Time { time: seek_time, track_id: Some(track_id) },
         );
     }
+
+    info!("Start new decode thread");
 
     loop {
         let packet = match probed.next_packet() {
             Ok(Some(p)) => p,
             Ok(None) => {
-                let mut s = shared.lock();
-                s.stream_ended = true;
+                ctrl.stream_ended.store(true, std::sync::atomic::Ordering::Release);
                 break Ok(());
             }
             Err(_) => {
-                // End of stream — signal the audio output to drain remaining
-                // buffered samples before transitioning to Completed.
-                let mut s = shared.lock();
-                s.stream_ended = true;
+                ctrl.stream_ended.store(true, std::sync::atomic::Ordering::Release);
                 info!("End of file");
                 break Ok(());
             }
         };
 
         let decoded = match decoder.decode(&packet) {
-            Ok(b) => b,
+            Ok(b)  => b,
             Err(e) => break Err(format!("Failed to decode packet: {e}")),
         };
 
         let (src_ch, src_rate, interleaved) = decoded_to_interleaved_f32(decoded);
         if interleaved.is_empty() || src_ch == 0 || src_rate == 0 {
+            info!("Interleaved is empty");
             continue;
         }
 
-        let playback_rate = shared.lock().pl_rate.clamp(MIN_RATE, MAX_RATE);
-
+        // Read playback rate from atomic — zero mutex.
+        let playback_rate = ctrl.rate().clamp(MIN_RATE, MAX_RATE);
         let effective_out_rate = ((out_sample_rate as f32) / playback_rate).max(1.0) as u32;
 
         let out = convert_to_output(
@@ -259,44 +248,41 @@ fn decode_and_feed(
         );
 
         if out.is_empty() {
+            info!("out is empty");
             continue;
         }
 
         let mut offset = 0;
         while offset < out.len() {
+            // Drain any pending commands before pushing samples.
             while let Ok(cmd) = command_rx.try_recv() {
                 match cmd {
                     DecodeCommand::Seek { millis } => {
-                        {
-                            let mut s = shared.lock();
-                            s.visualizer.clear();
-                            s.queue.clear();
-                            s.stream_ended = false;
-                        }
-
+                        // AudioPlayer::seek() already drains the consumer
+                        // and updates source_position before this message
+                        // arrives.  We just need to reset the decoder and
+                        // Symphonia reader, then skip remaining output from
+                        // the old packet.
                         decoder.reset();
-
                         resample_state.reset();
-
+                        ctrl.stream_ended.store(false, std::sync::atomic::Ordering::Release);
                         let seek_time = Time::from_millis(millis as i64);
                         let _ = probed.seek(
                             symphonia::core::formats::SeekMode::Accurate,
-                            SeekTo::Time {
-                                time: seek_time,
-                                track_id: Some(track_id),
-                            },
+                            SeekTo::Time { time: seek_time, track_id: Some(track_id) },
                         );
+                        offset = out.len(); // skip remaining output from old position
                     }
                     DecodeCommand::Stop => return Ok(()),
                 }
             }
 
-            let pushed = {
-                let mut s = shared.lock();
-                s.push_samples_bounded(&out[offset..])
-            };
+            if offset >= out.len() { break; }
 
+            // Push as many samples as the ring buffer will accept (lock-free).
+            let pushed = queue_prod.push_slice(&out[offset..]);
             if pushed == 0 {
+                // Queue is full: yield briefly so the audio callback can drain.
                 thread::sleep(Duration::from_millis(DECODE_BACKPRESSURE_SLEEP_MS));
             } else {
                 offset += pushed;
@@ -305,24 +291,19 @@ fn decode_and_feed(
     }
 }
 
-// ── Sample format conversion helpers ─────────────────────────────────────────
-
-/// Convert a Symphonia decoded buffer to interleaved `f32`.
+// ─────────────────────────────────────────────────────────────────────────────
+// Sample format conversion helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
 fn decoded_to_interleaved_f32(decoded: GenericAudioBufferRef<'_>) -> (usize, u32, Vec<f32>) {
     let spec = decoded.spec();
     let channels = spec.channels().count();
     let rate = spec.rate();
-
     let mut samples = Vec::<f32>::new();
     decoded.copy_to_vec_interleaved(&mut samples);
-
     (channels, rate, samples)
 }
 
-/// Select the correct source sample for a given output channel.
-///
-/// Handles mono→stereo up-mix, stereo→mono down-mix, and channel remapping.
 #[inline(always)]
 fn source_frame_sample(
     frames: &[f32],
@@ -331,32 +312,17 @@ fn source_frame_sample(
     out_channel: usize,
     out_channels: usize,
 ) -> f32 {
-    if src_channels == 0 {
-        return 0.0;
-    }
+    if src_channels == 0 { return 0.0; }
     let base = frame * src_channels;
-
-    // Stereo → mono.
     if out_channels == 1 && src_channels > 1 {
         let acc: f32 = (0..src_channels).map(|c| frames[base + c]).sum();
         return acc / src_channels as f32;
     }
-
-    // Mono → any.
-    if src_channels == 1 {
-        return frames[base];
-    }
-
-    // Channel clip.
+    if src_channels == 1 { return frames[base]; }
     let idx = out_channel.min(src_channels - 1);
     frames[base + idx]
 }
 
-/// Resample `src_interleaved` from `src_rate` to `out_rate` using linear
-/// interpolation, remapping from `src_channels` to `out_channels`.
-///
-/// Fractional position and boundary carry samples are threaded through
-/// `state` across calls so there are no inter-packet discontinuities.
 fn convert_to_output(
     src_interleaved: &[f32],
     src_channels: usize,
@@ -369,16 +335,12 @@ fn convert_to_output(
         return Vec::new();
     }
 
-    // Prepend the carry frame from the previous packet.
     let mut frames = Vec::with_capacity(state.carry.len() + src_interleaved.len());
     frames.extend_from_slice(&state.carry);
     frames.extend_from_slice(src_interleaved);
 
     let total_frames = frames.len() / src_channels;
-    if total_frames < 2 {
-        state.carry = frames;
-        return Vec::new();
-    }
+    if total_frames < 2 { state.carry = frames; return Vec::new(); }
 
     let step = src_rate as f64 / out_rate as f64;
     let mut pos = state.pos;
@@ -388,113 +350,83 @@ fn convert_to_output(
     let mut out = Vec::with_capacity(estimated.saturating_mul(out_channels));
 
     while pos + 1.0 < total_frames as f64 {
-        let i0 = pos.floor() as usize;
+        let i0   = pos.floor() as usize;
         let frac = (pos - i0 as f64) as f32;
-
         for ch in 0..out_channels {
-            let s0 = source_frame_sample(&frames, src_channels, i0, ch, out_channels);
+            let s0 = source_frame_sample(&frames, src_channels, i0,     ch, out_channels);
             let s1 = source_frame_sample(&frames, src_channels, i0 + 1, ch, out_channels);
             out.push(s0 + (s1 - s0) * frac);
         }
-
         pos += step;
     }
 
-    // Keep the last source frame as the left neighbour for the next packet.
     let keep_frame = total_frames - 1;
     let keep_base = keep_frame * src_channels;
     state.carry.clear();
-    state
-        .carry
-        .extend_from_slice(&frames[keep_base..keep_base + src_channels]);
+    state.carry.extend_from_slice(&frames[keep_base..keep_base + src_channels]);
     state.pos = pos - keep_frame as f64;
-
     out
 }
 
-/// Build a `BoxedMediaSource` from an owned [`AudioSource`].
+// ─────────────────────────────────────────────────────────────────────────────
+// MediaSource helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+pub struct MemorySource<T: AsRef<[u8]>> { inner: Cursor<T> }
+
+impl<T: AsRef<[u8]>> MemorySource<T> {
+    pub fn new(data: T) -> Self { Self { inner: Cursor::new(data) } }
+}
+impl<T: AsRef<[u8]>> Read for MemorySource<T> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> { self.inner.read(buf) }
+}
+impl<T: AsRef<[u8]>> Seek for MemorySource<T> {
+    fn seek(&mut self, pos: SeekFrom) -> std::io::Result<u64> { self.inner.seek(pos) }
+}
+impl<T: AsRef<[u8]> + Send + Sync> MediaSource for MemorySource<T> {
+    fn is_seekable(&self) -> bool { true }
+    fn byte_len(&self) -> Option<u64> {
+        Some(self.inner.get_ref().as_ref().len() as u64)
+    }
+}
+
 fn media_source_from_owned(source: AudioSource) -> Result<BoxedMediaSource, String> {
     match source {
         AudioSource::Path(p) => {
             let f = File::open(&p).map_err(|e| format!("Failed to open file '{p}': {e}"))?;
             Ok(Box::new(f))
         }
-        AudioSource::Url(u) => {
-            let s = HttpStream::new(&u)?;
-            Ok(Box::new(s))
-        }
-        AudioSource::Memory(data) => {
-            let f = write_bytes_to_temp_file(&data, "memory")?;
-            Ok(Box::new(f))
-        }
+        AudioSource::Url(u) => Ok(Box::new(HttpStream::new(&u)?)),
+        AudioSource::Memory(data) => Ok(Box::new(MemorySource::new(data))),
     }
 }
 
-/// Build a `BoxedMediaSource` from a reference, avoiding cloning large
-/// in-memory payloads (re-opens the file / connection instead).
 fn media_source_from_ref(source: &AudioSource) -> Result<BoxedMediaSource, String> {
     match source {
         AudioSource::Path(p) => {
-            let f =
-                File::open(p).map_err(|e| format!("Failed to open source for duration: {e}"))?;
+            let f = File::open(p)
+                .map_err(|e| format!("Failed to open source for duration: {e}"))?;
             Ok(Box::new(f))
         }
-        AudioSource::Url(u) => {
-            let s = HttpStream::new(u)?;
-            Ok(Box::new(s))
-        }
-        AudioSource::Memory(data) => {
-            let f = write_bytes_to_temp_file(data, "duration_memory")?;
-            Ok(Box::new(f))
-        }
+        AudioSource::Url(u) => Ok(Box::new(HttpStream::new(u)?)),
+        AudioSource::Memory(data) => Ok(Box::new(MemorySource::new(data.clone()))),
     }
 }
 
-/// Write `bytes` to an anonymous temporary file and rewind to the start.
-fn write_bytes_to_temp_file(bytes: &[u8], tag: &str) -> Result<File, String> {
-    let mut file =
-        tempfile().map_err(|e| format!("Failed to create temporary file for {tag}: {e}"))?;
-    file.write_all(bytes)
-        .map_err(|e| format!("Failed to write temporary file for {tag}: {e}"))?;
-    file.seek(SeekFrom::Start(0))
-        .map_err(|e| format!("Failed to rewind temporary file for {tag}: {e}"))?;
-    Ok(file)
-}
-
-/// Probe a source for duration without decoding.
-/// Returns `-1` if the duration cannot be determined.
 fn estimate_duration_millis(source: &AudioSource) -> Result<i32, String> {
     let media = match media_source_from_ref(source) {
-        Ok(m) => m,
-        Err(e) => {
-            error!("{e}");
-            return Ok(-1);
-        }
+        Ok(m)  => m,
+        Err(e) => { crate::error!("{e}"); return Ok(-1); }
     };
-
     let mss = MediaSourceStream::new(media, MediaSourceStreamOptions::default());
-
     let probed = symphonia::default::get_probe()
-        .probe(
-            &Hint::new(),
-            mss,
-            FormatOptions::default(),
-            MetadataOptions::default(),
-        )
+        .probe(&Hint::new(), mss, FormatOptions::default(), MetadataOptions::default())
         .map_err(|e| format!("Failed to probe audio format: {e}"))?;
 
     let track = probed.default_track(TrackType::Audio);
-
     let Some(track) = track else { return Ok(-1) };
-
-    let Some(CodecParameters::Audio(audio)) = track.codec_params.as_ref() else {
-        return Ok(-1);
-    };
-
-    let Some(sr) = audio.sample_rate else {
-        return Ok(-1);
-    };
-
+    let Some(CodecParameters::Audio(audio)) = track.codec_params.as_ref() else { return Ok(-1) };
+    let Some(sr) = audio.sample_rate else { return Ok(-1) };
     if let Some(nf) = track.num_frames {
         Ok(((nf as f64 / sr as f64) * 1000.0) as i32)
     } else {

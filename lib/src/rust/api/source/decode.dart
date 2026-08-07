@@ -6,13 +6,15 @@
 import '../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `convert_to_output`, `decode_and_feed`, `decoded_to_interleaved_f32`, `estimate_duration_millis`, `media_source_from_owned`, `media_source_from_ref`, `new`, `reap_finished`, `set_source`, `source_frame_sample`, `start`, `stop`, `write_bytes_to_temp_file`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DecodeCommand`
+// These functions are ignored because they are not marked as `pub`: `convert_to_output`, `decode_and_feed`, `decoded_to_interleaved_f32`, `estimate_duration_millis`, `media_source_from_owned`, `media_source_from_ref`, `new`, `reap_finished`, `set_source`, `signal_stop`, `source_frame_sample`, `start`, `stop`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DecodeCommand`, `MemorySource`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `byte_len`, `is_seekable`, `read`, `seek`
+// These functions are ignored (category: IgnoreBecauseOwnerTyShouldIgnore): `new`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DecodePool>>
 abstract class DecodePool implements RustOpaqueInterface {
   Future<bool> isDecoding();
 
-  /// Fast seek! No thread restart.
+  /// Send a seek command to the running decode thread (no restart).
   Future<void> seek({required int millis});
 }

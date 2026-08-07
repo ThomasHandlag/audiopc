@@ -274,7 +274,7 @@ impl VisualizerProcessor {
     //  Bar Visualization
     // ═══════════════════════════════════════════════════════════════════
 
-    pub fn compute(
+    pub(crate) fn compute(
         &mut self,
         samples: &[f32],
         channels: usize,
@@ -439,7 +439,7 @@ impl VisualizerProcessor {
     }
 
     /// Standalone band analysis — performs its own FFT.
-    pub fn analyze_bands(
+    pub(crate)fn analyze_bands(
         &mut self,
         samples: &[f32],
         channels: usize,

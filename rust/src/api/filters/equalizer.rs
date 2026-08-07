@@ -36,19 +36,49 @@ pub struct BandConfig {
 impl BandConfig {
     /// A sensible peaking band centred at `freq`.
     pub fn peaking(freq: f32, gain_db: f32, q: f32) -> Self {
-        Self { kind: BandKind::Peaking, freq, gain_db, q, enabled: true }
+        Self {
+            kind: BandKind::Peaking,
+            freq,
+            gain_db,
+            q,
+            enabled: true,
+        }
     }
     pub fn low_shelf(freq: f32, gain_db: f32, q: f32) -> Self {
-        Self { kind: BandKind::LowShelf, freq, gain_db, q, enabled: true }
+        Self {
+            kind: BandKind::LowShelf,
+            freq,
+            gain_db,
+            q,
+            enabled: true,
+        }
     }
     pub fn high_shelf(freq: f32, gain_db: f32, q: f32) -> Self {
-        Self { kind: BandKind::HighShelf, freq, gain_db, q, enabled: true }
+        Self {
+            kind: BandKind::HighShelf,
+            freq,
+            gain_db,
+            q,
+            enabled: true,
+        }
     }
     pub fn high_pass(freq: f32, q: f32) -> Self {
-        Self { kind: BandKind::HighPass, freq, gain_db: 0.0, q, enabled: true }
+        Self {
+            kind: BandKind::HighPass,
+            freq,
+            gain_db: 0.0,
+            q,
+            enabled: true,
+        }
     }
     pub fn low_pass(freq: f32, q: f32) -> Self {
-        Self { kind: BandKind::LowPass, freq, gain_db: 0.0, q, enabled: true }
+        Self {
+            kind: BandKind::LowPass,
+            freq,
+            gain_db: 0.0,
+            q,
+            enabled: true,
+        }
     }
 }
 
@@ -102,7 +132,11 @@ impl Equalizer {
     /// Create an empty equalizer.
     #[frb(sync)]
     pub fn new(sample_rate: f32) -> Self {
-        Self { bands: Vec::new(), sample_rate, bypass: false }
+        Self {
+            bands: Vec::new(),
+            sample_rate,
+            bypass: false,
+        }
     }
 
     /// Convenience: create a ready-to-use 10-band graphic EQ.
@@ -110,8 +144,37 @@ impl Equalizer {
     /// Bands at: 31, 63, 125, 250, 500, 1k, 2k, 4k, 8k, 16k Hz — all at 0 dB.
     #[frb(sync)]
     pub fn new_graphic_10band(sample_rate: f32) -> Self {
-        let freqs = [31.0, 63.0, 125.0, 250.0, 500.0, 1_000.0,
-                     2_000.0, 4_000.0, 8_000.0, 16_000.0_f32];
+        let freqs = [
+            31.0,
+            63.0,
+            125.0,
+            250.0,
+            500.0,
+            1_000.0,
+            2_000.0,
+            4_000.0,
+            8_000.0,
+            16_000.0_f32,
+        ];
+        let mut eq = Self::new(sample_rate);
+        for &f in &freqs {
+            eq.add_band(BandConfig::peaking(f, 0.0, 1.41));
+        }
+        eq
+    }
+
+    #[frb(sync)]
+    pub fn new_graphic_8band(sample_rate: f32) -> Self {
+        let freqs = [
+            31.0,
+            63.0,
+            125.0,
+            250.0,
+            500.0,
+            1_000.0,
+            4_000.0,
+            16_000.0_f32,
+        ];
         let mut eq = Self::new(sample_rate);
         for &f in &freqs {
             eq.add_band(BandConfig::peaking(f, 0.0, 1.41));
@@ -222,10 +285,10 @@ impl Equalizer {
 
 fn coeffs_for(cfg: &BandConfig, fs: f32) -> crate::api::filters::biquad::BiquadCoeffs {
     match cfg.kind {
-        BandKind::Peaking   => biquad::peaking_eq(cfg.freq, cfg.gain_db, cfg.q, fs),
-        BandKind::LowShelf  => biquad::low_shelf(cfg.freq, cfg.gain_db, cfg.q, fs),
+        BandKind::Peaking => biquad::peaking_eq(cfg.freq, cfg.gain_db, cfg.q, fs),
+        BandKind::LowShelf => biquad::low_shelf(cfg.freq, cfg.gain_db, cfg.q, fs),
         BandKind::HighShelf => biquad::high_shelf(cfg.freq, cfg.gain_db, cfg.q, fs),
-        BandKind::HighPass  => biquad::high_pass(cfg.freq, cfg.q, fs),
-        BandKind::LowPass   => biquad::low_pass(cfg.freq, cfg.q, fs),
+        BandKind::HighPass => biquad::high_pass(cfg.freq, cfg.q, fs),
+        BandKind::LowPass => biquad::low_pass(cfg.freq, cfg.q, fs),
     }
 }

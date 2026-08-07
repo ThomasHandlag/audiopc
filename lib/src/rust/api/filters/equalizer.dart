@@ -111,6 +111,11 @@ abstract class Equalizer implements RustOpaqueInterface {
         sampleRate: sampleRate,
       );
 
+  static Equalizer newGraphic8Band({required double sampleRate}) => RustLib
+      .instance
+      .api
+      .crateApiFiltersEqualizerEqualizerNewGraphic8Band(sampleRate: sampleRate);
+
   /// **Core DSP entry point** – process a single `f32` sample.
   ///
   /// All bands are applied in series. With no bands, or when bypassed,

@@ -4,20 +4,21 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import '../frb_generated.dart';
+import 'filters/equalizer.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 import 'renderer/output.dart';
 import 'source.dart';
 import 'visualizer.dart';
 
-// These functions are ignored because they are not marked as `pub`: `ensure_stream`, `start_decode`
+// These functions are ignored because they are not marked as `pub`: `ensure_stream`, `millis_to_samples`, `rebuild_queue`, `start_decode`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `drop`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>>
 abstract class AudioPlayer implements RustOpaqueInterface {
-  /// Clear the effect chain of every output channel.
+  void addBand({required BandConfig config});
+
   void clearEffects();
 
-  /// Duration in millisecond of current source.
   int durationMillis();
 
   List<BandEnergy> getBand({required List<VBandKind> kinds});
@@ -32,28 +33,31 @@ abstract class AudioPlayer implements RustOpaqueInterface {
 
   bool isCompleted();
 
-  /// Whether player is playing or not.
   bool isPlaying();
 
-  /// Create new player instance.
   factory AudioPlayer() => RustLib.instance.api.crateApiPlayerAudioPlayerNew();
 
-  /// Pause curent playing song.
+  /// Pause current playback.
   void pause();
 
-  /// Play current audio source. If current source is empty then an error will be throw.
+  /// Play current audio source.
   void play();
 
   int position();
 
+  /// Resume paused playback.
   void resume();
 
   double sampleRate();
 
-  /// Play audio at given position in millisecond.
+  /// Seek to `position` ms.
   void seek({required int position});
 
   void set10BandEq();
+
+  void set8BandEq();
+
+  void setBand({required int index, required BandConfig config});
 
   void setBandGain({required int index, required double gain});
 
@@ -73,7 +77,6 @@ abstract class AudioPlayer implements RustOpaqueInterface {
 
   void setProcessor({required int barCount, required int fftSize});
 
-  /// Set playback speed of output audio.
   void setRate({required double rate});
 
   void setReverb({
@@ -87,9 +90,8 @@ abstract class AudioPlayer implements RustOpaqueInterface {
 
   void setThreshold({required double threshold});
 
-  /// Set volume of ouput audio.
   void setVolumn({required double volumn});
 
-  /// Stop current playing audio.
+  /// Stop playback and reset position.
   void stop();
 }

@@ -6,7 +6,7 @@
 import '../../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `build`, `get_output_config`, `new`, `write_output_f32`, `write_output_i16`, `write_output_u16`
+// These functions are ignored because they are not marked as `pub`: `build_params`, `build_stream`, `get_output_config`, `install_stream`, `new`, `write_output`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioOutput>>
@@ -14,6 +14,8 @@ abstract class AudioOutput implements RustOpaqueInterface {
   Future<AudioOutputConfig> currentConfig();
 
   Future<void> disposeOldStream();
+
+  Future<bool> hasStream();
 }
 
 class AudioOutputConfig {
