@@ -19,6 +19,20 @@ abstract class AudioPlayer implements RustOpaqueInterface {
 
   void clearEffects();
 
+  void disableChorus();
+
+  void disableCompressor();
+
+  void disableDelay();
+
+  void disableGain();
+
+  void disableOverDrive();
+
+  void disableReverb();
+
+  void disableThreshold();
+
   int durationMillis();
 
   List<BandEnergy> getBand({required List<VBandKind> kinds});
@@ -67,13 +81,24 @@ abstract class AudioPlayer implements RustOpaqueInterface {
     required double wet,
   });
 
+  void setCompressor({
+    required double thresholdDb,
+    required double ratio,
+    required double attackS,
+    required double releaseS,
+    required double makeupDb,
+    required double sampleRate,
+  });
+
   void setDelay({
     required double delaySeconds,
     required double feedback,
     required double wet,
   });
 
-  void setOverride({required double drive, required double output});
+  void setGain({required double gain});
+
+  void setOverDride({required double drive, required double output});
 
   void setProcessor({required int barCount, required int fftSize});
 

@@ -8,7 +8,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 final class PcPlayer {
   /// player api
   final AudioPlayer player;
-  
+
   PcPlayer._(this.player) {
     _stateController = StreamController.broadcast();
     _posController = StreamController.broadcast();
@@ -100,6 +100,11 @@ final class PcPlayer {
     player.set10BandEq();
   }
 
+  /// Set 8 bands equalizer.
+  void set8BandsEqualizer() {
+    player.set8BandEq();
+  }
+
   /// Manually add equalizer band.
   void setBand(int index, double gainDb) {
     player.setBandGain(index: index, gain: gainDb);
@@ -118,8 +123,63 @@ final class PcPlayer {
     player.setDelay(delaySeconds: delaySeconds, feedback: feedback, wet: wet);
   }
 
-  void setOverride(double drive, double output) {
-    player.setOverride(drive: drive, output: output);
+  void setOverDride(double drive, double output) {
+    player.setOverDride(drive: drive, output: output);
+  }
+
+  void setGain(double gain) {
+    player.setGain(gain: gain);
+  }
+
+  void setThreshold(double threshold) {
+    player.setThreshold(threshold: threshold);
+  }
+
+  void disableThreshold() {
+    player.disableThreshold();
+  }
+
+  void disableOverDrive() {
+    player.disableOverDrive();
+  }
+
+  void disableGain() {
+    player.disableGain();
+  }
+
+  void disableCompressor() {
+    player.disableCompressor();
+  }
+
+  void disableReverb() {
+    player.disableReverb();
+  }
+
+  void disableDelay() {
+    player.disableDelay();
+  }
+
+
+  void disableChorus() {
+    player.disableChorus();
+  }
+
+  void setCompressor(
+    double thresholdDb,
+    double ratio,
+    double attackS,
+    double releaseS,
+    double makeupDb,
+    double sampleRate,
+  ) {
+    player.setCompressor(
+      thresholdDb: thresholdDb,
+      ratio: ratio,
+      attackS: attackS,
+      releaseS: releaseS,
+      makeupDb: makeupDb,
+      sampleRate: sampleRate,
+    );
   }
 
   /// Set volumn of ouput audio.
@@ -138,7 +198,7 @@ final class PcPlayer {
   }
 
   /// Get computed bars. The return data sized is determined by processor.
-  /// 
+  ///
   /// If audio processor did not set yet then an exception will be throw.
   /// To set how many bars and precise the bars is just call [setProcesor].
   Float32List getBars() {
@@ -150,13 +210,12 @@ final class PcPlayer {
   }
 
   /// Create new processor with bar count and fft size.
-  /// 
+  ///
   /// Increase [fftSize] can help visualizer bar more presice,
   /// but should consider performance if it too large.
   void setProcesor(int barCount, int fftSize) {
     player.setProcessor(barCount: barCount, fftSize: fftSize);
   }
-
 
   double drumBeat() {
     return VisualizerProcessor.drumBeat(

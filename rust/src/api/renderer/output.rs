@@ -82,6 +82,7 @@ impl AudioOutput {
 
     /// Install a pre-built stream (brief lock only).
     pub(crate) fn install_stream(&mut self, stream: Stream, config: AudioOutputConfig) {
+        info!("Install new stream");
         self.stream = Some(stream);
         self.current_config = config;
     }

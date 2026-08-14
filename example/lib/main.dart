@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:audiopc/audiopc.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/material.dart' hide MetaData;
+import 'package:material_ui/material_ui.dart' hide MetaData;
 import 'shader_widget.dart';
 
 /// Example app entry point.
@@ -237,7 +237,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _applyOverride() {
-    player.setOverride(_overrideDrive, _overrideOutput);
+    player.setOverDride(_overrideDrive, _overrideOutput);
   }
 
   @override

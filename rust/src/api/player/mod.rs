@@ -14,7 +14,10 @@ use crate::{
     api::{
         enums::{AudioCommand, MAX_RATE, MIN_RATE},
         filters::{
-            effects::{ChorusEffect, DelayEffect, HardClipEffect, OverdriveEffect, ReverbEffect},
+            effects::{
+                ChorusEffect, CompressorEffect, DelayEffect, GainEffect, HardClipEffect,
+                OverdriveEffect, ReverbEffect,
+            },
             equalizer::{BandConfig, Equalizer},
         },
         renderer::{
@@ -182,10 +185,10 @@ impl AudioPlayer {
                                     }
                                     ctrl_dp.set_state(prev.clone());
                                     if prev == PlaybackState::Playing {
-                                        let ms = audio_state_dp.lock().position();
-                                        if let Some(tx) = active_cmd_tx_clone.lock().as_ref() {
-                                            let _ = tx.send(DecodeCommand::Seek { millis: ms });
-                                        }
+                                        // let ms = audio_state_dp.lock().position();
+                                        // if let Some(tx) = active_cmd_tx_clone.lock().as_ref() {
+                                        //     let _ = tx.send(DecodeCommand::Seek { millis: ms });
+                                        // }
                                     }
                                 }
                                 Err(e) => warn!("Failed to rebuild audio output: {e}"),
@@ -380,6 +383,7 @@ impl AudioPlayer {
             out.build_params()
         };
         let Some((tx, state, dsp)) = build_params else {
+            info!("Output Params is None");
             return;
         };
 
@@ -388,6 +392,7 @@ impl AudioPlayer {
             {
                 let mut out = self.output.lock();
                 if out.has_stream() {
+                    info!("Drop unused stream");
                     return; // device_pool won the race; drop our unused stream
                 }
                 out.install_stream(stream, new_cfg);
@@ -416,7 +421,7 @@ impl AudioPlayer {
 
     #[frb(sync)]
     pub fn set_volumn(&mut self, volumn: f32) {
-        self.ctrl.set_volume(volumn.clamp(0.0, 1.0));
+        self.ctrl.set_volume(volumn.clamp(0.0, 2.0));
     }
 
     #[frb(sync)]
@@ -485,13 +490,73 @@ impl AudioPlayer {
     }
 
     #[frb(sync)]
+    pub fn set_gain(&mut self, gain: f32) {
+        self.dsp.lock().effects.gain = Some(GainEffect::new(gain))
+    }
+
+    #[frb(sync)]
     pub fn set_threshold(&mut self, threshold: f32) {
         self.dsp.lock().effects.hard_clip = Some(HardClipEffect::new(threshold));
     }
 
     #[frb(sync)]
-    pub fn set_override(&mut self, drive: f32, output: f32) {
+    pub fn set_over_dride(&mut self, drive: f32, output: f32) {
         self.dsp.lock().effects.overdrive = Some(OverdriveEffect::new(drive, output));
+    }
+
+    #[frb(sync)]
+    pub fn disable_over_drive(&mut self) {
+        self.dsp.lock().effects.overdrive = None;
+    }
+
+    #[frb(sync)]
+    pub fn disable_gain(&mut self) {
+        self.dsp.lock().effects.gain = None;
+    }
+
+    #[frb(sync)]
+    pub fn disable_delay(&mut self) {
+        self.dsp.lock().effects.delay = None;
+    }
+
+    #[frb(sync)]
+    pub fn disable_reverb(&mut self) {
+        self.dsp.lock().effects.reverb = None;
+    }
+
+    #[frb(sync)]
+    pub fn disable_threshold(&mut self) {
+        self.dsp.lock().effects.hard_clip = None;
+    }
+
+    #[frb(sync)]
+    pub fn disable_compressor(&mut self) {
+        self.dsp.lock().effects.compressor = None;
+    }
+
+    #[frb(sync)]
+    pub fn disable_chorus(&mut self) {
+        self.dsp.lock().effects.chorus = None;
+    }
+
+    #[frb(sync)]
+    pub fn set_compressor(
+        &mut self,
+        threshold_db: f32,
+        ratio: f32,
+        attack_s: f32,
+        release_s: f32,
+        makeup_db: f32,
+        sample_rate: f32,
+    ) {
+        self.dsp.lock().effects.compressor = Some(CompressorEffect::new(
+            threshold_db,
+            ratio,
+            attack_s,
+            release_s,
+            makeup_db,
+            sample_rate,
+        ));
     }
 
     #[frb(sync)]

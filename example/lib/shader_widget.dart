@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A widget that renders a GLSL fragment shader with audio spectrum data
 /// passed as a texture sampler (iChannel1) for real-time audio visualization.

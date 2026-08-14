@@ -46,7 +46,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 803870679;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1184983539;
 
 // Section: executor
 
@@ -300,6 +300,342 @@ fn wire__crate__api__player__AudioPlayer_clear_effects_impl(
                 let mut api_that_guard = api_that_guard.unwrap();
                 let output_ok = Result::<_, ()>::Ok({
                     crate::api::player::AudioPlayer::clear_effects(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_chorus_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_chorus",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_chorus(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_compressor_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_compressor",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_compressor(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_delay_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_delay",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_delay(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_gain_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_gain",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_gain(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_over_drive_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_over_drive",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_over_drive(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_reverb_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_reverb",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_reverb(&mut *api_that_guard);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_disable_threshold_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_disable_threshold",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::disable_threshold(&mut *api_that_guard);
                 })?;
                 Ok(output_ok)
             })())
@@ -1272,6 +1608,68 @@ fn wire__crate__api__player__AudioPlayer_set_chorus_impl(
         },
     )
 }
+fn wire__crate__api__player__AudioPlayer_set_compressor_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_set_compressor",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            let api_threshold_db = <f32>::sse_decode(&mut deserializer);
+            let api_ratio = <f32>::sse_decode(&mut deserializer);
+            let api_attack_s = <f32>::sse_decode(&mut deserializer);
+            let api_release_s = <f32>::sse_decode(&mut deserializer);
+            let api_makeup_db = <f32>::sse_decode(&mut deserializer);
+            let api_sample_rate = <f32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::set_compressor(
+                        &mut *api_that_guard,
+                        api_threshold_db,
+                        api_ratio,
+                        api_attack_s,
+                        api_release_s,
+                        api_makeup_db,
+                        api_sample_rate,
+                    );
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
 fn wire__crate__api__player__AudioPlayer_set_delay_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
@@ -1328,14 +1726,63 @@ fn wire__crate__api__player__AudioPlayer_set_delay_impl(
         },
     )
 }
-fn wire__crate__api__player__AudioPlayer_set_override_impl(
+fn wire__crate__api__player__AudioPlayer_set_gain_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "AudioPlayer_set_override",
+            debug_name: "AudioPlayer_set_gain",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_that = <RustOpaqueMoi<
+                flutter_rust_bridge::for_generated::RustAutoOpaqueInner<AudioPlayer>,
+            >>::sse_decode(&mut deserializer);
+            let api_gain = <f32>::sse_decode(&mut deserializer);
+            deserializer.end();
+            transform_result_sse::<_, ()>((move || {
+                let mut api_that_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_that, 0, true,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref_mut()),
+                        _ => unreachable!(),
+                    }
+                }
+                let mut api_that_guard = api_that_guard.unwrap();
+                let output_ok = Result::<_, ()>::Ok({
+                    crate::api::player::AudioPlayer::set_gain(&mut *api_that_guard, api_gain);
+                })?;
+                Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__player__AudioPlayer_set_over_dride_impl(
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "AudioPlayer_set_over_dride",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
@@ -1371,7 +1818,7 @@ fn wire__crate__api__player__AudioPlayer_set_override_impl(
                 }
                 let mut api_that_guard = api_that_guard.unwrap();
                 let output_ok = Result::<_, ()>::Ok({
-                    crate::api::player::AudioPlayer::set_override(
+                    crate::api::player::AudioPlayer::set_over_dride(
                         &mut *api_that_guard,
                         api_drive,
                         api_output,
@@ -12298,500 +12745,500 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        39 => wire__crate__api__renderer__state__AudioState_clear_audio_state_impl(
+        48 => wire__crate__api__renderer__state__AudioState_clear_audio_state_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        40 => wire__crate__api__renderer__state__AudioState_clear_buffers_impl(
+        49 => wire__crate__api__renderer__state__AudioState_clear_buffers_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        41 => wire__crate__api__renderer__state__AudioState_clear_effects_impl(
+        50 => wire__crate__api__renderer__state__AudioState_clear_effects_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        42 => wire__crate__api__renderer__state__AudioState_clear_eq_impl(
+        51 => wire__crate__api__renderer__state__AudioState_clear_eq_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        43 => wire__crate__api__renderer__state__AudioState_copy_latest_visualizer_samples_impl(
+        52 => wire__crate__api__renderer__state__AudioState_copy_latest_visualizer_samples_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        44 => wire__crate__api__renderer__state__AudioState_new_impl(
+        53 => wire__crate__api__renderer__state__AudioState_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        45 => wire__crate__api__renderer__state__AudioState_next_sample_impl(
+        54 => wire__crate__api__renderer__state__AudioState_next_sample_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        46 => wire__crate__api__renderer__state__AudioState_position_impl(
+        55 => wire__crate__api__renderer__state__AudioState_position_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        47 => wire__crate__api__renderer__state__AudioState_push_visualizer_sample_impl(
+        56 => wire__crate__api__renderer__state__AudioState_push_visualizer_sample_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        48 => wire__crate__api__renderer__state__AudioState_set_effect_impl(
+        57 => wire__crate__api__renderer__state__AudioState_set_effect_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        49 => wire__crate__api__renderer__state__AudioState_set_equalizer_impl(
+        58 => wire__crate__api__renderer__state__AudioState_set_equalizer_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        50 => wire__crate__api__renderer__state__AudioState_update_device_config_impl(
+        59 => wire__crate__api__renderer__state__AudioState_update_device_config_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        51 => wire__crate__api__renderer__state__AudioState_visualizer_window_impl(
+        60 => wire__crate__api__renderer__state__AudioState_visualizer_window_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        62 => wire__crate__api__filters__equalizer__BandConfig_high_pass_impl(
+        71 => wire__crate__api__filters__equalizer__BandConfig_high_pass_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        63 => wire__crate__api__filters__equalizer__BandConfig_high_shelf_impl(
+        72 => wire__crate__api__filters__equalizer__BandConfig_high_shelf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        64 => wire__crate__api__filters__equalizer__BandConfig_low_pass_impl(
+        73 => wire__crate__api__filters__equalizer__BandConfig_low_pass_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        65 => wire__crate__api__filters__equalizer__BandConfig_low_shelf_impl(
+        74 => wire__crate__api__filters__equalizer__BandConfig_low_shelf_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        66 => wire__crate__api__filters__equalizer__BandConfig_peaking_impl(
+        75 => wire__crate__api__filters__equalizer__BandConfig_peaking_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        79 => wire__crate__api__filters__biquad__BiquadFilter_new_impl(
+        88 => wire__crate__api__filters__biquad__BiquadFilter_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        80 => wire__crate__api__filters__biquad__BiquadFilter_process_impl(
+        89 => wire__crate__api__filters__biquad__BiquadFilter_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        81 => wire__crate__api__filters__biquad__BiquadFilter_reset_impl(
+        90 => wire__crate__api__filters__biquad__BiquadFilter_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        82 => wire__crate__api__filters__biquad__BiquadFilter_update_coeffs_impl(
+        91 => wire__crate__api__filters__biquad__BiquadFilter_update_coeffs_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        83 => wire__crate__api__filters__biquad__BiquadState_default_impl(
+        92 => wire__crate__api__filters__biquad__BiquadState_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        90 => wire__crate__api__renderer__state__BuffConfig_new_impl(
+        99 => wire__crate__api__renderer__state__BuffConfig_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        99 => wire__crate__api__filters__effects__ChorusEffect_new_impl(
+        108 => wire__crate__api__filters__effects__ChorusEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        100 => wire__crate__api__filters__effects__ChorusEffect_process_impl(
+        109 => wire__crate__api__filters__effects__ChorusEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        101 => wire__crate__api__filters__effects__ChorusEffect_reset_impl(
+        110 => wire__crate__api__filters__effects__ChorusEffect_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        102 => wire__crate__api__filters__effects__ChorusEffect_set_sample_rate_impl(
+        111 => wire__crate__api__filters__effects__ChorusEffect_set_sample_rate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        115 => wire__crate__api__filters__effects__CompressorEffect_new_impl(
+        124 => wire__crate__api__filters__effects__CompressorEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        116 => wire__crate__api__filters__effects__CompressorEffect_process_impl(
+        125 => wire__crate__api__filters__effects__CompressorEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        117 => wire__crate__api__filters__effects__CompressorEffect_reset_impl(
+        126 => wire__crate__api__filters__effects__CompressorEffect_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        118 => wire__crate__api__filters__effects__CompressorEffect_set_sample_rate_impl(
+        127 => wire__crate__api__filters__effects__CompressorEffect_set_sample_rate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        119 => wire__crate__api__source__decode__DecodePool_is_decoding_impl(
+        128 => wire__crate__api__source__decode__DecodePool_is_decoding_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        120 => wire__crate__api__source__decode__DecodePool_seek_impl(
+        129 => wire__crate__api__source__decode__DecodePool_seek_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        127 => wire__crate__api__filters__effects__DelayEffect_new_impl(
+        136 => wire__crate__api__filters__effects__DelayEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        128 => wire__crate__api__filters__effects__DelayEffect_process_impl(
+        137 => wire__crate__api__filters__effects__DelayEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        129 => wire__crate__api__filters__effects__DelayEffect_reset_impl(
+        138 => wire__crate__api__filters__effects__DelayEffect_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        130 => wire__crate__api__filters__effects__DelayEffect_set_delay_impl(
+        139 => wire__crate__api__filters__effects__DelayEffect_set_delay_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        135 => wire__crate__api__renderer__state__DspState_clear_effects_impl(
+        144 => wire__crate__api__renderer__state__DspState_clear_effects_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        136 => wire__crate__api__renderer__state__DspState_clear_eq_impl(
+        145 => wire__crate__api__renderer__state__DspState_clear_eq_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        137 => {
+        146 => {
             wire__crate__api__renderer__state__DspState_new_impl(port, ptr, rust_vec_len, data_len)
         }
-        152 => wire__crate__api__filters__effects__EffectsChain_empty_impl(
+        161 => wire__crate__api__filters__effects__EffectsChain_empty_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        153 => wire__crate__api__filters__effects__EffectsChain_process_impl(
+        162 => wire__crate__api__filters__effects__EffectsChain_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        159 => wire__crate__api__filters__equalizer__Equalizer_clear_bands_impl(
+        168 => wire__crate__api__filters__equalizer__Equalizer_clear_bands_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        163 => wire__crate__api__filters__equalizer__Equalizer_process_impl(
+        172 => wire__crate__api__filters__equalizer__Equalizer_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        165 => wire__crate__api__filters__equalizer__Equalizer_reset_impl(
+        174 => wire__crate__api__filters__equalizer__Equalizer_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        169 => wire__crate__api__filters__equalizer__Equalizer_set_sample_rate_impl(
+        178 => wire__crate__api__filters__equalizer__Equalizer_set_sample_rate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        174 => wire__crate__api__filters__effects__GainEffect_new_impl(
+        183 => wire__crate__api__filters__effects__GainEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        175 => wire__crate__api__filters__effects__GainEffect_process_impl(
+        184 => wire__crate__api__filters__effects__GainEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        176 => wire__crate__api__filters__effects__GainEffect_set_gain_db_impl(
+        185 => wire__crate__api__filters__effects__GainEffect_set_gain_db_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        181 => wire__crate__api__filters__effects__HardClipEffect_new_impl(
+        190 => wire__crate__api__filters__effects__HardClipEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        182 => wire__crate__api__filters__effects__HardClipEffect_process_impl(
+        191 => wire__crate__api__filters__effects__HardClipEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        189 => wire__crate__api__filters__effects__OverdriveEffect_new_impl(
+        198 => wire__crate__api__filters__effects__OverdriveEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        190 => wire__crate__api__filters__effects__OverdriveEffect_process_impl(
+        199 => wire__crate__api__filters__effects__OverdriveEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        191 => wire__crate__api__renderer__state__ResampleState_default_impl(
+        200 => wire__crate__api__renderer__state__ResampleState_default_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        192 => wire__crate__api__renderer__state__ResampleState_new_impl(
+        201 => wire__crate__api__renderer__state__ResampleState_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        193 => wire__crate__api__renderer__state__ResampleState_reset_impl(
+        202 => wire__crate__api__renderer__state__ResampleState_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        202 => wire__crate__api__filters__effects__ReverbEffect_new_impl(
+        211 => wire__crate__api__filters__effects__ReverbEffect_new_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        203 => wire__crate__api__filters__effects__ReverbEffect_process_impl(
+        212 => wire__crate__api__filters__effects__ReverbEffect_process_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        204 => wire__crate__api__filters__effects__ReverbEffect_reset_impl(
+        213 => wire__crate__api__filters__effects__ReverbEffect_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        205 => wire__crate__api__filters__effects__ReverbEffect_update_params_impl(
+        214 => wire__crate__api__filters__effects__ReverbEffect_update_params_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        206 => wire__crate__api__renderer__state__SharedControlState_get_volume_impl(
+        215 => wire__crate__api__renderer__state__SharedControlState_get_volume_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        207 => wire__crate__api__renderer__state__SharedControlState_rate_impl(
+        216 => wire__crate__api__renderer__state__SharedControlState_rate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        208 => wire__crate__api__renderer__state__SharedControlState_set_rate_impl(
+        217 => wire__crate__api__renderer__state__SharedControlState_set_rate_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        209 => wire__crate__api__renderer__state__SharedControlState_set_state_impl(
+        218 => wire__crate__api__renderer__state__SharedControlState_set_state_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        210 => wire__crate__api__renderer__state__SharedControlState_set_volume_impl(
+        219 => wire__crate__api__renderer__state__SharedControlState_set_volume_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        211 => wire__crate__api__renderer__state__SharedControlState_state_impl(
+        220 => wire__crate__api__renderer__state__SharedControlState_state_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        213 => wire__crate__api__visualizer__VisualizerProcessor_beat_for_kinds_impl(
+        222 => wire__crate__api__visualizer__VisualizerProcessor_beat_for_kinds_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        214 => wire__crate__api__visualizer__VisualizerProcessor_compute_bands_impl(
+        223 => wire__crate__api__visualizer__VisualizerProcessor_compute_bands_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        215 => wire__crate__api__visualizer__VisualizerProcessor_decay_only_impl(
+        224 => wire__crate__api__visualizer__VisualizerProcessor_decay_only_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        217 => wire__crate__api__visualizer__VisualizerProcessor_ensure_bar_count_impl(
+        226 => wire__crate__api__visualizer__VisualizerProcessor_ensure_bar_count_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        221 => wire__crate__api__visualizer__VisualizerProcessor_reset_impl(
+        230 => wire__crate__api__visualizer__VisualizerProcessor_reset_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        223 => wire__crate__api__source__audio_source_description_impl(
+        232 => wire__crate__api__source__audio_source_description_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        224 => {
+        233 => {
             wire__crate__api__source__audio_source_is_remote_impl(port, ptr, rust_vec_len, data_len)
         }
-        225 => {
+        234 => {
             wire__crate__api__visualizer__band_state_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        226 => {
+        235 => {
             wire__crate__api__filters__effects__db_to_linear_impl(port, ptr, rust_vec_len, data_len)
         }
-        227 => wire__crate__api__filters__biquad__high_pass_impl(port, ptr, rust_vec_len, data_len),
-        228 => {
+        236 => wire__crate__api__filters__biquad__high_pass_impl(port, ptr, rust_vec_len, data_len),
+        237 => {
             wire__crate__api__filters__biquad__high_shelf_impl(port, ptr, rust_vec_len, data_len)
         }
-        229 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
-        230 => {
+        238 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        239 => {
             wire__crate__api__filters__effects__linear_to_db_impl(port, ptr, rust_vec_len, data_len)
         }
-        231 => wire__crate__api__filters__biquad__low_pass_impl(port, ptr, rust_vec_len, data_len),
-        232 => wire__crate__api__filters__biquad__low_shelf_impl(port, ptr, rust_vec_len, data_len),
-        233 => {
+        240 => wire__crate__api__filters__biquad__low_pass_impl(port, ptr, rust_vec_len, data_len),
+        241 => wire__crate__api__filters__biquad__low_shelf_impl(port, ptr, rust_vec_len, data_len),
+        242 => {
             wire__crate__api__filters__biquad__peaking_eq_impl(port, ptr, rust_vec_len, data_len)
         }
-        234 => wire__crate__api__renderer__state__playback_state_from_u8_impl(
+        243 => wire__crate__api__renderer__state__playback_state_from_u8_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        235 => wire__crate__api__renderer__state__playback_state_id_impl(
+        244 => wire__crate__api__renderer__state__playback_state_id_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        236 => wire__crate__api__renderer__state__playback_state_to_u8_impl(
+        245 => wire__crate__api__renderer__state__playback_state_to_u8_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        237 => wire__crate__api__visualizer__v_band_kind_detailed_impl(
+        246 => wire__crate__api__visualizer__v_band_kind_detailed_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        238 => wire__crate__api__visualizer__v_band_kind_freq_range_impl(
+        247 => wire__crate__api__visualizer__v_band_kind_freq_range_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        239 => wire__crate__api__visualizer__v_band_kind_instrument_impl(
+        248 => wire__crate__api__visualizer__v_band_kind_instrument_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        240 => wire__crate__api__visualizer__v_band_kind_standard_impl(
+        249 => wire__crate__api__visualizer__v_band_kind_standard_impl(
             port,
             ptr,
             rust_vec_len,
@@ -12811,629 +13258,656 @@ fn pde_ffi_dispatcher_sync_impl(
     match func_id {
         4 => wire__crate__api__player__AudioPlayer_add_band_impl(ptr, rust_vec_len, data_len),
         5 => wire__crate__api__player__AudioPlayer_clear_effects_impl(ptr, rust_vec_len, data_len),
-        6 => {
+        6 => wire__crate__api__player__AudioPlayer_disable_chorus_impl(ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__player__AudioPlayer_disable_compressor_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        8 => wire__crate__api__player__AudioPlayer_disable_delay_impl(ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__player__AudioPlayer_disable_gain_impl(ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__player__AudioPlayer_disable_over_drive_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        11 => {
+            wire__crate__api__player__AudioPlayer_disable_reverb_impl(ptr, rust_vec_len, data_len)
+        }
+        12 => wire__crate__api__player__AudioPlayer_disable_threshold_impl(
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        13 => {
             wire__crate__api__player__AudioPlayer_duration_millis_impl(ptr, rust_vec_len, data_len)
         }
-        7 => wire__crate__api__player__AudioPlayer_get_band_impl(ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__player__AudioPlayer_get_bars_impl(ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__player__AudioPlayer_get_output_config_impl(
+        14 => wire__crate__api__player__AudioPlayer_get_band_impl(ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__player__AudioPlayer_get_bars_impl(ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__player__AudioPlayer_get_output_config_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        10 => wire__crate__api__player__AudioPlayer_get_samples_impl(ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__player__AudioPlayer_get_state_impl(ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__player__AudioPlayer_is_completed_impl(ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__player__AudioPlayer_is_playing_impl(ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__player__AudioPlayer_new_impl(ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__player__AudioPlayer_pause_impl(ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__player__AudioPlayer_play_impl(ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__player__AudioPlayer_position_impl(ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__player__AudioPlayer_resume_impl(ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__player__AudioPlayer_sample_rate_impl(ptr, rust_vec_len, data_len),
-        20 => wire__crate__api__player__AudioPlayer_seek_impl(ptr, rust_vec_len, data_len),
-        21 => wire__crate__api__player__AudioPlayer_set_10band_eq_impl(ptr, rust_vec_len, data_len),
-        22 => wire__crate__api__player__AudioPlayer_set_8band_eq_impl(ptr, rust_vec_len, data_len),
-        23 => wire__crate__api__player__AudioPlayer_set_band_impl(ptr, rust_vec_len, data_len),
-        24 => wire__crate__api__player__AudioPlayer_set_band_gain_impl(ptr, rust_vec_len, data_len),
-        25 => wire__crate__api__player__AudioPlayer_set_chorus_impl(ptr, rust_vec_len, data_len),
-        26 => wire__crate__api__player__AudioPlayer_set_delay_impl(ptr, rust_vec_len, data_len),
-        27 => wire__crate__api__player__AudioPlayer_set_override_impl(ptr, rust_vec_len, data_len),
-        28 => wire__crate__api__player__AudioPlayer_set_processor_impl(ptr, rust_vec_len, data_len),
-        29 => wire__crate__api__player__AudioPlayer_set_rate_impl(ptr, rust_vec_len, data_len),
-        30 => wire__crate__api__player__AudioPlayer_set_reverb_impl(ptr, rust_vec_len, data_len),
-        31 => wire__crate__api__player__AudioPlayer_set_source_impl(ptr, rust_vec_len, data_len),
-        32 => wire__crate__api__player__AudioPlayer_set_threshold_impl(ptr, rust_vec_len, data_len),
-        33 => wire__crate__api__player__AudioPlayer_set_volumn_impl(ptr, rust_vec_len, data_len),
-        34 => wire__crate__api__player__AudioPlayer_stop_impl(ptr, rust_vec_len, data_len),
-        35 => wire__crate__api__renderer__state__AudioState_auto_accessor_get_effects_impl(
+        17 => wire__crate__api__player__AudioPlayer_get_samples_impl(ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__player__AudioPlayer_get_state_impl(ptr, rust_vec_len, data_len),
+        19 => wire__crate__api__player__AudioPlayer_is_completed_impl(ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__player__AudioPlayer_is_playing_impl(ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__player__AudioPlayer_new_impl(ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__player__AudioPlayer_pause_impl(ptr, rust_vec_len, data_len),
+        23 => wire__crate__api__player__AudioPlayer_play_impl(ptr, rust_vec_len, data_len),
+        24 => wire__crate__api__player__AudioPlayer_position_impl(ptr, rust_vec_len, data_len),
+        25 => wire__crate__api__player__AudioPlayer_resume_impl(ptr, rust_vec_len, data_len),
+        26 => wire__crate__api__player__AudioPlayer_sample_rate_impl(ptr, rust_vec_len, data_len),
+        27 => wire__crate__api__player__AudioPlayer_seek_impl(ptr, rust_vec_len, data_len),
+        28 => wire__crate__api__player__AudioPlayer_set_10band_eq_impl(ptr, rust_vec_len, data_len),
+        29 => wire__crate__api__player__AudioPlayer_set_8band_eq_impl(ptr, rust_vec_len, data_len),
+        30 => wire__crate__api__player__AudioPlayer_set_band_impl(ptr, rust_vec_len, data_len),
+        31 => wire__crate__api__player__AudioPlayer_set_band_gain_impl(ptr, rust_vec_len, data_len),
+        32 => wire__crate__api__player__AudioPlayer_set_chorus_impl(ptr, rust_vec_len, data_len),
+        33 => {
+            wire__crate__api__player__AudioPlayer_set_compressor_impl(ptr, rust_vec_len, data_len)
+        }
+        34 => wire__crate__api__player__AudioPlayer_set_delay_impl(ptr, rust_vec_len, data_len),
+        35 => wire__crate__api__player__AudioPlayer_set_gain_impl(ptr, rust_vec_len, data_len),
+        36 => {
+            wire__crate__api__player__AudioPlayer_set_over_dride_impl(ptr, rust_vec_len, data_len)
+        }
+        37 => wire__crate__api__player__AudioPlayer_set_processor_impl(ptr, rust_vec_len, data_len),
+        38 => wire__crate__api__player__AudioPlayer_set_rate_impl(ptr, rust_vec_len, data_len),
+        39 => wire__crate__api__player__AudioPlayer_set_reverb_impl(ptr, rust_vec_len, data_len),
+        40 => wire__crate__api__player__AudioPlayer_set_source_impl(ptr, rust_vec_len, data_len),
+        41 => wire__crate__api__player__AudioPlayer_set_threshold_impl(ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__player__AudioPlayer_set_volumn_impl(ptr, rust_vec_len, data_len),
+        43 => wire__crate__api__player__AudioPlayer_stop_impl(ptr, rust_vec_len, data_len),
+        44 => wire__crate__api__renderer__state__AudioState_auto_accessor_get_effects_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        36 => wire__crate__api__renderer__state__AudioState_auto_accessor_get_equalizer_impl(
+        45 => wire__crate__api__renderer__state__AudioState_auto_accessor_get_equalizer_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        37 => wire__crate__api__renderer__state__AudioState_auto_accessor_set_effects_impl(
+        46 => wire__crate__api__renderer__state__AudioState_auto_accessor_set_effects_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        38 => wire__crate__api__renderer__state__AudioState_auto_accessor_set_equalizer_impl(
+        47 => wire__crate__api__renderer__state__AudioState_auto_accessor_set_equalizer_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        52 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_enabled_impl(
+        61 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_enabled_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        53 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_freq_impl(
+        62 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_freq_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        54 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_gain_db_impl(
+        63 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_gain_db_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        55 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_kind_impl(
+        64 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_kind_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        56 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_q_impl(
+        65 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_get_q_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        57 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_enabled_impl(
+        66 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_enabled_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        58 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_freq_impl(
+        67 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_freq_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        59 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_gain_db_impl(
+        68 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_gain_db_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        60 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_kind_impl(
+        69 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_kind_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        61 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_q_impl(
+        70 => wire__crate__api__filters__equalizer__BandConfig_auto_accessor_set_q_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        67 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_a1_impl(
+        76 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_a1_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        68 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_a2_impl(
+        77 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_a2_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        69 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_b0_impl(
+        78 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_b0_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        70 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_b1_impl(
+        79 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_b1_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        71 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_b2_impl(
+        80 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_get_b2_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        72 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_a1_impl(
+        81 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_a1_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        73 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_a2_impl(
+        82 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_a2_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        74 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_b0_impl(
+        83 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_b0_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        75 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_b1_impl(
+        84 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_b1_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        76 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_b2_impl(
+        85 => wire__crate__api__filters__biquad__BiquadCoeffs_auto_accessor_set_b2_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        77 => wire__crate__api__filters__biquad__BiquadFilter_auto_accessor_get_coeffs_impl(
+        86 => wire__crate__api__filters__biquad__BiquadFilter_auto_accessor_get_coeffs_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        78 => wire__crate__api__filters__biquad__BiquadFilter_auto_accessor_set_coeffs_impl(
+        87 => wire__crate__api__filters__biquad__BiquadFilter_auto_accessor_set_coeffs_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        84 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_get_m_queue_sec_impl(
+        93 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_get_m_queue_sec_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        85 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_get_max_samples_impl(
+        94 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_get_max_samples_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        86 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_get_sample_rate_impl(
+        95 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_get_sample_rate_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        87 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_set_m_queue_sec_impl(
+        96 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_set_m_queue_sec_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        88 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_set_max_samples_impl(
+        97 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_set_max_samples_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        89 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_set_sample_rate_impl(
+        98 => wire__crate__api__renderer__state__BuffConfig_auto_accessor_set_sample_rate_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        91 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_bypass_impl(
+        100 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        92 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_depth_impl(
+        101 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_depth_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        93 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_rate_impl(
+        102 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_rate_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        94 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_wet_impl(
+        103 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_get_wet_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        95 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_bypass_impl(
+        104 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        96 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_depth_impl(
+        105 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_depth_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        97 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_rate_impl(
+        106 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_rate_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        98 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_wet_impl(
+        107 => wire__crate__api__filters__effects__ChorusEffect_auto_accessor_set_wet_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        103 => {
+        112 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_attack_s_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        104 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_bypass_impl(
+        113 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        105 => {
+        114 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_makeup_db_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        106 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_ratio_impl(
+        115 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_ratio_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        107 => {
+        116 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_release_s_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        108 => {
+        117 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_get_threshold_db_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        109 => {
+        118 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_attack_s_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        110 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_bypass_impl(
+        119 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        111 => {
+        120 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_makeup_db_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        112 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_ratio_impl(
+        121 => wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_ratio_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        113 => {
+        122 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_release_s_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        114 => {
+        123 => {
             wire__crate__api__filters__effects__CompressorEffect_auto_accessor_set_threshold_db_impl(
                 ptr,
                 rust_vec_len,
                 data_len,
             )
         }
-        121 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_get_bypass_impl(
+        130 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        122 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_get_feedback_impl(
+        131 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_get_feedback_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        123 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_get_wet_impl(
+        132 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_get_wet_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        124 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_set_bypass_impl(
+        133 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        125 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_set_feedback_impl(
+        134 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_set_feedback_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        126 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_set_wet_impl(
+        135 => wire__crate__api__filters__effects__DelayEffect_auto_accessor_set_wet_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        131 => wire__crate__api__renderer__state__DspState_auto_accessor_get_effects_impl(
+        140 => wire__crate__api__renderer__state__DspState_auto_accessor_get_effects_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        132 => wire__crate__api__renderer__state__DspState_auto_accessor_get_equalizer_impl(
+        141 => wire__crate__api__renderer__state__DspState_auto_accessor_get_equalizer_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        133 => wire__crate__api__renderer__state__DspState_auto_accessor_set_effects_impl(
+        142 => wire__crate__api__renderer__state__DspState_auto_accessor_set_effects_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        134 => wire__crate__api__renderer__state__DspState_auto_accessor_set_equalizer_impl(
+        143 => wire__crate__api__renderer__state__DspState_auto_accessor_set_equalizer_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        138 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_chorus_impl(
+        147 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_chorus_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        139 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_compressor_impl(
+        148 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_compressor_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        140 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_delay_impl(
+        149 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_delay_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        141 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_gain_impl(
+        150 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_gain_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        142 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_hard_clip_impl(
+        151 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_hard_clip_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        143 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_overdrive_impl(
+        152 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_overdrive_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        144 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_reverb_impl(
+        153 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_get_reverb_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        145 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_chorus_impl(
+        154 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_chorus_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        146 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_compressor_impl(
+        155 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_compressor_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        147 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_delay_impl(
+        156 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_delay_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        148 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_gain_impl(
+        157 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_gain_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        149 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_hard_clip_impl(
+        158 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_hard_clip_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        150 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_overdrive_impl(
+        159 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_overdrive_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        151 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_reverb_impl(
+        160 => wire__crate__api__filters__effects__EffectsChain_auto_accessor_set_reverb_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        154 => wire__crate__api__filters__equalizer__Equalizer_add_band_impl(
+        163 => wire__crate__api__filters__equalizer__Equalizer_add_band_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        155 => wire__crate__api__filters__equalizer__Equalizer_auto_accessor_get_bypass_impl(
+        164 => wire__crate__api__filters__equalizer__Equalizer_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        156 => wire__crate__api__filters__equalizer__Equalizer_auto_accessor_set_bypass_impl(
+        165 => wire__crate__api__filters__equalizer__Equalizer_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        157 => wire__crate__api__filters__equalizer__Equalizer_band_config_impl(
+        166 => wire__crate__api__filters__equalizer__Equalizer_band_config_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        158 => wire__crate__api__filters__equalizer__Equalizer_band_count_impl(
+        167 => wire__crate__api__filters__equalizer__Equalizer_band_count_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        160 => {
+        169 => {
             wire__crate__api__filters__equalizer__Equalizer_new_impl(ptr, rust_vec_len, data_len)
         }
-        161 => wire__crate__api__filters__equalizer__Equalizer_new_graphic_10band_impl(
+        170 => wire__crate__api__filters__equalizer__Equalizer_new_graphic_10band_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        162 => wire__crate__api__filters__equalizer__Equalizer_new_graphic_8band_impl(
+        171 => wire__crate__api__filters__equalizer__Equalizer_new_graphic_8band_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        164 => wire__crate__api__filters__equalizer__Equalizer_remove_band_impl(
+        173 => wire__crate__api__filters__equalizer__Equalizer_remove_band_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        166 => wire__crate__api__filters__equalizer__Equalizer_set_band_impl(
+        175 => wire__crate__api__filters__equalizer__Equalizer_set_band_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        167 => wire__crate__api__filters__equalizer__Equalizer_set_band_enabled_impl(
+        176 => wire__crate__api__filters__equalizer__Equalizer_set_band_enabled_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        168 => wire__crate__api__filters__equalizer__Equalizer_set_band_gain_impl(
+        177 => wire__crate__api__filters__equalizer__Equalizer_set_band_gain_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        170 => wire__crate__api__filters__effects__GainEffect_auto_accessor_get_bypass_impl(
+        179 => wire__crate__api__filters__effects__GainEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        171 => wire__crate__api__filters__effects__GainEffect_auto_accessor_get_gain_db_impl(
+        180 => wire__crate__api__filters__effects__GainEffect_auto_accessor_get_gain_db_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        172 => wire__crate__api__filters__effects__GainEffect_auto_accessor_set_bypass_impl(
+        181 => wire__crate__api__filters__effects__GainEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        173 => wire__crate__api__filters__effects__GainEffect_auto_accessor_set_gain_db_impl(
+        182 => wire__crate__api__filters__effects__GainEffect_auto_accessor_set_gain_db_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        177 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_get_bypass_impl(
+        186 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        178 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_get_threshold_impl(
+        187 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_get_threshold_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        179 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_set_bypass_impl(
+        188 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        180 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_set_threshold_impl(
+        189 => wire__crate__api__filters__effects__HardClipEffect_auto_accessor_set_threshold_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        183 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_get_bypass_impl(
+        192 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        184 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_get_drive_impl(
+        193 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_get_drive_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        185 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_get_output_impl(
+        194 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_get_output_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        186 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_set_bypass_impl(
+        195 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        187 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_set_drive_impl(
+        196 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_set_drive_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        188 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_set_output_impl(
+        197 => wire__crate__api__filters__effects__OverdriveEffect_auto_accessor_set_output_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        194 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_bypass_impl(
+        203 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        195 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_damping_impl(
+        204 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_damping_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        196 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_room_size_impl(
+        205 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_room_size_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        197 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_wet_impl(
+        206 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_get_wet_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        198 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_bypass_impl(
+        207 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_bypass_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        199 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_damping_impl(
+        208 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_damping_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        200 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_room_size_impl(
+        209 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_room_size_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        201 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_wet_impl(
+        210 => wire__crate__api__filters__effects__ReverbEffect_auto_accessor_set_wet_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        212 => wire__crate__api__visualizer__VisualizerProcessor_bass_beat_impl(
+        221 => wire__crate__api__visualizer__VisualizerProcessor_bass_beat_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        216 => wire__crate__api__visualizer__VisualizerProcessor_drum_beat_impl(
+        225 => wire__crate__api__visualizer__VisualizerProcessor_drum_beat_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        218 => wire__crate__api__visualizer__VisualizerProcessor_high_frequency_energy_impl(
+        227 => wire__crate__api__visualizer__VisualizerProcessor_high_frequency_energy_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        219 => wire__crate__api__visualizer__VisualizerProcessor_low_frequency_energy_impl(
+        228 => wire__crate__api__visualizer__VisualizerProcessor_low_frequency_energy_impl(
             ptr,
             rust_vec_len,
             data_len,
         ),
-        220 => {
+        229 => {
             wire__crate__api__visualizer__VisualizerProcessor_new_impl(ptr, rust_vec_len, data_len)
         }
-        222 => wire__crate__api__visualizer__VisualizerProcessor_vocal_presence_impl(
+        231 => wire__crate__api__visualizer__VisualizerProcessor_vocal_presence_impl(
             ptr,
             rust_vec_len,
             data_len,
