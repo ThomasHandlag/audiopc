@@ -123,7 +123,6 @@ impl AudioPlayer {
 
         // ── active_cmd_tx ─────────────────────────────────────────────────────
         let active_cmd_tx: Arc<Mutex<Option<Sender<DecodeCommand>>>> = Arc::new(Mutex::new(None));
-        let active_cmd_tx_clone = Arc::clone(&active_cmd_tx);
 
         // ── Device-pool thread ────────────────────────────────────────────────
         let ctrl_dp = Arc::clone(&ctrl);

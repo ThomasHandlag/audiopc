@@ -438,30 +438,30 @@ impl VisualizerProcessor {
         results
     }
 
-    /// Standalone band analysis — performs its own FFT.
-    pub(crate)fn analyze_bands(
-        &mut self,
-        samples: &[f32],
-        channels: usize,
-        sample_rate: u32,
-        kinds: &[VBandKind],
-        playing: bool,
-    ) -> Vec<BandEnergy> {
-        self.ensure_band_states(kinds.len());
+    // /// Standalone band analysis — performs its own FFT.
+    // pub(crate)fn analyze_bands(
+    //     &mut self,
+    //     samples: &[f32],
+    //     channels: usize,
+    //     sample_rate: u32,
+    //     kinds: &[VBandKind],
+    //     playing: bool,
+    // ) -> Vec<BandEnergy> {
+    //     self.ensure_band_states(kinds.len());
 
-        if !playing || samples.is_empty() || channels == 0 || sample_rate == 0 {
-            return self.decay_bands(kinds);
-        }
+    //     if !playing || samples.is_empty() || channels == 0 || sample_rate == 0 {
+    //         return self.decay_bands(kinds);
+    //     }
 
-        let frame_count = samples.len() / channels;
-        if frame_count == 0 {
-            return self.decay_bands(kinds);
-        }
+    //     let frame_count = samples.len() / channels;
+    //     if frame_count == 0 {
+    //         return self.decay_bands(kinds);
+    //     }
 
-        let _ = self.perform_fft(samples, channels, sample_rate);
+    //     let _ = self.perform_fft(samples, channels, sample_rate);
 
-        self.compute_bands(kinds)
-    }
+    //     self.compute_bands(kinds)
+    // }
 
     fn decay_bands(&mut self, kinds: &[VBandKind]) -> Vec<BandEnergy> {
         self.ensure_band_states(kinds.len());
