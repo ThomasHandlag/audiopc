@@ -1,5 +1,10 @@
 # Plugin change logs
 
+## VERSION 0.2.1
+
+* Fix: Redundant audio when plugin new device
+* Fix: Position of audio behave incorrectly when new device plugged in
+
 ## VERSION 0.2.0+1
 
 * Replace hard code in visualizer

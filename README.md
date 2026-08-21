@@ -52,38 +52,6 @@ dependencies:
   audiopc: ^0.1.3
 ```
 
-### &#x1F527; Platform Specific Config
-
-#### Linux
-
-Nothing to do
-
-#### Windows
-
-Nothing to do
-
-#### Android
-
-Add plugin to your main activity.
-
-```kotlin
-// MainActivity.kt
-import com.thugbn.audiopc.AudiopcPlugin
-  
-class MainActivity : FlutterActivity() {
-  ...
-
-   override fun configureFlutterEngine(
-        @NonNull flutterEngine: FlutterEngine,
-    ) {
-        flutterEngine.plugins.add(AudiopcPlugin())
-        super.configureFlutterEngine(flutterEngine)
-    }
-  ... 
-}
-
-```
-
 ### Dart
 
 ```dart
@@ -121,6 +89,10 @@ Get visualizer bars.
 
   final bars = player.getBars();
 ```
+
+## Compability with other packages
+
+**Audiopc** can be used with any packages that implement features like background audio playing, etc...
 
 ## ⭐ Support
 
