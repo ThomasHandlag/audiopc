@@ -144,7 +144,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _volumePercent = sliderValue;
     });
-    player.setVolumn(_volumeFromSlider(sliderValue));
+    player.setVolume(_volumeFromSlider(sliderValue));
   }
 
   /// Updates spectrum bars from the current visualizer frame.

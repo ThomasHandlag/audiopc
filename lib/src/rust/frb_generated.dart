@@ -74,7 +74,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 1184983539;
+  int get rustContentHash => 1209224554;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -239,7 +239,7 @@ abstract class RustLibApi extends BaseApi {
     required double threshold,
   });
 
-  void crateApiPlayerAudioPlayerSetVolumn({
+  void crateApiPlayerAudioPlayerSetVolume({
     required AudioPlayer that,
     required double volumn,
   });
@@ -2688,7 +2688,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  void crateApiPlayerAudioPlayerSetVolumn({
+  void crateApiPlayerAudioPlayerSetVolume({
     required AudioPlayer that,
     required double volumn,
   }) {
@@ -2707,16 +2707,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiPlayerAudioPlayerSetVolumnConstMeta,
+        constMeta: kCrateApiPlayerAudioPlayerSetVolumeConstMeta,
         argValues: [that, volumn],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiPlayerAudioPlayerSetVolumnConstMeta =>
+  TaskConstMeta get kCrateApiPlayerAudioPlayerSetVolumeConstMeta =>
       const TaskConstMeta(
-        debugName: "AudioPlayer_set_volumn",
+        debugName: "AudioPlayer_set_volume",
         argNames: ["that", "volumn"],
       );
 
@@ -14697,8 +14697,8 @@ class AudioPlayerImpl extends RustOpaque implements AudioPlayer {
   void setThreshold({required double threshold}) => RustLib.instance.api
       .crateApiPlayerAudioPlayerSetThreshold(that: this, threshold: threshold);
 
-  void setVolumn({required double volumn}) => RustLib.instance.api
-      .crateApiPlayerAudioPlayerSetVolumn(that: this, volumn: volumn);
+  void setVolume({required double volumn}) => RustLib.instance.api
+      .crateApiPlayerAudioPlayerSetVolume(that: this, volumn: volumn);
 
   /// Stop playback and reset position.
   void stop() => RustLib.instance.api.crateApiPlayerAudioPlayerStop(that: this);

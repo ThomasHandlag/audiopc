@@ -60,6 +60,7 @@ flutter:
   plugin:
     platforms:
       android:
+        package: com.thugbn.audiopc
         ffiPlugin: true
         pluginClass: AudiopcPlugin
       ios:

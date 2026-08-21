@@ -420,7 +420,7 @@ impl AudioPlayer {
     // ── Volume / rate ─────────────────────────────────────────────────────────
 
     #[frb(sync)]
-    pub fn set_volumn(&mut self, volumn: f32) {
+    pub fn set_volume(&mut self, volumn: f32) {
         self.ctrl.set_volume(volumn.clamp(0.0, 2.0));
     }
 

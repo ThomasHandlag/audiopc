@@ -46,7 +46,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1184983539;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1209224554;
 
 // Section: executor
 
@@ -2089,14 +2089,14 @@ fn wire__crate__api__player__AudioPlayer_set_threshold_impl(
         },
     )
 }
-fn wire__crate__api__player__AudioPlayer_set_volumn_impl(
+fn wire__crate__api__player__AudioPlayer_set_volume_impl(
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
     rust_vec_len_: i32,
     data_len_: i32,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartSse {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::SseCodec, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "AudioPlayer_set_volumn",
+            debug_name: "AudioPlayer_set_volume",
             port: None,
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
@@ -2131,7 +2131,7 @@ fn wire__crate__api__player__AudioPlayer_set_volumn_impl(
                 }
                 let mut api_that_guard = api_that_guard.unwrap();
                 let output_ok = Result::<_, ()>::Ok({
-                    crate::api::player::AudioPlayer::set_volumn(&mut *api_that_guard, api_volumn);
+                    crate::api::player::AudioPlayer::set_volume(&mut *api_that_guard, api_volumn);
                 })?;
                 Ok(output_ok)
             })())
@@ -13318,7 +13318,7 @@ fn pde_ffi_dispatcher_sync_impl(
         39 => wire__crate__api__player__AudioPlayer_set_reverb_impl(ptr, rust_vec_len, data_len),
         40 => wire__crate__api__player__AudioPlayer_set_source_impl(ptr, rust_vec_len, data_len),
         41 => wire__crate__api__player__AudioPlayer_set_threshold_impl(ptr, rust_vec_len, data_len),
-        42 => wire__crate__api__player__AudioPlayer_set_volumn_impl(ptr, rust_vec_len, data_len),
+        42 => wire__crate__api__player__AudioPlayer_set_volume_impl(ptr, rust_vec_len, data_len),
         43 => wire__crate__api__player__AudioPlayer_stop_impl(ptr, rust_vec_len, data_len),
         44 => wire__crate__api__renderer__state__AudioState_auto_accessor_get_effects_impl(
             ptr,

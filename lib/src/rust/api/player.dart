@@ -115,7 +115,7 @@ abstract class AudioPlayer implements RustOpaqueInterface {
 
   void setThreshold({required double threshold});
 
-  void setVolumn({required double volumn});
+  void setVolume({required double volumn});
 
   /// Stop playback and reset position.
   void stop();

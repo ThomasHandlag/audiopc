@@ -10,11 +10,4 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import com.thugbn.audiopc.AudiopcPlugin
 
-class MainActivity : FlutterActivity() {
-    override fun configureFlutterEngine(
-        @NonNull flutterEngine: FlutterEngine,
-    ) {
-        flutterEngine.plugins.add(AudiopcPlugin())
-        super.configureFlutterEngine(flutterEngine)
-    }
-}
+class MainActivity : FlutterActivity()

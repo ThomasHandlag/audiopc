@@ -42,13 +42,10 @@ final class PcPlayer {
     return PcPlayer._(player);
   }
 
-  /// Return current audio duration.
-  int getDuration() {
-    return player.durationMillis();
-  }
-
   /// Return duration
-  int get duration => getDuration();
+  int get duration =>  player.durationMillis();
+
+  int get position => player.position();
 
   /// Jump to the given position in milliseconds.
   void seek(int target) {
@@ -183,8 +180,8 @@ final class PcPlayer {
   }
 
   /// Set volumn of ouput audio.
-  void setVolumn(double volumn) {
-    player.setVolumn(volumn: volumn);
+  void setVolume(double volumn) {
+    player.setVolume(volumn: volumn);
   }
 
   /// Whether audio completed or not.
