@@ -48,7 +48,12 @@ impl BiquadFilter {
 
         let y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
 
-        self.state = BiquadState { x1: x, x2: x1, y1: y, y2: y1 };
+        self.state = BiquadState {
+            x1: x,
+            x2: x1,
+            y1: y,
+            y2: y1,
+        };
         y
     }
 
@@ -62,6 +67,22 @@ impl BiquadFilter {
     }
 }
 
+#[inline]
+fn sanitise(fc: f32, q: f32, fs: f32) -> (f32, f32) {
+    let fs = if fs.is_finite() && fs > 0.0 {
+        fs
+    } else {
+        44_100.0
+    };
+    let fc = fc.clamp(1.0, fs * 0.49);
+    let q = if q.is_finite() {
+        q.clamp(0.05, 20.0)
+    } else {
+        0.707
+    };
+    (fc, q)
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Coefficient factories
 // ─────────────────────────────────────────────────────────────
@@ -73,6 +94,7 @@ impl BiquadFilter {
 /// * `q`       – quality factor (bandwidth). Typical value: 0.707–2.0
 /// * `fs`      – sample rate in Hz
 pub fn peaking_eq(fc: f32, gain_db: f32, q: f32, fs: f32) -> BiquadCoeffs {
+    let (fc, q) = sanitise(fc, q, fs);
     let a = 10.0_f32.powf(gain_db / 40.0); // sqrt(10^(dB/20))
     let w0 = 2.0 * std::f32::consts::PI * fc / fs;
     let (sin_w0, cos_w0) = w0.sin_cos();

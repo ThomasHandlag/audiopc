@@ -6,6 +6,7 @@ pub mod enums;
 pub mod error;
 pub mod visualizer;
 pub mod filters;
+pub mod utils;
 
 
 #[flutter_rust_bridge::frb(init)]

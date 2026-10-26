@@ -20,7 +20,11 @@ pub struct GainEffect {
 impl GainEffect {
     pub fn new(gain_db: f32) -> Self {
         let linear = db_to_linear(gain_db);
-        Self { gain_db, linear, bypass: false }
+        Self {
+            gain_db,
+            linear,
+            bypass: false,
+        }
     }
 
     pub fn set_gain_db(&mut self, gain_db: f32) {
@@ -30,7 +34,11 @@ impl GainEffect {
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { sample } else { sample * self.linear }
+        if self.bypass {
+            sample
+        } else {
+            sample * self.linear
+        }
     }
 }
 
@@ -52,12 +60,18 @@ pub struct OverdriveEffect {
 
 impl OverdriveEffect {
     pub fn new(drive: f32, output: f32) -> Self {
-        Self { drive: drive.max(1.0), output, bypass: false }
+        Self {
+            drive: drive.max(1.0),
+            output,
+            bypass: false,
+        }
     }
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { return sample; }
+        if self.bypass {
+            return sample;
+        }
         (sample * self.drive).tanh() * self.output
     }
 }
@@ -77,12 +91,17 @@ pub struct HardClipEffect {
 
 impl HardClipEffect {
     pub fn new(threshold: f32) -> Self {
-        Self { threshold: threshold.clamp(0.001, 1.0), bypass: false }
+        Self {
+            threshold: threshold.clamp(0.001, 1.0),
+            bypass: false,
+        }
     }
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { return sample; }
+        if self.bypass {
+            return sample;
+        }
         sample.clamp(-self.threshold, self.threshold) / self.threshold
     }
 }
@@ -145,7 +164,9 @@ impl CompressorEffect {
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { return sample; }
+        if self.bypass {
+            return sample;
+        }
 
         // Detect: convert sample amplitude to dB
         let input_db = linear_to_db(sample.abs().max(1e-9));
@@ -219,7 +240,9 @@ impl DelayEffect {
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { return sample; }
+        if self.bypass {
+            return sample;
+        }
 
         let buf_len = self.buffer.len();
         let read = (self.write + buf_len - self.delay_samples) % buf_len;
@@ -262,7 +285,7 @@ impl ChorusEffect {
     /// * `depth` – modulation depth in seconds (typical 0.002–0.030)
     /// * `wet`   – mix (0–1)
     pub fn new(rate: f32, depth: f32, wet: f32, sample_rate: f32) -> Self {
-        let max_buf = (sample_rate * 0.1) as usize; // 100 ms max
+        let max_buf = ((sample_rate * 0.1) as usize).max(2); // 100 ms max
         Self {
             rate,
             depth: depth.max(0.0),
@@ -287,7 +310,9 @@ impl ChorusEffect {
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { return sample; }
+        if self.bypass {
+            return sample;
+        }
 
         let buf_len = self.buffer.len();
         self.buffer[self.write] = sample;
@@ -303,7 +328,7 @@ impl ChorusEffect {
 
             // Linear interpolation between two adjacent samples
             let delay_f = mod_samples;
-            let delay_i = delay_f as usize;
+            let delay_i = (delay_f as usize).min(buf_len - 2);
             let frac = delay_f - delay_i as f32;
 
             let r0 = (self.write + buf_len - delay_i) % buf_len;
@@ -343,7 +368,7 @@ impl ReverbEffect {
         // Delay lengths tuned for 44100 Hz, scaled for other rates
         let scale = sample_rate / 44100.0;
         let comb_delays = [1557, 1617, 1491, 1422];
-        let ap_delays   = [225, 341];
+        let ap_delays = [225, 341];
 
         let feedback = 0.84 * room_size.clamp(0.0, 1.0) + 0.1;
 
@@ -352,7 +377,8 @@ impl ReverbEffect {
             damping: damping.clamp(0.0, 1.0),
             wet: wet.clamp(0.0, 1.0),
             bypass: false,
-            combs: comb_delays.map(|d| CombFilter::new((d as f32 * scale) as usize, feedback, damping)),
+            combs: comb_delays
+                .map(|d| CombFilter::new((d as f32 * scale) as usize, feedback, damping)),
             allpasses: ap_delays.map(|d| AllPassFilter::new((d as f32 * scale) as usize, 0.5)),
         }
     }
@@ -366,13 +392,22 @@ impl ReverbEffect {
     }
 
     pub fn reset(&mut self) {
-        for c in &mut self.combs    { c.buf.fill(0.0); c.pos = 0; c.last = 0.0; }
-        for a in &mut self.allpasses { a.buf.fill(0.0); a.pos = 0; }
+        for c in &mut self.combs {
+            c.buf.fill(0.0);
+            c.pos = 0;
+            c.last = 0.0;
+        }
+        for a in &mut self.allpasses {
+            a.buf.fill(0.0);
+            a.pos = 0;
+        }
     }
 
     #[inline]
     pub fn process(&mut self, sample: f32) -> f32 {
-        if self.bypass { return sample; }
+        if self.bypass {
+            return sample;
+        }
 
         // Parallel comb filters
         let mut out = 0.0_f32;
@@ -404,7 +439,13 @@ pub struct CombFilter {
 
 impl CombFilter {
     fn new(len: usize, feedback: f32, damp: f32) -> Self {
-        Self { buf: vec![0.0; len.max(1)], pos: 0, feedback, damp, last: 0.0 }
+        Self {
+            buf: vec![0.0; len.max(1)],
+            pos: 0,
+            feedback,
+            damp,
+            last: 0.0,
+        }
     }
 
     #[inline]
@@ -427,7 +468,11 @@ struct AllPassFilter {
 
 impl AllPassFilter {
     fn new(len: usize, feedback: f32) -> Self {
-        Self { buf: vec![0.0; len.max(1)], pos: 0, feedback }
+        Self {
+            buf: vec![0.0; len.max(1)],
+            pos: 0,
+            feedback,
+        }
     }
 
     #[inline]
@@ -451,26 +496,26 @@ impl AllPassFilter {
 #[frb(opaque)]
 #[derive(Clone)]
 pub struct EffectsChain {
-    pub gain:       Option<GainEffect>,
-    pub overdrive:  Option<OverdriveEffect>,
-    pub hard_clip:  Option<HardClipEffect>,
+    pub gain: Option<GainEffect>,
+    pub overdrive: Option<OverdriveEffect>,
+    pub hard_clip: Option<HardClipEffect>,
     pub compressor: Option<CompressorEffect>,
-    pub delay:      Option<DelayEffect>,
-    pub chorus:     Option<ChorusEffect>,
-    pub reverb:     Option<ReverbEffect>,
+    pub delay: Option<DelayEffect>,
+    pub chorus: Option<ChorusEffect>,
+    pub reverb: Option<ReverbEffect>,
 }
 
 impl EffectsChain {
     /// Create an empty chain (all slots disabled).
     pub fn empty() -> Self {
         Self {
-            gain:       None,
-            overdrive:  None,
-            hard_clip:  None,
+            gain: None,
+            overdrive: None,
+            hard_clip: None,
             compressor: None,
-            delay:      None,
-            chorus:     None,
-            reverb:     None,
+            delay: None,
+            chorus: None,
+            reverb: None,
         }
     }
 
@@ -479,13 +524,27 @@ impl EffectsChain {
     /// gain → overdrive → hard_clip → compressor → delay → chorus → reverb
     #[inline]
     pub fn process(&mut self, mut sample: f32) -> f32 {
-        if let Some(e) = &mut self.gain       { sample = e.process(sample); }
-        if let Some(e) = &mut self.overdrive  { sample = e.process(sample); }
-        if let Some(e) = &mut self.hard_clip  { sample = e.process(sample); }
-        if let Some(e) = &mut self.compressor { sample = e.process(sample); }
-        if let Some(e) = &mut self.delay      { sample = e.process(sample); }
-        if let Some(e) = &mut self.chorus     { sample = e.process(sample); }
-        if let Some(e) = &mut self.reverb     { sample = e.process(sample); }
+        if let Some(e) = &mut self.gain {
+            sample = e.process(sample);
+        }
+        if let Some(e) = &mut self.overdrive {
+            sample = e.process(sample);
+        }
+        if let Some(e) = &mut self.hard_clip {
+            sample = e.process(sample);
+        }
+        if let Some(e) = &mut self.compressor {
+            sample = e.process(sample);
+        }
+        if let Some(e) = &mut self.delay {
+            sample = e.process(sample);
+        }
+        if let Some(e) = &mut self.chorus {
+            sample = e.process(sample);
+        }
+        if let Some(e) = &mut self.reverb {
+            sample = e.process(sample);
+        }
         sample
     }
 }
@@ -507,5 +566,9 @@ pub fn linear_to_db(lin: f32) -> f32 {
 /// Convert a time constant to a one-pole IIR filter coefficient.
 #[inline]
 fn time_to_coeff(time_s: f32, sample_rate: f32) -> f32 {
-    if time_s <= 0.0 { 0.0 } else { (-1.0 / (time_s * sample_rate)).exp() }
+    if time_s <= 0.0 {
+        0.0
+    } else {
+        (-1.0 / (time_s * sample_rate)).exp()
+    }
 }

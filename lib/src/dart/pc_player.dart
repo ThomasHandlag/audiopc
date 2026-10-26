@@ -43,7 +43,7 @@ final class PcPlayer {
   }
 
   /// Return duration
-  int get duration =>  player.durationMillis();
+  int get duration => player.durationMillis();
 
   int get position => player.position();
 
@@ -156,7 +156,6 @@ final class PcPlayer {
     player.disableDelay();
   }
 
-
   void disableChorus() {
     player.disableChorus();
   }
@@ -218,6 +217,20 @@ final class PcPlayer {
     return VisualizerProcessor.drumBeat(
       bands: getBands([.kick, .snareBody, .snareCrack]),
     );
+  }
+
+  double highFrequencyBeat() {
+    return VisualizerProcessor.highFrequencyEnergy(bands: getBands([
+      .high,
+      .bass
+    ]));
+  }
+
+  double lowFrequencyBeat() {
+    return VisualizerProcessor.lowFrequencyEnergy(bands: getBands([
+      .high,
+      .bass
+    ]));
   }
 
   /// Return current output config.

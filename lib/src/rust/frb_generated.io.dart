@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/error.dart';
 import 'api/filters/biquad.dart';
 import 'api/filters/effects.dart';
 import 'api/filters/equalizer.dart';
@@ -11,6 +12,7 @@ import 'api/renderer/output.dart';
 import 'api/renderer/state.dart';
 import 'api/source.dart';
 import 'api/source/decode.dart';
+import 'api/utils.dart';
 import 'api/visualizer.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -624,6 +626,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String dco_decode_String(dynamic raw);
+
+  @protected
+  AudioError dco_decode_audio_error(dynamic raw);
 
   @protected
   AudioOutputConfig dco_decode_audio_output_config(dynamic raw);
@@ -1287,6 +1292,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  AudioError sse_decode_audio_error(SseDeserializer deserializer);
 
   @protected
   AudioOutputConfig sse_decode_audio_output_config(
@@ -2036,6 +2044,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_audio_error(AudioError self, SseSerializer serializer);
 
   @protected
   void sse_encode_audio_output_config(

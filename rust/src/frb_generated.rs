@@ -46,7 +46,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1209224554;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2127065116;
 
 // Section: executor
 
@@ -11345,6 +11345,41 @@ fn wire__crate__api__filters__effects__db_to_linear_impl(
         },
     )
 }
+fn wire__crate__api__utils__get_audio_waveform_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_audio_waveform",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_path = <String>::sse_decode(&mut deserializer);
+            let api_num_points = <usize>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, crate::api::error::AudioError>((move || {
+                    let output_ok =
+                        crate::api::utils::get_audio_waveform(api_path, api_num_points)?;
+                    Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__filters__biquad__high_pass_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -12394,6 +12429,66 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for crate::api::error::AudioError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut tag_ = <i32>::sse_decode(deserializer);
+        match tag_ {
+            0 => {
+                return crate::api::error::AudioError::NoDevice;
+            }
+            1 => {
+                let mut var_name = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::DeviceNotFound { name: var_name };
+            }
+            2 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::UnsupportedFormat(var_field0);
+            }
+            3 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::DecodeError(var_field0);
+            }
+            4 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::Io(var_field0);
+            }
+            5 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::Network(var_field0);
+            }
+            6 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::StreamConfig(var_field0);
+            }
+            7 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::StreamBuild(var_field0);
+            }
+            8 => {
+                return crate::api::error::AudioError::SeekNotSupported;
+            }
+            9 => {
+                let mut var_posMs = <i32>::sse_decode(deserializer);
+                return crate::api::error::AudioError::SeekOutOfRange { pos_ms: var_posMs };
+            }
+            10 => {
+                let mut var_field0 = <String>::sse_decode(deserializer);
+                return crate::api::error::AudioError::Pipeline(var_field0);
+            }
+            11 => {
+                return crate::api::error::AudioError::NoSource;
+            }
+            12 => {
+                return crate::api::error::AudioError::Poisoned;
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+
 impl SseDecode for crate::api::renderer::output::AudioOutputConfig {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -13189,56 +13284,57 @@ fn pde_ffi_dispatcher_primary_impl(
         235 => {
             wire__crate__api__filters__effects__db_to_linear_impl(port, ptr, rust_vec_len, data_len)
         }
-        236 => wire__crate__api__filters__biquad__high_pass_impl(port, ptr, rust_vec_len, data_len),
-        237 => {
+        236 => wire__crate__api__utils__get_audio_waveform_impl(port, ptr, rust_vec_len, data_len),
+        237 => wire__crate__api__filters__biquad__high_pass_impl(port, ptr, rust_vec_len, data_len),
+        238 => {
             wire__crate__api__filters__biquad__high_shelf_impl(port, ptr, rust_vec_len, data_len)
         }
-        238 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
-        239 => {
+        239 => wire__crate__api__init_app_impl(port, ptr, rust_vec_len, data_len),
+        240 => {
             wire__crate__api__filters__effects__linear_to_db_impl(port, ptr, rust_vec_len, data_len)
         }
-        240 => wire__crate__api__filters__biquad__low_pass_impl(port, ptr, rust_vec_len, data_len),
-        241 => wire__crate__api__filters__biquad__low_shelf_impl(port, ptr, rust_vec_len, data_len),
-        242 => {
+        241 => wire__crate__api__filters__biquad__low_pass_impl(port, ptr, rust_vec_len, data_len),
+        242 => wire__crate__api__filters__biquad__low_shelf_impl(port, ptr, rust_vec_len, data_len),
+        243 => {
             wire__crate__api__filters__biquad__peaking_eq_impl(port, ptr, rust_vec_len, data_len)
         }
-        243 => wire__crate__api__renderer__state__playback_state_from_u8_impl(
+        244 => wire__crate__api__renderer__state__playback_state_from_u8_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        244 => wire__crate__api__renderer__state__playback_state_id_impl(
+        245 => wire__crate__api__renderer__state__playback_state_id_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        245 => wire__crate__api__renderer__state__playback_state_to_u8_impl(
+        246 => wire__crate__api__renderer__state__playback_state_to_u8_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        246 => wire__crate__api__visualizer__v_band_kind_detailed_impl(
+        247 => wire__crate__api__visualizer__v_band_kind_detailed_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        247 => wire__crate__api__visualizer__v_band_kind_freq_range_impl(
+        248 => wire__crate__api__visualizer__v_band_kind_freq_range_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        248 => wire__crate__api__visualizer__v_band_kind_instrument_impl(
+        249 => wire__crate__api__visualizer__v_band_kind_instrument_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        249 => wire__crate__api__visualizer__v_band_kind_standard_impl(
+        250 => wire__crate__api__visualizer__v_band_kind_standard_impl(
             port,
             ptr,
             rust_vec_len,
@@ -14270,6 +14366,55 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<VisualizerProcessor>> for Visu
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::error::AudioError {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            crate::api::error::AudioError::NoDevice => [0.into_dart()].into_dart(),
+            crate::api::error::AudioError::DeviceNotFound { name } => {
+                [1.into_dart(), name.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::UnsupportedFormat(field0) => {
+                [2.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::DecodeError(field0) => {
+                [3.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::Io(field0) => {
+                [4.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::Network(field0) => {
+                [5.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::StreamConfig(field0) => {
+                [6.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::StreamBuild(field0) => {
+                [7.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::SeekNotSupported => [8.into_dart()].into_dart(),
+            crate::api::error::AudioError::SeekOutOfRange { pos_ms } => {
+                [9.into_dart(), pos_ms.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::Pipeline(field0) => {
+                [10.into_dart(), field0.into_into_dart().into_dart()].into_dart()
+            }
+            crate::api::error::AudioError::NoSource => [11.into_dart()].into_dart(),
+            crate::api::error::AudioError::Poisoned => [12.into_dart()].into_dart(),
+            _ => {
+                unimplemented!("");
+            }
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::error::AudioError {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::error::AudioError>
+    for crate::api::error::AudioError
+{
+    fn into_into_dart(self) -> crate::api::error::AudioError {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::renderer::output::AudioOutputConfig {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -14851,6 +14996,65 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crate::api::error::AudioError {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        match self {
+            crate::api::error::AudioError::NoDevice => {
+                <i32>::sse_encode(0, serializer);
+            }
+            crate::api::error::AudioError::DeviceNotFound { name } => {
+                <i32>::sse_encode(1, serializer);
+                <String>::sse_encode(name, serializer);
+            }
+            crate::api::error::AudioError::UnsupportedFormat(field0) => {
+                <i32>::sse_encode(2, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::DecodeError(field0) => {
+                <i32>::sse_encode(3, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::Io(field0) => {
+                <i32>::sse_encode(4, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::Network(field0) => {
+                <i32>::sse_encode(5, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::StreamConfig(field0) => {
+                <i32>::sse_encode(6, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::StreamBuild(field0) => {
+                <i32>::sse_encode(7, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::SeekNotSupported => {
+                <i32>::sse_encode(8, serializer);
+            }
+            crate::api::error::AudioError::SeekOutOfRange { pos_ms } => {
+                <i32>::sse_encode(9, serializer);
+                <i32>::sse_encode(pos_ms, serializer);
+            }
+            crate::api::error::AudioError::Pipeline(field0) => {
+                <i32>::sse_encode(10, serializer);
+                <String>::sse_encode(field0, serializer);
+            }
+            crate::api::error::AudioError::NoSource => {
+                <i32>::sse_encode(11, serializer);
+            }
+            crate::api::error::AudioError::Poisoned => {
+                <i32>::sse_encode(12, serializer);
+            }
+            _ => {
+                unimplemented!("");
+            }
+        }
     }
 }
 
