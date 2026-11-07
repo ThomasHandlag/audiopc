@@ -1,5 +1,9 @@
 # Plugin change logs
 
+## VERSION 0.2.2+1
+
+* Fix: seek change state to playing
+
 ## VERSION 0.2.2
 
 * Fix: crash on android
