@@ -297,7 +297,7 @@ impl AudioPlayer {
             return;
         }
 
-        let was_playing = self.ctrl.state() == PlaybackState::Playing;
+        let completed = self.ctrl.state() == PlaybackState::Completed;
 
         self.ensure_stream();
         self.decode.reap_finished();
@@ -318,7 +318,7 @@ impl AudioPlayer {
 
         let can_play = self.decode.source.is_some()
             && (self.decode.duration <= 0 || position < self.decode.duration);
-        if can_play && !was_playing {
+        if can_play && completed {
             self.ctrl.set_state(PlaybackState::Playing);
         }
     }
