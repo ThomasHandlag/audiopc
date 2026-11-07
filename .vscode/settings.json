@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "/home/thuong/documents/github/audiopc/linux"
+    "cmake.sourceDirectory": "/home/thuong/documents/github/audiopc/linux",
+    "rust-analyzer.cargo.cfgs": [
+         "target_os=android"
+    ]
 }

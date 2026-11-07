@@ -6,9 +6,13 @@ class WaveformControl extends StatelessWidget {
     required this.onChanged,
     required this.value,
     required this.data,
+    this.trackColor,
+    this.backgroundColor,
   });
 
   final ValueChanged<double> onChanged;
+  final Color? trackColor;
+  final Color? backgroundColor;
   final double value;
   final List<double> data;
 
@@ -42,10 +46,11 @@ class WaveformControl extends StatelessWidget {
               painter: WaveformPainter(
                 data: data,
                 value: value.clamp(0.0, 1.0),
-                activeColor: Theme.of(context).colorScheme.primary,
-                inactiveColor: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withAlpha(45),
+                activeColor:
+                    trackColor ?? Theme.of(context).colorScheme.primary,
+                inactiveColor:
+                    backgroundColor ??
+                    Theme.of(context).colorScheme.onSurface.withAlpha(45),
                 gap: 2,
               ),
             ),
