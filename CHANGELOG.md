@@ -1,5 +1,9 @@
 # Plugin change logs
 
+## VERSION 0.2.2
+
+* Fix: crash on android
+
 ## VERSION 0.2.1
 
 * Fix: Redundant audio when plugin new device
