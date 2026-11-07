@@ -1,5 +1,9 @@
 # Plugin change logs
 
+## VERSION 0.2.2+2
+
+* Upgrade dependencies
+
 ## VERSION 0.2.2+1
 
 * Fix: seek change state to playing

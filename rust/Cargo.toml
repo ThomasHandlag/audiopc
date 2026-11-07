@@ -12,12 +12,12 @@ crate-type = [
 ]
 
 [dependencies]
-cpal = { version = "0.18.1"}
+cpal = { version = "0.18.2"}
 reqwest = { version = "0.12", default-features = false, features = [
     "blocking",
     "rustls-tls",
 ] }
-symphonia = { version = "0.6.0", features = ["all"] }
+symphonia = { version = "0.6.1", features = ["all"] }
 rustfft = "6.2"
 tempfile = "3.14"
 crossbeam-channel = "0.5.16"
