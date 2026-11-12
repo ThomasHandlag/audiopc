@@ -9,3 +9,4 @@ export 'package:audiopc/src/rust/api/source.dart';
 export 'package:audiopc/src/rust/api/renderer/output.dart'
     show AudioOutputConfig;
 export 'package:audiopc/src/rust/api/utils.dart';
+export 'package:audiopc/src/dart/meta_modifier.dart';

@@ -1,3 +1,6 @@
+pub mod meta_reader;
+pub mod meta_writer;
+
 use std::{fs::File, path::Path};
 
 use flutter_rust_bridge::frb;

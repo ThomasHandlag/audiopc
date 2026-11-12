@@ -1,0 +1,10 @@
+name: Dart MCP Server
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Dart
+    command: dart
+    args:
+      - mcp-server
+      - --enable
+      - all

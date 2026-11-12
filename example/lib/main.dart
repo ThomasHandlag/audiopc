@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:audiopc/audiopc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart' hide MetaData;
+import 'meta_writer_page.dart';
 import 'shader_widget.dart';
 
 /// Example app entry point.
@@ -250,6 +251,15 @@ class _MyAppState extends State<MyApp> {
       appBar: AppBar(
         title: const Text('AUDIOPC'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_note),
+            tooltip: 'Meta Writer',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const MetaWriterPage(),
+              ),
+            ),
+          ),
           IconButton(
             icon: Icon(_showShader ? Icons.visibility : Icons.visibility_off),
             onPressed: () => setState(() => _showShader = !_showShader),
