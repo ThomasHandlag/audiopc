@@ -11,8 +11,8 @@
 
 ## 🚀 Overview
 
-**audiopc** is a Rust-powered Flutter audio plugin built using **FFI** and powered by the **CPAL** backend.  
-Provide seamless playback, and advance features like equalizer, audio sample, visualizer.
+**audiopc** is a Rust-powered Flutter audio plugin, powered by the **CPAL** backend.  
+Provide seamless playback, and advance features like equalizer, audio sample, visualizer, and audio file metadata reader/writer.
 
 ---
 
@@ -39,7 +39,8 @@ Provide seamless playback, and advance features like equalizer, audio sample, vi
 | Local Playback   | ✅     |
 | URL Streaming    | ✅     |
 | Audio Processing | ✅     |
-| Device Query     | ✅     |
+| Device Query (See device_audio_query package)    |   ✅   |
+| Audio metadata reader/writer | ✅ |
 
 ## 📦 Installation
 
@@ -49,7 +50,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  audiopc: ^0.1.3
+  audiopc: ^0.2.2+2
 ```
 
 ### Dart
@@ -61,7 +62,6 @@ void main() async {
 
   runApp(YourApp());
 }
-
 ```
 
 ## Usage
